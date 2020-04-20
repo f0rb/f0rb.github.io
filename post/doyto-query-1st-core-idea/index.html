@@ -5,14 +5,14 @@
     
 <meta charset="utf-8" >
 
-<title>DoytoQuery系列一之核心理念：WHERE语句是可生成的 | DOYToWin</title>
+<title>DoytoQuery系列一之核心理念 | DOYToWin</title>
 <meta name="description" content="">
 
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
 
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
-<link rel="shortcut icon" href="https://f0rb.github.io/favicon.ico?v=1587397215313">
+<link rel="shortcut icon" href="https://f0rb.github.io/favicon.ico?v=1587399194897">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
 <link rel="stylesheet" href="https://f0rb.github.io/styles/main.css">
 
@@ -30,7 +30,7 @@
   <div class="site-header">
     <div class="left">
       <a href="https://f0rb.github.io">
-        <img class="avatar" src="https://f0rb.github.io/images/avatar.png?v=1587397215313" alt="" width="32px" height="32px">
+        <img class="avatar" src="https://f0rb.github.io/images/avatar.png?v=1587399194897" alt="" width="32px" height="32px">
       </a>
       <a href="https://f0rb.github.io">
         <h1 class="site-title">DOYToWin</h1>
@@ -80,7 +80,7 @@
       <div class="content-container">
         <div class="post-detail">
           
-          <h2 class="post-title">DoytoQuery系列一之核心理念：WHERE语句是可生成的</h2>
+          <h2 class="post-title">DoytoQuery系列一之核心理念</h2>
           <div class="post-info post-detail-info">
             <span><i class="icon-calendar-outline"></i> 2020-04-20</span>
             
@@ -156,6 +156,42 @@ LIMIT 10 OFFSET 20
 <li>同时得到对应的参数列表</li>
 </ul>
 <pre><code>[&quot;admin&quot;, &quot;admin&quot;, &quot;admin&quot;, &quot;%管理员%&quot;, true]
+</code></pre>
+<p>其中WHERE语句的过滤条件根据字段是否为null来决定是否拼接。</p>
+<p>再来看对应的Entity对象</p>
+<pre><code>@Table(name = &quot;t_user&quot;)
+public class UserEntity {
+    private Integer id;
+    private String username;
+    private String password;
+    private String mobile;
+    private String email;
+    private Date createTime;
+    private Boolean valid;
+}
+</code></pre>
+<ul>
+<li>首先把UserEntity的字段全部列出来，得到表列</li>
+</ul>
+<pre><code>id, username, password, mobile, email, createTime
+</code></pre>
+<ul>
+<li>从@Table注解里得到表名</li>
+</ul>
+<pre><code>t_user
+</code></pre>
+<ul>
+<li>代入到SELECT [columns] FROM [TABLE]，得到</li>
+</ul>
+<pre><code>SELECT id, username, password, mobile, email, createTime, valid FROM t_user
+</code></pre>
+<ul>
+<li>再跟上述WHERE语句拼接，即可得到一条完整的查询语句</li>
+</ul>
+<pre><code>SELECT id, username, password, mobile, email, createTime, valid FROM t_user
+WHERE (username = ? OR email = ? OR mobile = ?) AND nickname LIKE ? AND valid = ?
+ORDER BY id DESC, createTime ASC
+LIMIT 10 OFFSET 20
 </code></pre>
 
           </div>
