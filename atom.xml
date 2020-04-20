@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://f0rb.github.io</id>
     <title>DOYToWin</title>
-    <updated>2020-04-20T15:40:17.726Z</updated>
+    <updated>2020-04-20T16:13:17.548Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://f0rb.github.io"/>
     <link rel="self" href="https://f0rb.github.io/atom.xml"/>
@@ -10,7 +10,7 @@
     <icon>https://f0rb.github.io/favicon.ico</icon>
     <rights>All rights reserved 2020, DOYToWin</rights>
     <entry>
-        <title type="html"><![CDATA[DoytoQuery系列一之核心理念：WHERE语句是可生成的]]></title>
+        <title type="html"><![CDATA[DoytoQuery系列一之核心理念]]></title>
         <id>https://f0rb.github.io/post/doyto-query-1st-core-idea/</id>
         <link href="https://f0rb.github.io/post/doyto-query-1st-core-idea/">
         </link>
@@ -75,6 +75,42 @@ LIMIT 10 OFFSET 20
 <li>同时得到对应的参数列表</li>
 </ul>
 <pre><code>[&quot;admin&quot;, &quot;admin&quot;, &quot;admin&quot;, &quot;%管理员%&quot;, true]
+</code></pre>
+<p>其中WHERE语句的过滤条件根据字段是否为null来决定是否拼接。</p>
+<p>再来看对应的Entity对象</p>
+<pre><code>@Table(name = &quot;t_user&quot;)
+public class UserEntity {
+    private Integer id;
+    private String username;
+    private String password;
+    private String mobile;
+    private String email;
+    private Date createTime;
+    private Boolean valid;
+}
+</code></pre>
+<ul>
+<li>首先把UserEntity的字段全部列出来，得到表列</li>
+</ul>
+<pre><code>id, username, password, mobile, email, createTime
+</code></pre>
+<ul>
+<li>从@Table注解里得到表名</li>
+</ul>
+<pre><code>t_user
+</code></pre>
+<ul>
+<li>代入到SELECT [columns] FROM [TABLE]，得到</li>
+</ul>
+<pre><code>SELECT id, username, password, mobile, email, createTime, valid FROM t_user
+</code></pre>
+<ul>
+<li>再跟上述WHERE语句拼接，即可得到一条完整的查询语句</li>
+</ul>
+<pre><code>SELECT id, username, password, mobile, email, createTime, valid FROM t_user
+WHERE (username = ? OR email = ? OR mobile = ?) AND nickname LIKE ? AND valid = ?
+ORDER BY id DESC, createTime ASC
+LIMIT 10 OFFSET 20
 </code></pre>
 ]]></content>
     </entry>
