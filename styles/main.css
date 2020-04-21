@@ -996,3 +996,29 @@ td {
         font-family: -apple-system,BlinkMacSystemFont,'Helvetica Neue','PingFang SC','Hiragino Sans GB','Droid Sans Fallback','Microsoft YaHei',sans-serif;
       }
     
+      .site-header {
+    height: 56px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin: 0 auto;
+    box-shadow: inset 0px -1px 0px #fafafa;
+}
+.site-header .left {
+    display: flex;
+}
+.site-header .right {
+    display: flex;
+}
+.site-header .avatar {
+    margin: 0 10px 0 30px;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+}
+.site-header .site-title {
+    font-size: 24px;
+}
+    
