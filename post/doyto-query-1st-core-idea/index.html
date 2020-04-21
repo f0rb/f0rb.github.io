@@ -3,7 +3,7 @@
     <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>DoytoQuery系列一：核心理念之WHERE语句生成 | DOYToWin</title>
-<link rel="shortcut icon" href="https://f0rb.github.io/favicon.ico?v=1587429628914">
+<link rel="shortcut icon" href="https://f0rb.github.io/favicon.ico?v=1587483400374">
 <link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
 <link rel="stylesheet" href="https://f0rb.github.io/styles/main.css">
 <link rel="alternate" type="application/atom+xml" title="DoytoQuery系列一：核心理念之WHERE语句生成 | DOYToWin - Atom Feed" href="https://f0rb.github.io/atom.xml">
@@ -41,7 +41,7 @@ public class U..." />
         <div class="site-header">
   <div class="left">
     <a href="https://f0rb.github.io">
-      <img class="avatar" src="https://f0rb.github.io/images/avatar.png?v=1587429628914" alt="" width="32px" height="32px">
+      <img class="avatar" src="https://f0rb.github.io/images/avatar.png?v=1587483400374" alt="" width="32px" height="32px">
     </a>
     <a href="https://f0rb.github.io">
       <h1 class="site-title">DOYToWin</h1>
@@ -87,7 +87,7 @@ public class U..." />
                 2020-04-20
               </span>
               <span>
-                2 min read
+                4 min read
               </span>
               
                 <a href="https://f0rb.github.io/tag/qP6WaPh-k/" class="post-tag">
@@ -166,12 +166,12 @@ LIMIT 10 OFFSET 20
 </code></pre>
 <p><em>其中WHERE语句的过滤条件根据对应字段是否赋值来决定是否拼接</em></p>
 <ul>
-<li>再从@Table注解里得到表名，代入到SELECT * FROM [TABLE]，得到</li>
+<li>再从@Table注解里得到表名，代入SELECT * FROM [TABLE]，得到</li>
 </ul>
 <pre><code>SELECT * FROM t_user
 </code></pre>
 <ul>
-<li>再跟上述WHERE语句拼接，即可得到一条完整的查询语句</li>
+<li>再同上述WHERE语句拼接，即可得到一条完整的查询语句</li>
 </ul>
 <pre><code>SELECT * FROM t_user
 WHERE (username = ? OR email = ? OR mobile = ?) AND nickname LIKE ? AND valid = ?
@@ -179,6 +179,75 @@ ORDER BY id DESC, createTime ASC
 LIMIT 10 OFFSET 20
 </code></pre>
 <p>证毕。</p>
+<hr>
+<h3 id="扩展">扩展</h3>
+<p>每条SELECT语句都需要支持分页和排序，所以可以将pageNumber，pageSize，sort提取为父类</p>
+<pre><code>public class PageQuery {
+    private Integer pageNumber;
+    private Integer pageSize;
+    private String sort;
+}
+
+public class UserQuery extends PageQuery {
+    private String usernameOrEmailOrMobile;
+    private String nicknameLike;
+    private Boolean valid;
+}
+</code></pre>
+<hr>
+<h3 id="单元测试用例"><a href="https://github.com/f0rb/doyto-query/blob/master/src/test/java/win/doyto/query/core/QueryBuilderTest.java">单元测试用例</a></h3>
+<pre><code>public class QueryBuilderTest {
+
+    private QueryBuilder testQueryBuilder = new QueryBuilder(TestEntity.class);
+    private List&lt;Object&gt; argList;
+    
+    @BeforeEach
+    void setUp() {
+        argList = new ArrayList&lt;&gt;();
+    }
+
+    @Test
+    public void buildSelect() {
+        TestQuery testQuery = TestQuery.builder().build();
+        assertEquals(&quot;SELECT * FROM user&quot;, testQueryBuilder.buildSelectAndArgs(testQuery, argList));
+    }
+
+    @Test
+    public void buildSelectWithWhere() {
+        TestQuery testQuery = TestQuery.builder().username(&quot;test&quot;).build();
+        assertEquals(&quot;SELECT * FROM user WHERE username = ?&quot;, testQueryBuilder.buildSelectAndArgs(testQuery, argList));
+    }
+
+    @Test
+    public void buildSelectWithWhereAndPage() {
+        TestQuery testQuery = TestQuery.builder().username(&quot;test&quot;).build();
+        testQuery.setPageNumber(3).setPageSize(10);
+        assertEquals(&quot;SELECT * FROM user WHERE username = ? LIMIT 10 OFFSET 30&quot;,
+                     testQueryBuilder.buildSelectAndArgs(testQuery, argList));
+    }
+
+    @Test
+    public void buildSelectWithCustomWhere() {
+        TestQuery testQuery = TestQuery.builder().account(&quot;test&quot;).build();
+        assertEquals(&quot;SELECT * FROM user WHERE (username = ? OR email = ? OR mobile = ?)&quot;,
+                     testQueryBuilder.buildSelectAndArgs(testQuery, argList));
+    }
+
+    @Test
+    public void buildSelectWithArgs() {
+        argList = new ArrayList&lt;&gt;();
+        TestQuery testQuery = TestQuery.builder().username(&quot;test&quot;).build();
+        assertEquals(&quot;SELECT * FROM user WHERE username = ?&quot;,
+                     testQueryBuilder.buildSelectAndArgs(testQuery, argList));
+        assertEquals(1, argList.size());
+        assertEquals(&quot;test&quot;, argList.get(0));
+    }
+...
+}
+</code></pre>
+<hr>
+<h3 id="github地址">Github地址</h3>
+<p><a href="https://github.com/f0rb/doyto-query/">doyto-query</a></p>
 
               </div>
               <div class="toc-container">
@@ -189,6 +258,9 @@ LIMIT 10 OFFSET 20
 <ul>
 <li><a href="#%E5%85%88%E8%AF%B4%E7%BB%93%E8%AE%BA">先说结论</a></li>
 <li><a href="#%E6%8E%A5%E7%9D%80%E8%AE%BA%E8%AF%81">接着论证</a></li>
+<li><a href="#%E6%89%A9%E5%B1%95">扩展</a></li>
+<li><a href="#%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95%E7%94%A8%E4%BE%8B">单元测试用例</a></li>
+<li><a href="#github%E5%9C%B0%E5%9D%80">Github地址</a></li>
 </ul>
 </li>
 </ul>
@@ -200,15 +272,6 @@ LIMIT 10 OFFSET 20
           </article>
         </div>
 
-        
-          <div class="next-post">
-            <div class="next">下一篇</div>
-            <a href="https://f0rb.github.io/post/hello-gridea/">
-              <h3 class="post-title">
-                Hello Gridea
-              </h3>
-            </a>
-          </div>
         
 
         
@@ -240,7 +303,16 @@ LIMIT 10 OFFSET 20
         
 
         <div class="site-footer">
-  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank" style="margin:0 -10px 0 10px">Gridea</a>
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?d5d7ae2ddd28b5b5061cc801ef122a66";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
   <a class="rss" href="https://f0rb.github.io/atom.xml" target="_blank">
     <i class="ri-rss-line"></i> RSS
   </a>

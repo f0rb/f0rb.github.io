@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://f0rb.github.io</id>
     <title>DOYToWin</title>
-    <updated>2020-04-21T00:41:55.381Z</updated>
+    <updated>2020-04-21T15:37:09.162Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://f0rb.github.io"/>
     <link rel="self" href="https://f0rb.github.io/atom.xml"/>
@@ -11,23 +11,17 @@
     <icon>https://f0rb.github.io/favicon.ico</icon>
     <rights>All rights reserved 2020, DOYToWin</rights>
     <entry>
+        <title type="html"><![CDATA[兼容各浏览器的文件下载时中文名称乱码的解决方案]]></title>
+        <id>https://f0rb.github.io/post/jian-rong-ge-liu-lan-qi-de-wen-jian-xia-zai-shi-zhong-wen-ming-cheng-luan-ma-de-jie-jue-fang-an/</id>
+        <link href="https://f0rb.github.io/post/jian-rong-ge-liu-lan-qi-de-wen-jian-xia-zai-shi-zhong-wen-ming-cheng-luan-ma-de-jie-jue-fang-an/">
+        </link>
+        <updated>2020-04-21T13:48:19.000Z</updated>
+    </entry>
+    <entry>
         <title type="html"><![CDATA[DoytoQuery系列一：核心理念之WHERE语句生成]]></title>
         <id>https://f0rb.github.io/post/doyto-query-1st-core-idea/</id>
         <link href="https://f0rb.github.io/post/doyto-query-1st-core-idea/">
         </link>
         <updated>2020-04-20T15:16:12.000Z</updated>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[Hello Gridea]]></title>
-        <id>https://f0rb.github.io/post/hello-gridea/</id>
-        <link href="https://f0rb.github.io/post/hello-gridea/">
-        </link>
-        <updated>2018-12-11T16:00:00.000Z</updated>
-        <summary type="html"><![CDATA[<p>👏  欢迎使用 <strong>Gridea</strong> ！<br>
-✍️  <strong>Gridea</strong> 一个静态博客写作客户端。你可以用它来记录你的生活、心情、知识、笔记、创意... ...</p>
-]]></summary>
-        <content type="html"><![CDATA[<p>👏  欢迎使用 <strong>Gridea</strong> ！<br>
-✍️  <strong>Gridea</strong> 一个静态博客写作客户端。你可以用它来记录你的生活、心情、知识、笔记、创意... ...</p>
-]]></content>
     </entry>
 </feed>
