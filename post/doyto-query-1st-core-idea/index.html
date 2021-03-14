@@ -3,7 +3,7 @@
     <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>DoytoQuery系列一：核心理念之WHERE语句生成 | DOYToWin</title>
-<link rel="shortcut icon" href="https://f0rb.github.io/favicon.ico?v=1587486229087">
+<link rel="shortcut icon" href="https://f0rb.github.io/favicon.ico?v=1615684620748">
 <link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
 <link rel="stylesheet" href="https://f0rb.github.io/styles/main.css">
 <link rel="alternate" type="application/atom+xml" title="DoytoQuery系列一：核心理念之WHERE语句生成 | DOYToWin - Atom Feed" href="https://f0rb.github.io/atom.xml">
@@ -41,7 +41,7 @@ public class U..." />
         <div class="site-header">
   <div class="left">
     <a href="https://f0rb.github.io">
-      <img class="avatar" src="https://f0rb.github.io/images/avatar.png?v=1587486229087" alt="" width="32px" height="32px">
+      <img class="avatar" src="https://f0rb.github.io/images/avatar.png?v=1615684620748" alt="" width="32px" height="32px">
     </a>
     <a href="https://f0rb.github.io">
       <h1 class="site-title">DOYToWin</h1>
@@ -188,6 +188,7 @@ LIMIT 10 OFFSET 20
     private String sort;
 }
 
+@Table(name = &quot;t_user&quot;)
 public class UserQuery extends PageQuery {
     private String usernameOrEmailOrMobile;
     private String nicknameLike;
@@ -195,45 +196,31 @@ public class UserQuery extends PageQuery {
 }
 </code></pre>
 <hr>
+<h3 id="查询构造器querybuilder">查询构造器<a href="https://github.com/f0rb/doyto-query/blob/master/src/main/java/win/doyto/query/core/QueryBuilder.java">QueryBuilder</a></h3>
+<p>基于上述分析，我们就可以编写出测试用例，通过测试用例驱动出一个自动化的查询语句构造器</p>
+<hr>
 <h3 id="单元测试用例"><a href="https://github.com/f0rb/doyto-query/blob/master/src/test/java/win/doyto/query/core/QueryBuilderTest.java">单元测试用例</a></h3>
-<pre><code>public class QueryBuilderTest {
-
-    private QueryBuilder testQueryBuilder = new QueryBuilder(TestEntity.class);
-    private List&lt;Object&gt; argList;
-    
-    @BeforeEach
-    void setUp() {
-        argList = new ArrayList&lt;&gt;();
-    }
-
-    @Test
+<pre><code>    @Test
     public void buildSelect() {
         TestQuery testQuery = TestQuery.builder().build();
         assertEquals(&quot;SELECT * FROM user&quot;, testQueryBuilder.buildSelectAndArgs(testQuery, argList));
     }
-
-    @Test
+</code></pre>
+<pre><code>    @Test
     public void buildSelectWithWhere() {
         TestQuery testQuery = TestQuery.builder().username(&quot;test&quot;).build();
         assertEquals(&quot;SELECT * FROM user WHERE username = ?&quot;, testQueryBuilder.buildSelectAndArgs(testQuery, argList));
     }
-
-    @Test
+</code></pre>
+<pre><code>    @Test
     public void buildSelectWithWhereAndPage() {
         TestQuery testQuery = TestQuery.builder().username(&quot;test&quot;).build();
         testQuery.setPageNumber(3).setPageSize(10);
         assertEquals(&quot;SELECT * FROM user WHERE username = ? LIMIT 10 OFFSET 30&quot;,
                      testQueryBuilder.buildSelectAndArgs(testQuery, argList));
     }
-
-    @Test
-    public void buildSelectWithCustomWhere() {
-        TestQuery testQuery = TestQuery.builder().account(&quot;test&quot;).build();
-        assertEquals(&quot;SELECT * FROM user WHERE (username = ? OR email = ? OR mobile = ?)&quot;,
-                     testQueryBuilder.buildSelectAndArgs(testQuery, argList));
-    }
-
-    @Test
+</code></pre>
+<pre><code>    @Test
     public void buildSelectWithArgs() {
         argList = new ArrayList&lt;&gt;();
         TestQuery testQuery = TestQuery.builder().username(&quot;test&quot;).build();
@@ -242,8 +229,6 @@ public class UserQuery extends PageQuery {
         assertEquals(1, argList.size());
         assertEquals(&quot;test&quot;, argList.get(0));
     }
-...
-}
 </code></pre>
 <hr>
 <h3 id="github地址">Github地址</h3>
@@ -259,6 +244,7 @@ public class UserQuery extends PageQuery {
 <li><a href="#%E5%85%88%E8%AF%B4%E7%BB%93%E8%AE%BA">先说结论</a></li>
 <li><a href="#%E6%8E%A5%E7%9D%80%E8%AE%BA%E8%AF%81">接着论证</a></li>
 <li><a href="#%E6%89%A9%E5%B1%95">扩展</a></li>
+<li><a href="#%E6%9F%A5%E8%AF%A2%E6%9E%84%E9%80%A0%E5%99%A8querybuilder">查询构造器QueryBuilder</a></li>
 <li><a href="#%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95%E7%94%A8%E4%BE%8B">单元测试用例</a></li>
 <li><a href="#github%E5%9C%B0%E5%9D%80">Github地址</a></li>
 </ul>
@@ -272,6 +258,15 @@ public class UserQuery extends PageQuery {
           </article>
         </div>
 
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://f0rb.github.io/post/broswer-download-compatible-solution-in-java/">
+              <h3 class="post-title">
+                兼容各浏览器的文件下载时中文名称乱码的解决方案
+              </h3>
+            </a>
+          </div>
         
 
         

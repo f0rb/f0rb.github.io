@@ -1,0 +1,317 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>DoytoQuery系列二：增删查改语句生成 | DOYToWin</title>
+<link rel="shortcut icon" href="https://f0rb.github.io/favicon.ico?v=1615684620748">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://f0rb.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="DoytoQuery系列二：增删查改语句生成 | DOYToWin - Atom Feed" href="https://f0rb.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-164125169-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-164125169-1');
+</script>
+
+
+    <meta name="description" content="Entity对象的映射
+通过Query对象生成WHERE语句后，已经具备了对单表的查询能力，接下来我们完善一下对单表的增删查改操作，考虑引入Entity对象。
+增删改语句生成CrudBuilder
+查询语句
+对于如下Entity对象
+@Ta..." />
+    <meta name="keywords" content="java,f0rb说,doyto" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <div class="left">
+    <a href="https://f0rb.github.io">
+      <img class="avatar" src="https://f0rb.github.io/images/avatar.png?v=1615684620748" alt="" width="32px" height="32px">
+    </a>
+    <a href="https://f0rb.github.io">
+      <h1 class="site-title">DOYToWin</h1>
+    </a>
+  </div>
+  <div class="right">
+    <div class="menu-container">
+      
+        
+          <a href="/" class="menu">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="menu">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="menu">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="menu">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+</div>
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              DoytoQuery系列二：增删查改语句生成
+            </h2>
+            <div class="post-info">
+              <span>
+                2020-04-23
+              </span>
+              <span>
+                3 min read
+              </span>
+              
+                <a href="https://f0rb.github.io/tag/RH0YH5rbd/" class="post-tag">
+                  # java
+                </a>
+              
+                <a href="https://f0rb.github.io/tag/qP6WaPh-k/" class="post-tag">
+                  # f0rb说
+                </a>
+              
+                <a href="https://f0rb.github.io/tag/fWU1cnQts/" class="post-tag">
+                  # doyto
+                </a>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content">
+                <h2 id="entity对象的映射">Entity对象的映射</h2>
+<p>通过Query对象生成WHERE语句后，已经具备了对单表的查询能力，接下来我们完善一下对单表的增删查改操作，考虑引入Entity对象。</p>
+<h2 id="增删改语句生成crudbuilder">增删改语句生成<a href="https://github.com/f0rb/doyto-query/blob/master/src/main/java/win/doyto/query/core/CrudBuilder.java">CrudBuilder</a></h2>
+<h4 id="查询语句">查询语句</h4>
+<p>对于如下Entity对象</p>
+<pre><code>@Table(name = &quot;t_user&quot;)
+public class UserEntity {
+    private Integer id;
+    private String username;
+    private String password;
+    private String mobile;
+    private String email;
+    private Date createTime;
+}
+</code></pre>
+<ul>
+<li>把UserEntity的字段全部列出来，得到表列</li>
+</ul>
+<pre><code>id, username, password, mobile, email, createTime
+</code></pre>
+<ul>
+<li>从@Table注解里得到表名</li>
+</ul>
+<pre><code>t_user
+</code></pre>
+<ul>
+<li>代入到SELECT [columns] FROM [table]，得到</li>
+</ul>
+<pre><code>SELECT id, username, password, mobile, email, createTime FROM t_user
+</code></pre>
+<ul>
+<li>再与UserQuery生成的WHERE语句拼接，即可得到对应的查询语句，如：</li>
+</ul>
+<pre><code>SELECT id, username, password, mobile, email, createTime FROM t_user 
+WHERE username LIKE ？LIMIT 10 OFFSET 0
+</code></pre>
+<h4 id="插入语句">插入语句</h4>
+<p>将表名和列名代入INSERT INTO [table] [columns] VALUES (?[, ?])得到</p>
+<pre><code>INSERT INTO t_user (id, username, password, mobile, email, createTime) 
+VALUES (?, ?, ?, ?, ?, ?)
+</code></pre>
+<h4 id="更新语句">更新语句</h4>
+<p>将表名和列名代入UPDATE [table] SET $column = ?[, $column = ?] WHERE id = ?，得到</p>
+<pre><code>UPDATE t_user SET username = ?, password = ?, mobile = ?, email = ?, createTime = ? 
+WHERE id = ?
+</code></pre>
+<p><em>更新语句可以更新实体的所有字段，或者只更新非空字段</em></p>
+<h4 id="删除语句">删除语句</h4>
+<p>将表名代入DELETE FROM [table] WHERE id = ?，得到</p>
+<pre><code>DELETE FROM t_user WHERE id = ?
+</code></pre>
+<h4 id="批量插入语句">批量插入语句</h4>
+<pre><code>INSERT INTO t_user (id, username, password, mobile, email, createTime) 
+VALUES (?, ?, ?, ?, ?, ?),  (?, ?, ?, ?, ?, ?)
+</code></pre>
+<h4 id="where拼接">WHERE拼接</h4>
+<p>然后UPDATE和DELETE语句也可以和WHERE语句拼接，如</p>
+<pre><code>UPDATE t_user SET valid = ? WHERE username = ? LIMIT 10
+DELETE FROM t_user WHERE username LIKE ? LIMIT 5
+</code></pre>
+<h3 id="sql语句执行">SQL语句执行</h3>
+<p>根据Entity类和Query类生成SQL语句和参数列表后，就可以交给JDBC执行了</p>
+<pre><code>    public List&lt;E&gt; query(Q query) {
+        SqlAndArgs sqlAndArgs = crudBuilder.buildSelectColumnsAndArgs(q, &quot;*&quot;);
+        return jdbcOperations.query(sqlAndArgs.sql, sqlAndArgs.args);
+    }
+
+    public final int update(E e) {
+        return doUpdate(crudBuilder.buildUpdateAndArgs(e));
+    }
+
+    public final int patch(E e) {
+        return doUpdate(crudBuilder.buildPatchAndArgsWithId(e));
+    }
+
+    public final int patch(E e, Q q) {
+        return doUpdate(crudBuilder.buildPatchAndArgsWithQuery(e, q));
+    }
+
+    private int doUpdate(SqlAndArgs sqlAndArgs) {
+        return jdbcOperations.update(sqlAndArgs.sql, sqlAndArgs.args);
+    }
+</code></pre>
+<h2 id="小结">小结</h2>
+<p>可以看到，通过解析Query对象和Entity对象，我们已经可以生成针对单表访问的增删查改等基本SQL语句并执行数据库操作，然后我们就可以在这个基础上抽象出一个通用的数据访问接口——<a href="https://github.com/f0rb/doyto-query/blob/master/src/main/java/win/doyto/query/core/DataAccess.java">DataAccess</a>。</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#entity%E5%AF%B9%E8%B1%A1%E7%9A%84%E6%98%A0%E5%B0%84">Entity对象的映射</a></li>
+<li><a href="#%E5%A2%9E%E5%88%A0%E6%94%B9%E8%AF%AD%E5%8F%A5%E7%94%9F%E6%88%90crudbuilder">增删改语句生成CrudBuilder</a><br>
+*
+<ul>
+<li><a href="#%E6%9F%A5%E8%AF%A2%E8%AF%AD%E5%8F%A5">查询语句</a></li>
+<li><a href="#%E6%8F%92%E5%85%A5%E8%AF%AD%E5%8F%A5">插入语句</a></li>
+<li><a href="#%E6%9B%B4%E6%96%B0%E8%AF%AD%E5%8F%A5">更新语句</a></li>
+<li><a href="#%E5%88%A0%E9%99%A4%E8%AF%AD%E5%8F%A5">删除语句</a></li>
+<li><a href="#%E6%89%B9%E9%87%8F%E6%8F%92%E5%85%A5%E8%AF%AD%E5%8F%A5">批量插入语句</a></li>
+<li><a href="#where%E6%8B%BC%E6%8E%A5">WHERE拼接</a></li>
+<li><a href="#sql%E8%AF%AD%E5%8F%A5%E6%89%A7%E8%A1%8C">SQL语句执行</a></li>
+</ul>
+</li>
+<li><a href="#%E5%B0%8F%E7%BB%93">小结</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://f0rb.github.io/post/doyto-query-1st-core-idea/">
+              <h3 class="post-title">
+                DoytoQuery系列一：核心理念之WHERE语句生成
+              </h3>
+            </a>
+          </div>
+        
+
+        
+          
+            <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+
+<div id="gitalk-container"></div>
+
+<script>
+
+  var gitalk = new Gitalk({
+    clientID: 'bba21e5713780b0ea310',
+    clientSecret: '6d4e00ab700caf5d3809bdafa989c566b458cf2b',
+    repo: 'f0rb.github.io',
+    owner: 'f0rb',
+    admin: ['f0rb'],
+    id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+    distractionFreeMode: false  // Facebook-like distraction free mode
+  })
+
+  gitalk.render('gitalk-container')
+
+</script>
+
+          
+
+          
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank" style="margin:0 -10px 0 10px">Gridea</a>
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?d5d7ae2ddd28b5b5061cc801ef122a66";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script>
+  <a class="rss" href="https://f0rb.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>
