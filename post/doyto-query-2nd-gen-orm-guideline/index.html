@@ -3,7 +3,7 @@
     <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>DoytoQuery——第二代ORM框架的Java实现（提纲版） | DOYToWin</title>
-<link rel="shortcut icon" href="https://f0rb.github.io/favicon.ico?v=1623375333885">
+<link rel="shortcut icon" href="https://f0rb.github.io/favicon.ico?v=1625237736804">
 <link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
 <link rel="stylesheet" href="https://f0rb.github.io/styles/main.css">
 <link rel="alternate" type="application/atom+xml" title="DoytoQuery——第二代ORM框架的Java实现（提纲版） | DOYToWin - Atom Feed" href="https://f0rb.github.io/atom.xml">
@@ -34,7 +34,7 @@
         <div class="site-header">
   <div class="left">
     <a href="https://f0rb.github.io">
-      <img class="avatar" src="https://f0rb.github.io/images/avatar.png?v=1623375333885" alt="" width="32px" height="32px">
+      <img class="avatar" src="https://f0rb.github.io/images/avatar.png?v=1625237736804" alt="" width="32px" height="32px">
     </a>
     <a href="https://f0rb.github.io">
       <h1 class="site-title">DOYToWin</h1>
@@ -91,8 +91,7 @@
 <p>背景：当前的ORM框架都是将数据库表映射为实体(Entity)对象来对数据库进行访问操作。<br>
 问题：动态查询语句和复杂的连接查询需要大量编码，且有结构型重复。<br>
 方案：既然通过SQL语句进行数据库操作，那就将SQL语句作为对象映射的目标。<br>
-结果：动态查询和复杂查询的开发大大简化，并由此搭建了一整套闭合的Web应用分层体系。<br>
-产出：DoytoQuery是Java语言的一个参考实现。</p>
+结果：动态查询和复杂查询的开发大大简化，并由此搭建了一整套闭合的Web应用分层体系。</p>
 <h1 id="第二代orm框架概述">第二代ORM框架概述</h1>
 <h2 id="一条核心理念">一条核心理念</h2>
 <p><strong>将SQL语句映射为对象进行数据库访问操作</strong></p>
@@ -198,9 +197,8 @@
 <h2 id="dataaccess层">DataAccess层</h2>
 <ul>
 <li>单表增删查改操作</li>
-<li>分表增删查改操作</li>
 <li>数据库方言扩展</li>
-<li>用于TDD的一个Mock实现</li>
+<li>DataAccess接口的一个Mock实现</li>
 </ul>
 <h2 id="service层">Service层</h2>
 <ul>
@@ -211,7 +209,7 @@
 </ul>
 <h2 id="controller层">Controller层</h2>
 <ul>
-<li>RestApi</li>
+<li>RESTFul API 接口</li>
 <li>错误码</li>
 <li>异常断言</li>
 <li>异常处理</li>
