@@ -1,0 +1,468 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    
+<meta charset="utf-8" >
+
+<title>DoytoQuery中的查询映射方案 | DOYToWin</title>
+<meta name="description" content="DOYToWin">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.doyto.win/favicon.ico?v=1701832346906">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://blog.doyto.win/styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+
+  
+
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-164125169-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-164125169-1');
+</script>
+
+
+  </head>
+  <body>
+    <div id="app" class="main">
+      <div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="https://blog.doyto.win">
+        <img class="avatar" src="https://blog.doyto.win/images/avatar.png?v=1701832346906" alt="" width="32px" height="32px">
+      </a>
+      <a href="https://blog.doyto.win">
+        <h1 class="site-title">DOYToWin</h1>
+      </a>
+    </div>
+    <div class="right">
+      <transition name="fade">
+        <i class="icon" :class="{ 'icon-close-outline': menuVisible, 'icon-menu-outline': !menuVisible }" @click="menuVisible = !menuVisible"></i>
+      </transition>
+    </div>
+  </div>
+</div>
+
+<transition name="fade">
+  <div class="menu-container" style="display: none;" v-show="menuVisible">
+    <div class="menu-list">
+      
+        
+          <a href="/" class="menu purple-link">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="menu purple-link">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="menu purple-link">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="menu purple-link">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+</transition>
+
+
+      <div class="content-container">
+        <div class="post-detail">
+          
+          <h2 class="post-title">DoytoQuery中的查询映射方案</h2>
+          <div class="post-info post-detail-info">
+            <span><i class="icon-calendar-outline"></i> 2022-12-04</span>
+            
+              <span>
+                <i class="icon-pricetags-outline"></i>
+                
+                  <a href="https://blog.doyto.win/tag/zPv-nX5nF/">
+                    DoytoQuery
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/CcCKyUB3QV/">
+                    Java
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/7k1aGKguYI/">
+                    CRUD
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/qP6WaPh-k/">
+                    f0rb说
+                    
+                  </a>
+                
+              </span>
+            
+          </div>
+          <div class="post-content">
+            <figure data-type="image" tabindex="1"><img src="https://blog.doyto.win/post-images/1670157991801.png" alt="DoytoQuery中的4种字段映射方式" loading="lazy"></figure>
+<h2 id="引言">引言</h2>
+<p>DoytoQuery作为一个ORM框架，在研发过程中积累了很多全新的思路和解决方案，其中一个核心方案就是将查询对象的字段映射为SQL语句中的WHERE条件进行动态查询，目前支持四种字段映射方式。</p>
+<p>让我们看看如何为以下<code>UserEntity</code>编写查询对象：</p>
+<pre><code class="language-java">@Getter
+@Setter
+@Entity
+public class UserEntity extends AbstractPersistable&lt;Integer&gt; {
+    private String username;
+    private String email;
+    private String mobile;
+    private String password;
+    private String nickname;
+    private Boolean valid;
+}
+</code></pre>
+<h2 id="四种字段映射方式详解">四种字段映射方式详解</h2>
+<h3 id="1-后缀映射">1. 后缀映射</h3>
+<p>先定义一个类<code>UserQuery</code>, 对于一些常见的查询条件，比如<code>id = ?</code>, <code>username = ?</code> and <code>valid = ?</code>等，我们只需要在<code>UserQuery</code>类中定义如下字段即可。</p>
+<pre><code class="language-java">@Getter
+@Setter
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
+public class UserQuery extends PageQuery {
+    private Integer id;
+    private String username;
+    private Boolean valid;
+}
+</code></pre>
+<p>像其他一些常用的比较符号. <code>[NOT] LIKE</code>, <code>&gt;</code>, <code>&lt;</code>, <code>!=</code>, <code>&gt;=</code>, <code>&lt;=</code>, <code>IS [NOT] NULL</code>, <code>[NOT] IN</code>, 我们需要在列名后加一些特定的后缀作为字段名称来标识对应的条件符号。比如，将<code>idIn</code>映射为<code>id IN (?,?,?)</code>, 将<code>idGt</code>映射为<code>id &gt; ?</code>, 将<code>usernameLike</code>映射为<code>username LIKE ?</code>, 还需要定义好对应的类型。</p>
+<pre><code class="language-java">public class UserQuery extends PageQuery {
+    private Integer id;
+    private String username;
+    private Boolean valid;
+    private List&lt;Integer&gt; idIn;
+    private Integer idGt;
+    private String usernameLike;
+}
+</code></pre>
+<p>只有值不为NULL的字段才会被映射，并且多个条件由<code>AND</code>连接。</p>
+<pre><code class="language-java">UserQuery userQuery = UserQuery.builder().usernameLike(&quot;test&quot;).valid(true).build();
+</code></pre>
+<p>这个<code>userQuery</code>会被映射为如下查询语句以及对应的参数。</p>
+<pre><code class="language-sql">SELECT id, username, email, mobile, password, nickname, valid FROM user WHERE username LIKE ? and valid = ?
+-- With parameters: [&quot;%test%&quot;, true] 
+</code></pre>
+<p>所有支持的后缀详见附录I。</p>
+<h3 id="2-or映射">2. OR映射</h3>
+<p><code>OR</code>语句也是SQL里一种常用的查询方式，DoytoQuery支持的方式有两种。</p>
+<p>2.1 将含<code>Or</code>的字段映射为<code>OR</code>语句</p>
+<p>像<code>usernameOrEmailOrMobile</code>这样多个字段由<code>Or</code>连接的字段会被映射为<code>username = ? OR email = ? OR mobile = ?</code>。</p>
+<p>2.2 将实现了<code>Or</code>的对象映射为<code>OR</code>语句</p>
+<pre><code class="language-java">public interface Or {
+}
+
+public class AccountOr implements Or {
+    private String username;
+    private String email;
+    private String mobile;
+}
+
+public class UserQuery {
+    private AccountOr account;
+}
+</code></pre>
+<p>遍历<code>AccountOr</code>中的字段可以得到<code>[username, email, mobile]</code>，然后使用关键字<code>OR</code>相连而得<code>username = ? OR email = ? OR mobile = ?</code>.</p>
+<h3 id="3-嵌套查询映射">3. 嵌套查询映射</h3>
+<p>嵌套查询是SQL的另一个常用特性。在管理菜单树的<code>menu</code>表的常见定义中，我们通常定义一个外键<code>parentId</code>来引向父菜单实体的<code>id</code>。</p>
+<p>要查询拥有子菜单的父菜单，我们可以执行以下SQL：</p>
+<pre><code class="language-sql">SELECT * FROM menu WHERE id IN (SELECT parentId FROM menu WHERE ...)
+</code></pre>
+<p>要查询某些菜单的子菜单，我们可以执行以下SQL：</p>
+<pre><code class="language-sql">SELECT * FROM menu WHERE parentId IN (SELECT id FROM menu WHERE ...)
+</code></pre>
+<p>这条语句用于查询指定用户拥有的菜单：</p>
+<pre><code class="language-sql">SELECT * FROM menu WHERE id IN (
+    SELECT menu_id FROM a_perm_and_menu WHERE perm_id IN (
+        SELECT perm_id FROM a_role_and_perm WHERE role_id IN (
+            SELECT role_id FROM a_user_and_role WHERE user_id IN (
+                SELECT id FROM t_user WHERE id = ?
+))))
+</code></pre>
+<p>这些都是ERM模型里常见的一对多/多对一/多对多关系. DoytoQuery定义了一个新的<code>@DomainPath</code>注解来映射这种嵌套查询。</p>
+<pre><code class="language-java">@Target(FIELD)
+@Retention(RUNTIME)
+public @interface DomainPath {
+    // To describe how to route from the host domain to the target domain.
+    String[] value();
+    String localField() default &quot;id&quot;;
+    String foreignField() default &quot;id&quot;;
+}
+</code></pre>
+<p>这里有一个<code>@DomainPath</code>注解用法介绍。</p>
+<pre><code class="language-java">public class MenuQuery extends PageQuery {
+    // 多对一: 根据父菜单的条件查询他们的子菜单
+    @DomainPath(localField = &quot;parentId&quot;, foreignField = &quot;id&quot;, value = &quot;menu&quot;)
+    MenuQuery parent;      // parentId   IN (SELECT      id   FROM     menu  WHERE ... )
+    // 一对多: 根据子菜单的条件查询父菜单
+    @DomainPath(localField = &quot;id&quot;, foreignField = &quot;parentId&quot;, value = &quot;menu&quot;)
+    MenuQuery children;    // id   IN (SELECT      parentId   FROM     menu  WHERE ... )
+
+    // 多对多: 查询满足条件的用户被授予的菜单
+    @DomainPath({&quot;menu&quot;, &quot;~&quot;, &quot;perm&quot;,  &quot;~&quot;, &quot;role&quot;, &quot;~&quot;, &quot;user&quot;})
+    UserQuery user;
+}
+</code></pre>
+<h3 id="4-直接映射">4. 直接映射</h3>
+<p>当上述方法都不使用时，还有最后一种将字段映射到条件的方法，就是使用注解<code>@QueryField</code>定义查询条件后直接映射。这是DoytoQuery创建时的第一种映射方式，但是是最后一种推荐的方式，用法如下：</p>
+<pre><code class="language-java">public class MenuQuery extends PageQuery {
+    @QueryField(and = &quot;id = (SELECT parent_id FROM menu WHERE id = ?)&quot;)
+    private Integer childId;
+}
+</code></pre>
+<p>嵌套查询的这种映射方式在<code>@DomainPath</code>发明后就已弃用。</p>
+<h2 id="总结">总结</h2>
+<p>在本文中，我们介绍了DoytoQuery中的四种字段映射方式。前三种方式不需要编写任何SQL语句，并且可以涵盖到关系数据库开发中大部分涉及单表查询的场景。</p>
+<h2 id="附录i-后缀支持列表">附录I: 后缀支持列表</h2>
+<table>
+<thead>
+<tr>
+<th>后缀名称</th>
+<th>比较符号</th>
+<th>占位符</th>
+<th>类型</th>
+<th>值处理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(No matching<br>suffix)</td>
+<td>=</td>
+<td>？</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Not</td>
+<td>!=</td>
+<td>?</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>NotLike</td>
+<td>NOT LIKE</td>
+<td>?</td>
+<td>String</td>
+<td>%value%</td>
+</tr>
+<tr>
+<td>Like</td>
+<td>LIKE</td>
+<td>?</td>
+<td>String</td>
+<td>%value%</td>
+</tr>
+<tr>
+<td>Start</td>
+<td>LIKE</td>
+<td>?</td>
+<td>String</td>
+<td>%value</td>
+</tr>
+<tr>
+<td>End</td>
+<td>LIKE</td>
+<td>?</td>
+<td>String</td>
+<td>value%</td>
+</tr>
+<tr>
+<td>NotIn</td>
+<td>NOT IN</td>
+<td><p>非空集合: (?[, ?]);<br>空集合则忽略</p></td>
+<td>Collection</td>
+<td></td>
+</tr>
+<tr>
+<td>In</td>
+<td>IN</td>
+<td><p>非空集合(?[, ?]);<br>空集合: (null)</p></td>
+<td>Collection</td>
+<td></td>
+</tr>
+<tr>
+<td>NotNull</td>
+<td>IS NOT NULL</td>
+<td>-</td>
+<td>boolean</td>
+<td></td>
+</tr>
+<tr>
+<td>Null</td>
+<td>IS NULL</td>
+<td>-</td>
+<td>boolean</td>
+<td></td>
+</tr>
+<tr>
+<td>Gt</td>
+<td>&gt;</td>
+<td>?</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Ge</td>
+<td>&gt;=</td>
+<td>?</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Lt</td>
+<td>&lt;</td>
+<td>?</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Le</td>
+<td>&lt;=</td>
+<td>?</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Eq</td>
+<td>=</td>
+<td>?</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
+          </div>
+        </div>
+
+        
+          <div class="next-post">
+            <a class="purple-link" href="https://blog.doyto.win/post/the-query-mapping-solution-in-doyto-query/">
+              <h3 class="post-title">
+                下一篇：The Query Mapping Solution in DoytoQuery
+              </h3>
+            </a>
+          </div>
+          
+      </div>
+
+      
+        
+          <div id="gitalk-container"></div>
+        
+
+        
+      
+
+      <div class="site-footer">
+  <div class="slogan">DOYToWin</div>
+  <div class="social-container">
+    
+      
+        <a href="https://github.com/f0rb/" target="_blank">
+          <i class="fab fa-github"></i>
+        </a>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank" style="margin:0 -10px 0 10px">Gridea</a>
+<a target="_blank" rel="noopener noreferrer" href="https://beian.miit.gov.cn/" style="margin: 0 -14px 0 20px;">鄂ICP备17018023号-1</a>
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?d5d7ae2ddd28b5b5061cc801ef122a66";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script> | <a class="rss" href="https://blog.doyto.win/atom.xml" target="_blank">RSS</a>
+</div>
+
+
+    </div>
+    <script type="application/javascript">
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: 'bba21e5713780b0ea310',
+        clientSecret: '6d4e00ab700caf5d3809bdafa989c566b458cf2b',
+        repo: 'f0rb.github.io',
+        owner: 'f0rb',
+        admin: ['f0rb'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+
+  </body>
+</html>

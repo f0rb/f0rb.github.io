@@ -1,0 +1,410 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    
+<meta charset="utf-8" >
+
+<title>DoytoQuery中的聚合查询方案 | DOYToWin</title>
+<meta name="description" content="DOYToWin">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.doyto.win/favicon.ico?v=1701832346906">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://blog.doyto.win/styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+
+  
+
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-164125169-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-164125169-1');
+</script>
+
+
+  </head>
+  <body>
+    <div id="app" class="main">
+      <div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="https://blog.doyto.win">
+        <img class="avatar" src="https://blog.doyto.win/images/avatar.png?v=1701832346906" alt="" width="32px" height="32px">
+      </a>
+      <a href="https://blog.doyto.win">
+        <h1 class="site-title">DOYToWin</h1>
+      </a>
+    </div>
+    <div class="right">
+      <transition name="fade">
+        <i class="icon" :class="{ 'icon-close-outline': menuVisible, 'icon-menu-outline': !menuVisible }" @click="menuVisible = !menuVisible"></i>
+      </transition>
+    </div>
+  </div>
+</div>
+
+<transition name="fade">
+  <div class="menu-container" style="display: none;" v-show="menuVisible">
+    <div class="menu-list">
+      
+        
+          <a href="/" class="menu purple-link">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="menu purple-link">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="menu purple-link">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="menu purple-link">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+</transition>
+
+
+      <div class="content-container">
+        <div class="post-detail">
+          
+          <h2 class="post-title">DoytoQuery中的聚合查询方案</h2>
+          <div class="post-info post-detail-info">
+            <span><i class="icon-calendar-outline"></i> 2022-12-26</span>
+            
+              <span>
+                <i class="icon-pricetags-outline"></i>
+                
+                  <a href="https://blog.doyto.win/tag/zPv-nX5nF/">
+                    DoytoQuery
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/CcCKyUB3QV/">
+                    Java
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/7k1aGKguYI/">
+                    CRUD
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/qP6WaPh-k/">
+                    f0rb说
+                    
+                  </a>
+                
+              </span>
+            
+          </div>
+          <div class="post-content">
+            <p>本文详细介绍了DoytoQuery中的聚合查询方案，包括聚合函数的前缀映射，<code>@GroupBy</code>注解，<code>Having</code>接口以及动态查询构造等方式，将对象映射为聚合查询语句，用以完成聚合查询。</p>
+<!-- more -->
+<h2 id="1-引言">1. 引言</h2>
+<p>聚合查询是数据库提供的另一种常用的用于数据的统计和计算的查询功能，它通过提供一系列聚合函数来汇总来自多个行的信息。</p>
+<p>DoytoQuery采用字段前缀映射的方式来将字段名映射为聚合函数，再配合<code>@GroupBy</code>注解，<code>Having</code>接口以及Query对象，完成整条聚合查询语句的映射。</p>
+<h2 id="2-聚合查询映射">2. 聚合查询映射</h2>
+<h3 id="21-前缀映射">2.1. 前缀映射</h3>
+<p>聚合函数是聚合查询的核心功能，常用的聚合函数有以下几种：</p>
+<ul>
+<li>count</li>
+<li>sum</li>
+<li>max</li>
+<li>min</li>
+<li>avg</li>
+<li>first</li>
+<li>last</li>
+<li>stddev_pop</li>
+<li>stddev_samp</li>
+<li>stddev</li>
+<li>addToSet</li>
+<li>push</li>
+</ul>
+<p>使用聚合函数查询出来的数据也需要占用一列，这一列数据也需要映射到POJO对象的一个字段。我们可以利用这一特性，在定义POJO对象的字段时，采用聚合函数关键字加上大驼峰格式的列名即可。这个字段既可以用于映射查询语句，又可以保存返回的数据，一举两得。比如我们想统计分数列<code>score</code>的平均值，我们将字段名定义为<code>avgScore</code>，在构造查询语句时，这个字段就会被映射为<code>avg(score) AS avgScore</code>，依此类推。</p>
+<h3 id="22-分组聚合">2.2. 分组聚合</h3>
+<p>聚合查询中少不了针对部分表列进行分组聚合，这些用于分组的表列通常也需要查询出来，<br>
+于是便可以将这些表列也定义到POJO对象中，同时需要与其他的聚合字段加以区别。DoytoQuery中采用添加<code>@GroupBy</code>注解的方式进行区分。</p>
+<pre><code class="language-java">@Target(FIELD)
+@Retention(RUNTIME)
+public @interface GroupBy {
+}
+</code></pre>
+<p>示例：</p>
+<pre><code class="language-java">@Entity(name = &quot;t_score&quot;)
+private class ScoreGroupByStudentView {
+    @GroupBy
+    private Long studentId;
+    private Double avgScore;
+}
+</code></pre>
+<p>上述对象会被映射为如下SQL语句：</p>
+<pre><code class="language-sql">SELECT student_id AS studentId, avg(score) AS avgScore FROM t_score GROUP BY student_id
+</code></pre>
+<h3 id="23-having">2.3. HAVING</h3>
+<p>SQL语句使用<code>HAVING</code>子句针对聚合后的数据进行筛选过滤。DoytoQuery将实现了<code>Having</code>接口的对象映射为<code>HAVING</code>子句。字段的映射同时采用前缀映射和后缀映射方式。例如在实现了<code>Having</code>接口的对象中定义的字段<code>avgScoreGe</code>将被映射为<code>HAVING avg(score) &gt;= ?</code>。</p>
+<pre><code class="language-java">public interface Having extends Serializable {
+}
+</code></pre>
+<h3 id="24-动态查询">2.4. 动态查询</h3>
+<p>动态查询<code>WHERE</code>语句的构造复用<a href="https://blog.doyto.win/post/the-query-mapping-solution-in-doyto-query-zh/">DoytoQuery中的动态查询方案</a>。</p>
+<p>另外，为Query对象提供了一个<code>AggregationQuery</code>接口用于构造<code>HAVING</code>条件。</p>
+<pre><code>public interface AggregationQuery extends DoytoQuery {
+    Having getHaving();
+}
+</code></pre>
+<h3 id="25-查询接口定义">2.5. 查询接口定义</h3>
+<p>最后，DoytoQuery中关于聚合查询的接口定义如下：</p>
+<pre><code class="language-java">public interface DataQueryClient {
+    // ...
+
+    &lt;V, Q extends AggregationQuery&gt;
+    List&lt;V&gt; aggregate(Q query, Class&lt;V&gt; viewClass);
+}
+</code></pre>
+<h2 id="3-完整示例">3. 完整示例</h2>
+<p>现在我们来通过一个完整的示例，来演示DoytoQuery如何来实现对表<code>t_student_score</code>的聚合查询功能。</p>
+<pre><code class="language-sql">create table t_student_score
+(
+    id          bigint generated by default as identity primary key,
+    school_term varchar(100)   not null,
+    subject     varchar(100)   not null,
+    student_no  varchar(10)    not null,
+    score       numeric(10, 2) not null,
+    is_deleted  boolean        not null default false
+);
+</code></pre>
+<ul>
+<li>
+<ol>
+<li>创建<code>StudentScoreStatView</code>用于映射聚合函数和分组字段。</li>
+</ol>
+</li>
+</ul>
+<pre><code class="language-java">@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity(name = &quot;t_student_score&quot;)
+public class StudentScoreStatView {
+    @SuppressWarnings(&quot;java:S116&quot;)
+    @GroupBy
+    private String school_term;
+    @GroupBy
+    private String subject;
+
+    private Integer countScore;
+    private Double minScore;
+    private Double maxScore;
+    private Double avgScore;
+}
+</code></pre>
+<ul>
+<li>
+<ol start="2">
+<li>创建<code>StudentScoreHaving</code>用于映射<code>HAVING</code>子句。</li>
+</ol>
+</li>
+</ul>
+<pre><code class="language-java">public class StudentScoreHaving implements Having {
+    private Integer countGt;
+}
+</code></pre>
+<ul>
+<li>
+<ol start="3">
+<li>创建<code>StudentScoreStatViewQuery</code>用于动态查询条件。</li>
+</ol>
+</li>
+</ul>
+<pre><code class="language-java">public class StudentScoreStatViewQuery extends PageQuery implements AggregationQuery {
+
+    private String schoolTermGe;
+    private List&lt;String&gt; subjectIn;
+    private Double scoreGe;
+    private Boolean isDeleted;
+
+    private StudentScoreHaving studentScoreHaving;
+
+    @Override
+    public Having getHaving() {
+        return studentScoreHaving;
+    }
+}
+</code></pre>
+<ul>
+<li>
+<ol start="4">
+<li>最后创建一个单元测试来进行验证。</li>
+</ol>
+</li>
+</ul>
+<pre><code class="language-java">@SpringBootTest
+class StudentScoreStatTest {
+    @Resource
+    private DataQueryClient dataQueryClient;
+
+    @Test
+    void aggregateStudentScore() {
+        StudentScoreStatViewQuery statQuery = StudentScoreStatViewQuery
+                .builder()
+                .schoolTermGe(&quot;2000&quot;)
+                .subjectIn(Arrays.asList(&quot;Chinese&quot;, &quot;Math&quot;, &quot;English&quot;))
+                .scoreGe(60.)
+                .isDeleted(false)
+                .studentScoreHaving(StudentScoreHaving.builder().countGt(1).build())
+                .sort(&quot;school_term,asc;subject,asc&quot;)
+                .build();
+
+        SqlAndArgs sqlAndArgs = RelationalQueryBuilder.buildSelectAndArgs(statQuery, StudentScoreStatView.class);
+
+        assertThat(sqlAndArgs.getSql()).isEqualTo(
+                &quot;SELECT school_term, subject, count(score) AS countScore, min(score) AS minScore, &quot; +
+                        &quot;max(score) AS maxScore, avg(score) AS avgScore &quot; +
+                        &quot;FROM t_student_score &quot; +
+                        &quot;WHERE school_term &gt;= ? AND subject IN (?, ?, ?) AND score &gt;= ? AND is_deleted = ? &quot; +
+                        &quot;GROUP BY school_term, subject &quot; +
+                        &quot;HAVING count(*) &gt; ? &quot; +
+                        &quot;ORDER BY school_term asc, subject asc&quot;);
+        assertThat(sqlAndArgs.getArgs()).containsExactly(&quot;2000&quot;, &quot;Chinese&quot;, &quot;Math&quot;, &quot;English&quot;, 60., false, 1);
+
+        List&lt;StudentScoreStatView&gt; statList = dataQueryClient.aggregate(statQuery, StudentScoreStatView.class);
+        assertThat(statList).hasSize(3)
+                            .first().isEqualTo(new StudentScoreStatView(&quot;2022&quot;, &quot;Chinese&quot;, 3, 85., 93., 89.));
+    }
+
+}
+</code></pre>
+<p>完整代码请查看<a href="https://github.com/doytowin/doyto-query-demo">GitHub</a>。</p>
+<h2 id="4-总结">4. 总结</h2>
+<p>本文详细介绍了DoytoQuery中的聚合查询方案，包括聚合函数的前缀映射，<code>@GroupBy</code>注解，<code>Having</code>接口以及动态查询构造等方式，将对象映射为聚合查询语句，用以完成聚合查询。</p>
+
+          </div>
+        </div>
+
+        
+          <div class="next-post">
+            <a class="purple-link" href="https://blog.doyto.win/post/the-query-mapping-solution-in-doyto-query-zh/">
+              <h3 class="post-title">
+                下一篇：DoytoQuery中的查询映射方案
+              </h3>
+            </a>
+          </div>
+          
+      </div>
+
+      
+        
+          <div id="gitalk-container"></div>
+        
+
+        
+      
+
+      <div class="site-footer">
+  <div class="slogan">DOYToWin</div>
+  <div class="social-container">
+    
+      
+        <a href="https://github.com/f0rb/" target="_blank">
+          <i class="fab fa-github"></i>
+        </a>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank" style="margin:0 -10px 0 10px">Gridea</a>
+<a target="_blank" rel="noopener noreferrer" href="https://beian.miit.gov.cn/" style="margin: 0 -14px 0 20px;">鄂ICP备17018023号-1</a>
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?d5d7ae2ddd28b5b5061cc801ef122a66";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script> | <a class="rss" href="https://blog.doyto.win/atom.xml" target="_blank">RSS</a>
+</div>
+
+
+    </div>
+    <script type="application/javascript">
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: 'bba21e5713780b0ea310',
+        clientSecret: '6d4e00ab700caf5d3809bdafa989c566b458cf2b',
+        repo: 'f0rb.github.io',
+        owner: 'f0rb',
+        admin: ['f0rb'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+
+  </body>
+</html>

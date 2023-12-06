@@ -1,0 +1,611 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    
+<meta charset="utf-8" >
+
+<title>f0rb说 | DOYToWin</title>
+<meta name="description" content="DOYToWin">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.doyto.win/favicon.ico?v=1701832346906">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://blog.doyto.win/styles/main.css">
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-164125169-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-164125169-1');
+</script>
+
+
+  </head>
+  <body>
+    <div id="app" class="main">
+      <div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="https://blog.doyto.win">
+        <img class="avatar" src="https://blog.doyto.win/images/avatar.png?v=1701832346906" alt="" width="32px" height="32px">
+      </a>
+      <a href="https://blog.doyto.win">
+        <h1 class="site-title">DOYToWin</h1>
+      </a>
+    </div>
+    <div class="right">
+      <transition name="fade">
+        <i class="icon" :class="{ 'icon-close-outline': menuVisible, 'icon-menu-outline': !menuVisible }" @click="menuVisible = !menuVisible"></i>
+      </transition>
+    </div>
+  </div>
+</div>
+
+<transition name="fade">
+  <div class="menu-container" style="display: none;" v-show="menuVisible">
+    <div class="menu-list">
+      
+        
+          <a href="/" class="menu purple-link">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="menu purple-link">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="menu purple-link">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="menu purple-link">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+</transition>
+
+
+      <div class="content-container">
+
+        <div class="current-tag-container">
+          <h2 class="title">
+            <i class="icon icon-pricetags-outline"></i> f0rb说
+          </h2> 
+        </div>
+
+        
+<section class="post-item">
+    <div class="content">
+      <a href="https://blog.doyto.win/post/the-crud-solution-in-doyto-query-zh/">
+        <h2 class="post-title">DoytoQuery中关于增删改查接口的增强方法</h2>
+      </a>
+      <div class="post-abstract">
+        
+      </div>
+      <div class="post-info">
+        <span><i class="icon icon-calendar-outline"></i> 2023-04-14</span>
+        
+          <span>
+            <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="https://blog.doyto.win/tag/zPv-nX5nF/">
+                DoytoQuery
+                
+                  ，
+                
+              </a>
+            
+              <a href="https://blog.doyto.win/tag/CcCKyUB3QV/">
+                Java
+                
+                  ，
+                
+              </a>
+            
+              <a href="https://blog.doyto.win/tag/7k1aGKguYI/">
+                CRUD
+                
+                  ，
+                
+              </a>
+            
+              <a href="https://blog.doyto.win/tag/qP6WaPh-k/">
+                f0rb说
+                
+              </a>
+            
+          </span>
+        
+      </div>
+    </div>
+    
+  </section>
+
+<section class="post-item">
+    <div class="content">
+      <a href="https://blog.doyto.win/post/the-aggregation-query-solution-in-doyto-query/">
+        <h2 class="post-title">The Aggregation Query Solution in DoytoQuery</h2>
+      </a>
+      <div class="post-abstract">
+        <p>This article introduces the aggregate query solution in DoytoQuery in detail. Through the prefix mapping of aggregation functions, <code>@GroupBy</code> annotation, <code>Having</code> interface and dynamic query construction, DoytoQuery maps objects to aggregate query statements to complete aggregate queries.</p>
+
+      </div>
+      <div class="post-info">
+        <span><i class="icon icon-calendar-outline"></i> 2022-12-27</span>
+        
+          <span>
+            <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="https://blog.doyto.win/tag/zPv-nX5nF/">
+                DoytoQuery
+                
+                  ，
+                
+              </a>
+            
+              <a href="https://blog.doyto.win/tag/CcCKyUB3QV/">
+                Java
+                
+                  ，
+                
+              </a>
+            
+              <a href="https://blog.doyto.win/tag/7k1aGKguYI/">
+                CRUD
+                
+                  ，
+                
+              </a>
+            
+              <a href="https://blog.doyto.win/tag/qP6WaPh-k/">
+                f0rb说
+                
+              </a>
+            
+          </span>
+        
+      </div>
+    </div>
+    
+  </section>
+
+<section class="post-item">
+    <div class="content">
+      <a href="https://blog.doyto.win/post/the-aggregation-query-solution-in-doyto-query-zh/">
+        <h2 class="post-title">DoytoQuery中的聚合查询方案</h2>
+      </a>
+      <div class="post-abstract">
+        <p>本文详细介绍了DoytoQuery中的聚合查询方案，包括聚合函数的前缀映射，<code>@GroupBy</code>注解，<code>Having</code>接口以及动态查询构造等方式，将对象映射为聚合查询语句，用以完成聚合查询。</p>
+
+      </div>
+      <div class="post-info">
+        <span><i class="icon icon-calendar-outline"></i> 2022-12-26</span>
+        
+          <span>
+            <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="https://blog.doyto.win/tag/zPv-nX5nF/">
+                DoytoQuery
+                
+                  ，
+                
+              </a>
+            
+              <a href="https://blog.doyto.win/tag/CcCKyUB3QV/">
+                Java
+                
+                  ，
+                
+              </a>
+            
+              <a href="https://blog.doyto.win/tag/7k1aGKguYI/">
+                CRUD
+                
+                  ，
+                
+              </a>
+            
+              <a href="https://blog.doyto.win/tag/qP6WaPh-k/">
+                f0rb说
+                
+              </a>
+            
+          </span>
+        
+      </div>
+    </div>
+    
+  </section>
+
+<section class="post-item">
+    <div class="content">
+      <a href="https://blog.doyto.win/post/the-query-mapping-solution-in-doyto-query-zh/">
+        <h2 class="post-title">DoytoQuery中的查询映射方案</h2>
+      </a>
+      <div class="post-abstract">
+        
+      </div>
+      <div class="post-info">
+        <span><i class="icon icon-calendar-outline"></i> 2022-12-04</span>
+        
+          <span>
+            <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="https://blog.doyto.win/tag/zPv-nX5nF/">
+                DoytoQuery
+                
+                  ，
+                
+              </a>
+            
+              <a href="https://blog.doyto.win/tag/CcCKyUB3QV/">
+                Java
+                
+                  ，
+                
+              </a>
+            
+              <a href="https://blog.doyto.win/tag/7k1aGKguYI/">
+                CRUD
+                
+                  ，
+                
+              </a>
+            
+              <a href="https://blog.doyto.win/tag/qP6WaPh-k/">
+                f0rb说
+                
+              </a>
+            
+          </span>
+        
+      </div>
+    </div>
+    
+  </section>
+
+<section class="post-item">
+    <div class="content">
+      <a href="https://blog.doyto.win/post/the-query-mapping-solution-in-doyto-query/">
+        <h2 class="post-title">The Query Mapping Solution in DoytoQuery</h2>
+      </a>
+      <div class="post-abstract">
+        
+      </div>
+      <div class="post-info">
+        <span><i class="icon icon-calendar-outline"></i> 2022-12-02</span>
+        
+          <span>
+            <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="https://blog.doyto.win/tag/zPv-nX5nF/">
+                DoytoQuery
+                
+                  ，
+                
+              </a>
+            
+              <a href="https://blog.doyto.win/tag/CcCKyUB3QV/">
+                Java
+                
+                  ，
+                
+              </a>
+            
+              <a href="https://blog.doyto.win/tag/7k1aGKguYI/">
+                CRUD
+                
+                  ，
+                
+              </a>
+            
+              <a href="https://blog.doyto.win/tag/qP6WaPh-k/">
+                f0rb说
+                
+              </a>
+            
+          </span>
+        
+      </div>
+    </div>
+    
+  </section>
+
+<section class="post-item">
+    <div class="content">
+      <a href="https://blog.doyto.win/post/how-to-start-tdd/">
+        <h2 class="post-title">TDD的起点</h2>
+      </a>
+      <div class="post-abstract">
+        
+      </div>
+      <div class="post-info">
+        <span><i class="icon icon-calendar-outline"></i> 2022-05-15</span>
+        
+          <span>
+            <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="https://blog.doyto.win/tag/qP6WaPh-k/">
+                f0rb说
+                
+              </a>
+            
+          </span>
+        
+      </div>
+    </div>
+    
+  </section>
+
+<section class="post-item">
+    <div class="content">
+      <a href="https://blog.doyto.win/post/query-obejct-mapping/">
+        <h2 class="post-title">关于查询对象字段映射的一篇小结</h2>
+      </a>
+      <div class="post-abstract">
+        
+      </div>
+      <div class="post-info">
+        <span><i class="icon icon-calendar-outline"></i> 2022-03-04</span>
+        
+          <span>
+            <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="https://blog.doyto.win/tag/zPv-nX5nF/">
+                DoytoQuery
+                
+                  ，
+                
+              </a>
+            
+              <a href="https://blog.doyto.win/tag/CcCKyUB3QV/">
+                Java
+                
+                  ，
+                
+              </a>
+            
+              <a href="https://blog.doyto.win/tag/7k1aGKguYI/">
+                CRUD
+                
+                  ，
+                
+              </a>
+            
+              <a href="https://blog.doyto.win/tag/qP6WaPh-k/">
+                f0rb说
+                
+              </a>
+            
+          </span>
+        
+      </div>
+    </div>
+    
+  </section>
+
+<section class="post-item">
+    <div class="content">
+      <a href="https://blog.doyto.win/post/paging-and-sorting-en/">
+        <h2 class="post-title">An object-oriented solution for Paging and Sorting in database query</h2>
+      </a>
+      <div class="post-abstract">
+        
+      </div>
+      <div class="post-info">
+        <span><i class="icon icon-calendar-outline"></i> 2022-03-04</span>
+        
+          <span>
+            <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="https://blog.doyto.win/tag/zPv-nX5nF/">
+                DoytoQuery
+                
+                  ，
+                
+              </a>
+            
+              <a href="https://blog.doyto.win/tag/CcCKyUB3QV/">
+                Java
+                
+                  ，
+                
+              </a>
+            
+              <a href="https://blog.doyto.win/tag/7k1aGKguYI/">
+                CRUD
+                
+                  ，
+                
+              </a>
+            
+              <a href="https://blog.doyto.win/tag/qP6WaPh-k/">
+                f0rb说
+                
+              </a>
+            
+          </span>
+        
+      </div>
+    </div>
+    
+  </section>
+
+<section class="post-item">
+    <div class="content">
+      <a href="https://blog.doyto.win/post/paging-and-sorting/">
+        <h2 class="post-title">数据库查询中的分页和排序方案</h2>
+      </a>
+      <div class="post-abstract">
+        
+      </div>
+      <div class="post-info">
+        <span><i class="icon icon-calendar-outline"></i> 2022-02-27</span>
+        
+          <span>
+            <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="https://blog.doyto.win/tag/zPv-nX5nF/">
+                DoytoQuery
+                
+                  ，
+                
+              </a>
+            
+              <a href="https://blog.doyto.win/tag/CcCKyUB3QV/">
+                Java
+                
+                  ，
+                
+              </a>
+            
+              <a href="https://blog.doyto.win/tag/7k1aGKguYI/">
+                CRUD
+                
+                  ，
+                
+              </a>
+            
+              <a href="https://blog.doyto.win/tag/qP6WaPh-k/">
+                f0rb说
+                
+              </a>
+            
+          </span>
+        
+      </div>
+    </div>
+    
+  </section>
+
+<section class="post-item">
+    <div class="content">
+      <a href="https://blog.doyto.win/post/nested-query/">
+        <h2 class="post-title">子查询的几种映射方法</h2>
+      </a>
+      <div class="post-abstract">
+        
+      </div>
+      <div class="post-info">
+        <span><i class="icon icon-calendar-outline"></i> 2022-02-18</span>
+        
+          <span>
+            <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="https://blog.doyto.win/tag/zPv-nX5nF/">
+                DoytoQuery
+                
+                  ，
+                
+              </a>
+            
+              <a href="https://blog.doyto.win/tag/CcCKyUB3QV/">
+                Java
+                
+                  ，
+                
+              </a>
+            
+              <a href="https://blog.doyto.win/tag/7k1aGKguYI/">
+                CRUD
+                
+                  ，
+                
+              </a>
+            
+              <a href="https://blog.doyto.win/tag/qP6WaPh-k/">
+                f0rb说
+                
+              </a>
+            
+          </span>
+        
+      </div>
+    </div>
+    
+  </section>
+
+
+<div class="pagination-container">
+  
+  
+    <a href="https://blog.doyto.win/tag/qP6WaPh-k/page/2" class="next">下一页 <i class="icon-arrow-ios-forward-outline"></i></a>
+  
+</div>
+
+
+      </div>
+
+      <div class="site-footer">
+  <div class="slogan">DOYToWin</div>
+  <div class="social-container">
+    
+      
+        <a href="https://github.com/f0rb/" target="_blank">
+          <i class="fab fa-github"></i>
+        </a>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank" style="margin:0 -10px 0 10px">Gridea</a>
+<a target="_blank" rel="noopener noreferrer" href="https://beian.miit.gov.cn/" style="margin: 0 -14px 0 20px;">鄂ICP备17018023号-1</a>
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?d5d7ae2ddd28b5b5061cc801ef122a66";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script> | <a class="rss" href="https://blog.doyto.win/atom.xml" target="_blank">RSS</a>
+</div>
+
+
+    </div>
+    <script type="application/javascript">
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+  </body>
+</html>

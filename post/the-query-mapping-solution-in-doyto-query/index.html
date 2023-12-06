@@ -1,0 +1,468 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    
+<meta charset="utf-8" >
+
+<title>The Query Mapping Solution in DoytoQuery | DOYToWin</title>
+<meta name="description" content="DOYToWin">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.doyto.win/favicon.ico?v=1701832346906">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://blog.doyto.win/styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+
+  
+
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-164125169-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-164125169-1');
+</script>
+
+
+  </head>
+  <body>
+    <div id="app" class="main">
+      <div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="https://blog.doyto.win">
+        <img class="avatar" src="https://blog.doyto.win/images/avatar.png?v=1701832346906" alt="" width="32px" height="32px">
+      </a>
+      <a href="https://blog.doyto.win">
+        <h1 class="site-title">DOYToWin</h1>
+      </a>
+    </div>
+    <div class="right">
+      <transition name="fade">
+        <i class="icon" :class="{ 'icon-close-outline': menuVisible, 'icon-menu-outline': !menuVisible }" @click="menuVisible = !menuVisible"></i>
+      </transition>
+    </div>
+  </div>
+</div>
+
+<transition name="fade">
+  <div class="menu-container" style="display: none;" v-show="menuVisible">
+    <div class="menu-list">
+      
+        
+          <a href="/" class="menu purple-link">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="menu purple-link">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="menu purple-link">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="menu purple-link">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+</transition>
+
+
+      <div class="content-container">
+        <div class="post-detail">
+          
+          <h2 class="post-title">The Query Mapping Solution in DoytoQuery</h2>
+          <div class="post-info post-detail-info">
+            <span><i class="icon-calendar-outline"></i> 2022-12-02</span>
+            
+              <span>
+                <i class="icon-pricetags-outline"></i>
+                
+                  <a href="https://blog.doyto.win/tag/zPv-nX5nF/">
+                    DoytoQuery
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/CcCKyUB3QV/">
+                    Java
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/7k1aGKguYI/">
+                    CRUD
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/qP6WaPh-k/">
+                    f0rb说
+                    
+                  </a>
+                
+              </span>
+            
+          </div>
+          <div class="post-content">
+            <figure data-type="image" tabindex="1"><img src="https://blog.doyto.win/post-images/1669993942608.png" alt="" loading="lazy"></figure>
+<h2 id="introduction">Introduction</h2>
+<p>As an ORM framework, there are many new ideas and solutions in DoytoQuery. The core idea of DoytoQuery is to map the query object to WHERE clause in a SQL statement for dynamic query, and there are four ways to map the fields in DoytoQuery.</p>
+<p>Let's see how to write a query object for the following <code>UserEntity</code>:</p>
+<pre><code class="language-java">@Getter
+@Setter
+@Entity
+public class UserEntity extends AbstractPersistable&lt;Integer&gt; {
+    private String username;
+    private String email;
+    private String mobile;
+    private String password;
+    private String nickname;
+    private Boolean valid;
+}
+</code></pre>
+<h2 id="the-four-fields-mapping-ways">The four fields mapping ways</h2>
+<h3 id="1-suffix-mapping">1. Suffix mapping</h3>
+<p>We define a class <code>UserQuery</code> first, and for common conditions like <code>id = ?</code>, <code>username = ?</code> and <code>valid = ?</code>, we just define the fields in <code>UserQuery</code> class as follows.</p>
+<pre><code class="language-java">@Getter
+@Setter
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
+public class UserQuery extends PageQuery {
+    private Integer id;
+    private String username;
+    private Boolean valid;
+}
+</code></pre>
+<p>For other comparison operators e.g. <code>[NOT] LIKE</code>, <code>&gt;</code>, <code>&lt;</code>, <code>!=</code>, <code>&gt;=</code>, <code>&lt;=</code>, <code>IS [NOT] NULL</code>, <code>[NOT] IN</code>, we can add a suffix after the column name to specify the comparator. For examples, map <code>idIn</code> to <code>id IN (?,?,?)</code>, <code>idGt</code> to <code>id &gt; ?</code>, <code>usernameLike</code> to <code>username LIKE ?</code>, and also with the right type as following.</p>
+<pre><code class="language-java">public class UserQuery extends PageQuery {
+    private Integer id;
+    private String username;
+    private Boolean valid;
+    private List&lt;Integer&gt; idIn;
+    private Integer idGt;
+    private String usernameLike;
+}
+</code></pre>
+<p>Only non-null fields will be mapped and mutliple condiitions will be connected by <code>AND</code>.</p>
+<pre><code class="language-java">UserQuery userQuery = UserQuery.builder().usernameLike(&quot;test&quot;).valid(true).build();
+</code></pre>
+<p>The above <code>userQuery</code> object will be mapped to the following SQL with corresponding parameters.</p>
+<pre><code class="language-sql">SELECT id, username, email, mobile, password, nickname, valid FROM user WHERE username LIKE ? and valid = ?
+-- With parameters: [&quot;%test%&quot;, true] 
+</code></pre>
+<p>Check Appendix I for all supported suffixes.</p>
+<h3 id="2-or-mapping">2. OR Mapping</h3>
+<p>We also need to connect the conditions by <code>OR</code> in some scenarios and there are two ways in DoytoQuery.</p>
+<p>2.1 Map <code>OR</code> clause by field name containing <code>Or</code></p>
+<p>Connect multi column names with <code>Or</code> like <code>usernameOrEmailOrMobile</code>, and map it to <code>username = ? OR email = ? OR mobile = ?</code>.</p>
+<p>2.2 Map <code>OR</code> clause for objects marked by <code>Or</code> interface</p>
+<pre><code class="language-java">public interface Or {
+}
+
+public class AccountOr implements Or {
+    private String username;
+    private String email;
+    private String mobile;
+}
+
+public class UserQuery {
+    private AccountOr account;
+}
+</code></pre>
+<p>Traverse the fields in <code>AccountOr</code> to get <code>[username, email, mobile]</code> and then connect them with <code>OR</code> and get <code>username = ? OR email = ? OR mobile = ?</code>.</p>
+<h3 id="3-nested-query-mapping">3. Nested Query Mapping</h3>
+<p>The nested query is another frequently used feature of SQL. In a common definititon of a <code>menu</code> table to manage the menu tree, we usually define a foreign key <code>parentId</code> to refer to the <code>id</code> of the parent menu entity.</p>
+<p>To query the menus which have children menus, we execute the following SQL:</p>
+<pre><code class="language-sql">SELECT * FROM menu WHERE id IN (SELECT parentId FROM menu)
+</code></pre>
+<p>To query the children menus of the specified menu, we execute the following SQL:</p>
+<pre><code class="language-sql">SELECT * FROM menu WHERE parentId IN (SELECT id FROM menu)
+</code></pre>
+<p>And query the menus onwed by certain users:</p>
+<pre><code class="language-sql">SELECT * FROM menu WHERE id IN (
+  SELECT menu_id FROM a_perm_and_menu WHERE perm_id IN (
+    SELECT perm_id FROM a_role_and_perm WHERE role_id IN (
+      SELECT role_id FROM a_user_and_role WHERE user_id IN (
+        SELECT id FROM t_user WHERE id = ?
+))))
+</code></pre>
+<p>These are the typical one-to-many/many-to-one/many-to-many relationships in ERM. DoytoQuery defines a new annotation <code>@DomainPath</code> to map the nested query.</p>
+<pre><code class="language-java">@Target(FIELD)
+@Retention(RUNTIME)
+public @interface DomainPath {
+    // To describe how to route from the host domain to the target domain.
+    String[] value();
+    String localField() default &quot;id&quot;;
+    String foreignField() default &quot;id&quot;;
+}
+</code></pre>
+<p>Here are the full examples about the usages of <code>@DomainPath</code>.</p>
+<pre><code class="language-java">public class MenuQuery extends PageQuery {
+    // many-to-one: query children menus by their parents' conditions
+    @DomainPath(localField = &quot;parentId&quot;, foreignField = &quot;id&quot;, value = &quot;menu&quot;)
+    MenuQuery parent;      // parentId   IN (SELECT      id   FROM     menu  WHERE ... )
+    // one-to-many: query parent menus by their children's conditions
+    @DomainPath(localField = &quot;id&quot;, foreignField = &quot;parentId&quot;, value = &quot;menu&quot;)
+    MenuQuery children;    // id   IN (SELECT      parentId   FROM     menu  WHERE ... )
+    
+    // Many-to-many: query menus owned by the users meeting the query conditions
+    @DomainPath({&quot;menu&quot;, &quot;~&quot;, &quot;perm&quot;,  &quot;~&quot;, &quot;role&quot;, &quot;~&quot;, &quot;user&quot;})
+    UserQuery user;
+}
+</code></pre>
+<h3 id="4-mapping-explicitly">4. Mapping explicitly</h3>
+<p>The last way to map the field to the condition when no ways matching above is to use the annotation <code>@QueryField</code>, it will map the clause defined by the annotation directly. It is the first mapping way when DoytoQuery is created, but the last one to use now. Here is an example.</p>
+<pre><code class="language-java">public class MenuQuery extends PageQuery {
+    @QueryField(and = &quot;id = (SELECT parent_id FROM menu WHERE id = ?)&quot;)
+    private Integer childId;
+}
+</code></pre>
+<p>This way is deprecated for nested query after the <code>@DomainPath</code> is created.</p>
+<h2 id="conclution">Conclution</h2>
+<p>In this article, we explored four ways of mapping fields of a query object to the SQL conditions with DoytoQuery. You don't need write any SQL with the first three ways and they can cover most of the single-table query scenarios when working with relational databases.</p>
+<h2 id="appendix-i-supported-mapping-suffix">Appendix I: Supported Mapping Suffix</h2>
+<table>
+<thead>
+<tr>
+<th>Suffix</th>
+<th>Operator</th>
+<th>PlaceHolder</th>
+<th>Type Restriction</th>
+<th>Value Conversion</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(No matching<br>suffix)</td>
+<td>=</td>
+<td>？</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td>Not</td>
+<td>!=</td>
+<td>?</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>NotLike</td>
+<td>NOT LIKE</td>
+<td>?</td>
+<td>String</td>
+<td>%value%</td>
+</tr>
+<tr>
+<td>Like</td>
+<td>LIKE</td>
+<td>?</td>
+<td>String</td>
+<td>%value%</td>
+</tr>
+<tr>
+<td>Start</td>
+<td>LIKE</td>
+<td>?</td>
+<td>String</td>
+<td>%value</td>
+</tr>
+<tr>
+<td>End</td>
+<td>LIKE</td>
+<td>?</td>
+<td>String</td>
+<td>value%</td>
+</tr>
+<tr>
+<td>NotIn</td>
+<td>NOT IN</td>
+<td><p>(?[, ?]) for nonempty set;<br>Bypass for emply set.</p></td>
+<td>Collection</td>
+<td></td>
+</tr>
+<tr>
+<td>In</td>
+<td>IN</td>
+<td><p>(?[, ?]) for nonempty set;<br>(null) for emply set.</p></td>
+<td>Collection</td>
+<td></td>
+</tr>
+<tr>
+<td>NotNull</td>
+<td>IS NOT NULL</td>
+<td>-</td>
+<td>boolean</td>
+<td></td>
+</tr>
+<tr>
+<td>Null</td>
+<td>IS NULL</td>
+<td>-</td>
+<td>boolean</td>
+<td></td>
+</tr>
+<tr>
+<td>Gt</td>
+<td>&gt;</td>
+<td>?</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Ge</td>
+<td>&gt;=</td>
+<td>?</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Lt</td>
+<td>&lt;</td>
+<td>?</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Le</td>
+<td>&lt;=</td>
+<td>?</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Eq</td>
+<td>=</td>
+<td>?</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
+          </div>
+        </div>
+
+        
+          <div class="next-post">
+            <a class="purple-link" href="https://blog.doyto.win/post/how-to-start-tdd/">
+              <h3 class="post-title">
+                下一篇：TDD的起点
+              </h3>
+            </a>
+          </div>
+          
+      </div>
+
+      
+        
+          <div id="gitalk-container"></div>
+        
+
+        
+      
+
+      <div class="site-footer">
+  <div class="slogan">DOYToWin</div>
+  <div class="social-container">
+    
+      
+        <a href="https://github.com/f0rb/" target="_blank">
+          <i class="fab fa-github"></i>
+        </a>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank" style="margin:0 -10px 0 10px">Gridea</a>
+<a target="_blank" rel="noopener noreferrer" href="https://beian.miit.gov.cn/" style="margin: 0 -14px 0 20px;">鄂ICP备17018023号-1</a>
+<script>
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?d5d7ae2ddd28b5b5061cc801ef122a66";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script> | <a class="rss" href="https://blog.doyto.win/atom.xml" target="_blank">RSS</a>
+</div>
+
+
+    </div>
+    <script type="application/javascript">
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: 'bba21e5713780b0ea310',
+        clientSecret: '6d4e00ab700caf5d3809bdafa989c566b458cf2b',
+        repo: 'f0rb.github.io',
+        owner: 'f0rb',
+        admin: ['f0rb'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+
+  </body>
+</html>
