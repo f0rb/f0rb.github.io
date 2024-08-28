@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://blog.doyto.win</id>
+    <title>DOYToWin</title>
+    <updated>2024-08-28T00:50:17.547Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://blog.doyto.win"/>
+    <link rel="self" href="https://blog.doyto.win/atom.xml"/>
+    <subtitle>DOYToWin</subtitle>
+    <logo>https://blog.doyto.win/images/avatar.png</logo>
+    <icon>https://blog.doyto.win/favicon.ico</icon>
+    <rights>All rights reserved 2024, DOYToWin</rights>
+    <entry>
+        <title type="html"><![CDATA[What?! Go Implementation of OQM Can Build CRUD in Just Two Lines?]]></title>
+        <id>https://blog.doyto.win/post/introduction-to-goooqo-en/</id>
+        <link href="https://blog.doyto.win/post/introduction-to-goooqo-en/">
+        </link>
+        <updated>2024-08-27T04:52:36.000Z</updated>
+        <summary type="html"><![CDATA[<p>This is all thanks to the support of OQM (Object Query-Language Mapping) technology, we developed a Go version called <a href="https://github.com/doytowin/goooqo">GoooQo</a>.</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>This is all thanks to the support of OQM (Object Query-Language Mapping) technology, we developed a Go version called <a href="https://github.com/doytowin/goooqo">GoooQo</a>.</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[什么?！Golang里两行代码就能搞定增删查改接口了？]]></title>
+        <id>https://blog.doyto.win/post/introduction-to-goooqo/</id>
+        <link href="https://blog.doyto.win/post/introduction-to-goooqo/">
+        </link>
+        <updated>2024-08-26T03:24:31.000Z</updated>
+        <summary type="html"><![CDATA[<p>这都得益于OQM（Object Query-Language Mapping）技术的加持，我们开发了一个Go版本的实现，<a href="https://github.com/doytowin/goooqo">GoooQo</a> 。</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>这都得益于OQM（Object Query-Language Mapping）技术的加持，我们开发了一个Go版本的实现，<a href="https://github.com/doytowin/goooqo">GoooQo</a> 。</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[From ORM to OQM: An Object-Only SQL Construction Solution]]></title>
+        <id>https://blog.doyto.win/post/from-orm-to-oqm-en/</id>
+        <link href="https://blog.doyto.win/post/from-orm-to-oqm-en/">
+        </link>
+        <updated>2024-08-20T13:02:19.000Z</updated>
+        <summary type="html"><![CDATA[<p>Object/Relational Mapping (ORM) may lead the development of object-oriented applications based on relational databases in the wrong direction.</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>Object/Relational Mapping (ORM) may lead the development of object-oriented applications based on relational databases in the wrong direction.</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[从ORM到OQM：一种基于对象的SQL语句构造方案]]></title>
+        <id>https://blog.doyto.win/post/from-orm-to-oqm/</id>
+        <link href="https://blog.doyto.win/post/from-orm-to-oqm/">
+        </link>
+        <updated>2024-08-20T05:16:42.000Z</updated>
+        <summary type="html"><![CDATA[<p>对象/关系映射（ORM）技术在一定程度上将基于关系数据库的应用开发引向了错误的方向。一个好的技术方案应该是把事情变得越来越简单，而不是越来越复杂。</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>对象/关系映射（ORM）技术在一定程度上将基于关系数据库的应用开发引向了错误的方向。一个好的技术方案应该是把事情变得越来越简单，而不是越来越复杂。</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[DoytoQuery中的关联查询方案]]></title>
+        <id>https://blog.doyto.win/post/the-related-query-solution-in-doyto-query-zh/</id>
+        <link href="https://blog.doyto.win/post/the-related-query-solution-in-doyto-query-zh/">
+        </link>
+        <updated>2022-12-09T03:27:04.000Z</updated>
+        <summary type="html"><![CDATA[<p>本文介绍了DoytoQuery对N+1查询问题的解决方案，以及实体间关系的查询方案。</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>本文介绍了DoytoQuery对N+1查询问题的解决方案，以及实体间关系的查询方案。</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[The Related Query Solution in DoytoQuery (for n+1 selects problem)]]></title>
+        <id>https://blog.doyto.win/post/the-related-query-solution-in-doyto-query/</id>
+        <link href="https://blog.doyto.win/post/the-related-query-solution-in-doyto-query/">
+        </link>
+        <updated>2022-12-05T04:17:25.000Z</updated>
+        <summary type="html"><![CDATA[<p>In this article, we introduced a solution in DoytoQuery to do the related query avoiding the n+1 problem.</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>In this article, we introduced a solution in DoytoQuery to do the related query avoiding the n+1 problem.</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[TDD的起点]]></title>
+        <id>https://blog.doyto.win/post/how-to-start-tdd/</id>
+        <link href="https://blog.doyto.win/post/how-to-start-tdd/">
+        </link>
+        <updated>2022-05-15T03:18:07.000Z</updated>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[An object-oriented solution for Paging and Sorting in database query]]></title>
+        <id>https://blog.doyto.win/post/paging-and-sorting-en/</id>
+        <link href="https://blog.doyto.win/post/paging-and-sorting-en/">
+        </link>
+        <updated>2022-03-04T09:14:48.000Z</updated>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[数据库查询中的分页和排序方案]]></title>
+        <id>https://blog.doyto.win/post/paging-and-sorting/</id>
+        <link href="https://blog.doyto.win/post/paging-and-sorting/">
+        </link>
+        <updated>2022-02-27T04:26:35.000Z</updated>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[OR语句的三种映射方法]]></title>
+        <id>https://blog.doyto.win/post/or-query/</id>
+        <link href="https://blog.doyto.win/post/or-query/">
+        </link>
+        <updated>2022-02-10T14:13:51.000Z</updated>
+    </entry>
+</feed>

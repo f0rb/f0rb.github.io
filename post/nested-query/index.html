@@ -1,0 +1,376 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    
+<meta charset="utf-8" >
+
+<title>子查询的几种映射方法 | DOYToWin</title>
+<meta name="description" content="DOYToWin">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.doyto.win/favicon.ico?v=1724806213854">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://blog.doyto.win/styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+
+  
+
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-164125169-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-164125169-1');
+</script>
+
+
+  </head>
+  <body>
+    <div id="app" class="main">
+      <div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="https://blog.doyto.win">
+        <img class="avatar" src="https://blog.doyto.win/images/avatar.png?v=1724806213854" alt="" width="32px" height="32px">
+      </a>
+      <a href="https://blog.doyto.win">
+        <h1 class="site-title">DOYToWin</h1>
+      </a>
+    </div>
+    <div class="right">
+      <transition name="fade">
+        <i class="icon" :class="{ 'icon-close-outline': menuVisible, 'icon-menu-outline': !menuVisible }" @click="menuVisible = !menuVisible"></i>
+      </transition>
+    </div>
+  </div>
+</div>
+
+<transition name="fade">
+  <div class="menu-container" style="display: none;" v-show="menuVisible">
+    <div class="menu-list">
+      
+        
+          <a href="/" class="menu purple-link">
+            首页/Home
+          </a>
+        
+      
+        
+          <a href="/archives" class="menu purple-link">
+            归档/Archives
+          </a>
+        
+      
+        
+          <a href="/tags" class="menu purple-link">
+            标签/Tags
+          </a>
+        
+      
+        
+          <a href="/post/about" class="menu purple-link">
+            关于/About
+          </a>
+        
+      
+    </div>
+  </div>
+</transition>
+
+
+      <div class="content-container">
+        <div class="post-detail">
+          
+          <h2 class="post-title">子查询的几种映射方法</h2>
+          <div class="post-info post-detail-info">
+            <span><i class="icon-calendar-outline"></i> 2022-02-18</span>
+            <span id="busuanzi_container_page_pv"><i class="icon-eye-outline"></i> <span id="busuanzi_value_page_pv"></span></span>
+            
+              <span>
+                <i class="icon-pricetags-outline"></i>
+                
+                  <a href="https://blog.doyto.win/tag/zPv-nX5nF/">
+                    DoytoQuery
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/CcCKyUB3QV/">
+                    Java
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/7k1aGKguYI/">
+                    CRUD
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/qP6WaPh-k/">
+                    f0rb说
+                    
+                  </a>
+                
+              </span>
+            
+          </div>
+          <div class="post-content">
+            <p>要问孔乙己茴字有几种写法，他会告诉你有四种。</p>
+<p>要问我子查询语句有几种映射方法，我也给你列个三五种吧。</p>
+<h2 id="业务背景">业务背景</h2>
+<p>比如说我们有这样一个菜单表，每条菜单记录都有一个parentId指向它的上级菜单的id，Entity对象定义如下：</p>
+<pre><code class="language-java">@Table(name = &quot;menu&quot;)
+public class MenuEntity {
+    @Id
+    @GeneratedValue
+    private Integer id;
+    private Integer parentId;
+    private String menuName;
+    // getters and setters
+}
+</code></pre>
+<p>现在我们想要查询所有的父菜单可以使用这条SQL：</p>
+<pre><code class="language-sql">SELECT * FROM menu WHERE id IN (SELECT parent_id FROM menu)
+</code></pre>
+<p>那么这种子查询如何通过字段来映射呢？</p>
+<h2 id="方法一queryfield">方法一：@QueryField</h2>
+<p>直接使用通用注解<code>@QueryField</code>，将查询语句原样定义到注解里。</p>
+<pre><code class="language-java">public class MenuQuery extends PageQuery {
+    @QueryField(and = &quot;id IN (SELECT parent_id FROM menu)&quot;)
+    private boolean onlyParent;
+}
+</code></pre>
+<p>当<code>onlyParent</code>字段赋值为<code>true</code>时，从注解中即可得到对应的查询语句为</p>
+<pre><code class="language-sql">id IN (SELECT parent_id FROM menu)
+</code></pre>
+<p>拼接<code>SELECT</code>语句即得：</p>
+<pre><code class="language-sql">SELECT * FROM menu WHERE id IN (SELECT parent_id FROM menu)
+</code></pre>
+<h2 id="方法二subquery">方法二：@SubQuery</h2>
+<p>我们接着来进行一些优化，将子查询语句的一些变量提取出来，定义一个新的注解<code>@SubQuery</code>：</p>
+<pre><code class="language-java">@Target(FIELD)
+@Retention(RUNTIME)
+public @interface SubQuery {
+    String column() default &quot;id&quot;;
+    String op() default &quot;IN&quot;;
+    String select();
+    String from();
+}
+</code></pre>
+<p>然后使用<code>@SubQuery</code>注解重新定义字段：</p>
+<pre><code class="language-java">public class MenuQuery extends PageQuery {
+    @SubQuery(select = &quot;parent_id&quot;, from = &quot;menu&quot;)
+    private boolean onlyParent;
+}
+</code></pre>
+<p><code>@SubQuery</code>注解对应的子查询语句的格式为：</p>
+<pre><code>#{column} #{op} (SELECT #{select} FROM #{from})
+</code></pre>
+<p>将定义注解时所赋的值<code>id</code>, <code>IN</code>, <code>parent_id</code>, <code>menu</code>代入即得：</p>
+<pre><code class="language-sql">id IN (SELECT parent_id FROM menu)
+</code></pre>
+<h2 id="方法三nestedqueriesnestedquery">方法三：@NestedQueries/@NestedQuery</h2>
+<p>子查询往往需要多层嵌套，一个<code>@SubQuery</code>通常是不够用的，而Java的注解又不支持自嵌套，所以我们需要定义两个注解<code>@NestedQueries</code>和<code>@NestedQuery</code>，利用数组来表达嵌套逻辑。</p>
+<pre><code class="language-java">
+@Target({})
+public @interface NestedQuery {
+    String select();
+    String from();
+    /**
+     * Will use next @NestedQuery.select() as column if empty.
+     *
+     * @return custom column for next nested query.
+     */
+    String where() default &quot;&quot;;
+    String op() default &quot;IN&quot;;
+}
+
+@Target(FIELD)
+@Retention(RUNTIME)
+public @interface NestedQueries {
+    String column() default &quot;id&quot;;
+    String op() default &quot;IN&quot;;
+    NestedQuery[] value();
+    boolean appendWhere() default true;
+}
+</code></pre>
+<p><code>@NestedQueries</code>注解对应的子查询语句的格式为：</p>
+<pre><code class="language-sql">#{column} #{op} (
+  SELECT #{select} FROM #{from} [#{where} #{op} (
+     SELECT #{select} FROM #{from} ...)]
+)
+</code></pre>
+<p>改用<code>@NestedQueries</code>来定义子查询</p>
+<pre><code class="language-java">public class MenuQuery extends PageQuery {
+    @NestedQueries({
+            @NestedQuery(select = &quot;parent_id&quot;, from = &quot;menu&quot;)
+    })
+    private boolean onlyParent;
+}
+</code></pre>
+<p>同样可以得到：</p>
+<pre><code class="language-sql">id IN (SELECT parent_id FROM menu)
+</code></pre>
+<h2 id="拓展一为最后一个子查询添加查询条件">拓展一：为最后一个子查询添加查询条件</h2>
+<p>假设我想按菜单名称查询它的父菜单，SQL语句可以是这样：</p>
+<pre><code class="language-sql">SELECT * FROM menu WHERE id IN (SELECT parent_id FROM menu WHERE menu_name = ?)
+</code></pre>
+<p>我们只需要把<code>boolean</code>类型的<code>onlyParent</code>字段改为<code>String</code>类型的<code>menuName</code>即可。</p>
+<pre><code class="language-java">public class MenuQuery extends PageQuery {
+    @NestedQueries({
+            @NestedQuery(select = &quot;parent_id&quot;, from = &quot;menu&quot;)
+    })
+    private String menuName;
+}
+</code></pre>
+<p>但是这里用于子查询定义的<code>menuName</code>会和普通查询的<code>menuName</code>字段冲突，于是有：</p>
+<h2 id="拓展二将子查询的字段定义为query对象">拓展二：将子查询的字段定义为Query对象</h2>
+<p>在<code>MenuQuery</code>中将<code>@NestedQueries</code>注解到新添加的<code>MenuQuery</code>类型的<code>menu</code>字段上用于子查询的映射，再添加一个<code>String</code>类型的<code>menuName</code>，用于子查询的查询条件。</p>
+<pre><code class="language-java">public class MenuQuery extends PageQuery {
+    @NestedQueries({
+            @NestedQuery(select = &quot;parent_id&quot;, from = &quot;menu&quot;)
+    })
+    private MenuQuery menu;
+    
+    private String menuName;
+}
+</code></pre>
+<p>再这样构造一个MenuQuery对象即可：</p>
+<pre><code class="language-java">MenuQuery parentBySubMenu = MenuQuery.builder().menu(MenuQuery.builder().menuName(&quot;test&quot;).build()).build();
+</code></pre>
+<h2 id="解答">解答</h2>
+<p>现在回到《基于查询对象字段的后缀推导》这篇文章最后提出的问题，这种复杂的嵌套查询如何映射呢?</p>
+<pre><code class="language-sql">SELECT * FROM t_perm WHERE id IN (
+    SELECT permId FROM t_role_and_perm WHERE roleId IN (
+        SELECT roleId FROM t_user_and_role WHERE userId IN (
+            SELECT id FROM t_user WHERE username = ?
+)))
+</code></pre>
+<p>根据上面所讲的注解和方法，对应的查询字段可以定义如下：</p>
+<pre><code class="language-java">public class PermQuery extends PageQuery {
+    @NestedQueries({
+            @NestedQuery(select = &quot;permId&quot;, from = &quot;t_role_and_perm&quot;),
+            @NestedQuery(select = &quot;roleId&quot;, from = &quot;t_user_and_role&quot;, where = &quot;userId&quot;),
+            @NestedQuery(select = &quot;id&quot;, from = &quot;t_user&quot;)
+    })
+    private String username;
+}
+</code></pre>
+<h2 id="小结">小结</h2>
+<p>本篇主要讲解了子查询映射的优化过程，目前的最佳方案为使用<code>@NestedQueries</code>注解以实现子查询的映射，字段的类型可以选择<code>boolean</code>类型，普通类型或者<code>Query</code>类型。</p>
+
+          </div>
+        </div>
+
+        
+      </div>
+
+      
+        
+          <div id="gitalk-container"></div>
+        
+
+        
+      
+
+      <div class="site-footer">
+  <div class="slogan">DOYToWin</div>
+  <div class="social-container">
+    
+      
+        <a href="https://github.com/doytowin/" target="_blank">
+          <i class="fab fa-github"></i>
+        </a>
+      
+    
+      
+        <a href="https://x.com/doytowin" target="_blank">
+          <i class="fab fa-twitter"></i>
+        </a>
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+  <a target="_blank" rel="noopener noreferrer" href="https://beian.miit.gov.cn/">鄂ICP备17018023号-1</a>
+|
+<span>Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a></span>
+|
+<span>Hosted on <a href="https://github.com/f0rb/f0rb.github.io/" target="_blank">f0rb.github.io</a></span>
+<script>
+    var _hmt = _hmt || [];
+    (function () {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?d5d7ae2ddd28b5b5061cc801ef122a66";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script> | <a class="rss" href="https://blog.doyto.win/atom.xml" target="_blank">RSS</a>
+</div>
+
+
+    </div>
+    <script type="application/javascript">
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: 'bba21e5713780b0ea310',
+        clientSecret: '6d4e00ab700caf5d3809bdafa989c566b458cf2b',
+        repo: 'f0rb.github.io',
+        owner: 'f0rb',
+        admin: ['f0rb'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+
+  </body>
+</html>

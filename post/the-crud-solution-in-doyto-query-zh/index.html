@@ -1,0 +1,348 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    
+<meta charset="utf-8" >
+
+<title>DoytoQuery中关于增删改查接口的增强方法 | DOYToWin</title>
+<meta name="description" content="DOYToWin">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.doyto.win/favicon.ico?v=1724806213854">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://blog.doyto.win/styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+
+  
+
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-164125169-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-164125169-1');
+</script>
+
+
+  </head>
+  <body>
+    <div id="app" class="main">
+      <div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="https://blog.doyto.win">
+        <img class="avatar" src="https://blog.doyto.win/images/avatar.png?v=1724806213854" alt="" width="32px" height="32px">
+      </a>
+      <a href="https://blog.doyto.win">
+        <h1 class="site-title">DOYToWin</h1>
+      </a>
+    </div>
+    <div class="right">
+      <transition name="fade">
+        <i class="icon" :class="{ 'icon-close-outline': menuVisible, 'icon-menu-outline': !menuVisible }" @click="menuVisible = !menuVisible"></i>
+      </transition>
+    </div>
+  </div>
+</div>
+
+<transition name="fade">
+  <div class="menu-container" style="display: none;" v-show="menuVisible">
+    <div class="menu-list">
+      
+        
+          <a href="/" class="menu purple-link">
+            首页/Home
+          </a>
+        
+      
+        
+          <a href="/archives" class="menu purple-link">
+            归档/Archives
+          </a>
+        
+      
+        
+          <a href="/tags" class="menu purple-link">
+            标签/Tags
+          </a>
+        
+      
+        
+          <a href="/post/about" class="menu purple-link">
+            关于/About
+          </a>
+        
+      
+    </div>
+  </div>
+</transition>
+
+
+      <div class="content-container">
+        <div class="post-detail">
+          
+          <h2 class="post-title">DoytoQuery中关于增删改查接口的增强方法</h2>
+          <div class="post-info post-detail-info">
+            <span><i class="icon-calendar-outline"></i> 2023-04-14</span>
+            <span id="busuanzi_container_page_pv"><i class="icon-eye-outline"></i> <span id="busuanzi_value_page_pv"></span></span>
+            
+              <span>
+                <i class="icon-pricetags-outline"></i>
+                
+                  <a href="https://blog.doyto.win/tag/zPv-nX5nF/">
+                    DoytoQuery
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/CcCKyUB3QV/">
+                    Java
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/7k1aGKguYI/">
+                    CRUD
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/qP6WaPh-k/">
+                    f0rb说
+                    
+                  </a>
+                
+              </span>
+            
+          </div>
+          <div class="post-content">
+            <h2 id="背景">背景</h2>
+<p>目前，大部分成熟的ORM框架都为数据库单表操作封装了增删查改接口，在接口调用时会自动生成对应的SQL语句并执行数据库操作。</p>
+<p>DoytoQuery框架在实现这些功能的同时，对于需要对数据进行动态筛选的更新和删除的接口，基于《DoytoQuery中的查询映射方案》进行了增强，并大幅简化了其参数的构造工作。</p>
+<h2 id="orm框架中的增删查改接口及典型实现">ORM框架中的增删查改接口及典型实现</h2>
+<p>我们依然使用以下实体对象作为示范：</p>
+<pre><code class="language-java">@Getter
+@Setter
+@Entity
+@Table(name = &quot;user&quot;)
+public class UserEntity extends AbstractPersistable&lt;Integer&gt; {
+    private String username;
+    private String password;
+    private String mobile;
+    private String email;
+    private String nickname;
+    private Boolean valid;
+}
+</code></pre>
+<p>以SpringDataJPA中的<code>JpaRepository</code>为例，基础的增删查改接口定义如下：</p>
+<pre><code class="language-java">@NoRepositoryBean
+public interface JpaRepository&lt;T, ID&gt; extends ListCrudRepository&lt;T, ID&gt;, ListPagingAndSortingRepository&lt;T, ID&gt;, QueryByExampleExecutor&lt;T&gt; {
+
+    Optional&lt;T&gt; findById(ID id);
+  
+    &lt;S extends T&gt; S save(S entity);
+
+    void deleteById(ID id);
+    
+    //...
+}
+</code></pre>
+<p>这类接口的每个方法在被调用后，围绕SQL语句大致都会执行以下两大步骤：</p>
+<ol>
+<li><strong>生成SQL语句</strong></li>
+<li><strong>执行SQL语句</strong></li>
+</ol>
+<p>当使用SpringDataJPA时，我们会为UserEntity定义以下Repository：</p>
+<pre><code class="language-java">public interface UserRepository extends JpaRepository&lt;UserEntity, Integer&gt; {
+}
+</code></pre>
+<p>当调用<code>UserRepository#findById</code>时，会根据<code>UserEntity</code>类中定义的字段和注释的表名生成一下SQL语句然后执行：</p>
+<pre><code class="language-sql">SELECT id, username, password, mobile, email, nickname, valid FROM user WHERE id = ?
+</code></pre>
+<p>对于<code>save</code>方法，当保存的<code>User</code>为新实体时，会执行一条<code>Insert</code>的语句：</p>
+<pre><code class="language-sql">INSERT INTO t_user (id, username, password, mobile, email, nickname, valid) VALUES (?, ?, ?, ?, ?, ?)
+</code></pre>
+<p>而当实体已存在，也就是当<code>User</code>对象中赋有对应的<code>id</code>时，会执行以下更新语句：</p>
+<pre><code class="language-sql">UPDATE t_user SET username = ?, password = ?, mobile = ?, email = ?, nickname = ?, valid = ? WHERE id = ?
+</code></pre>
+<p>而<code>deleteById</code>方法则会对应一条删除语句：</p>
+<pre><code class="language-sql">DELETE FROM t_user WHERE id = ?;
+</code></pre>
+<p>其他的ORM框架如Hibernate、MyBatis/Mybatis-Generator、MyBatis-Plus、jOOQ等，也都提供了类似的接口。</p>
+<h2 id="doytoquery中的数据操作接口">DoytoQuery中的数据操作接口</h2>
+<p>作为一款持久层框架，DoytoQuery中的单表操作接口被命名为<code>DataAccess</code>，定义如下：</p>
+<pre><code class="language-java">public interface DataAccess&lt;E extends Persistable&lt;I&gt;, I extends Serializable, Q&gt; {
+    E get(I id);
+    void create(E e);
+    int delete(I id);
+    int update(E e);
+    int patch(E e);
+    
+    List&lt;E&gt; query(Q query);
+    long count(Q query);
+    int patch(E e, Q q);
+    int delete(Q query);
+}
+</code></pre>
+<p>其中<code>get(I)/create(E)/delete(I)/update(E)/patch(E)</code>等基本的增删查改接口跟其他框架提供的功能基本一致，除了更新方法<code>update</code>和<code>patch</code>方法略有区别，<code>update</code>方法会更新对象的所有字段，而<code>patch</code>方法仅更新非<code>null</code>的字段。</p>
+<h2 id="doytoquery中的增强接口">DoytoQuery中的增强接口</h2>
+<p>在进行动态条件查询时，大部分ORM框架都需要借助一个中间对象来生成条件语句，比如Hibernate中的<code>Criteria</code>，SpringDataJPA中的<code>Example</code>，<code>Specification</code>，MybatisPlus中的<code>Wrapper</code>等，这就要求框架的使用者先根据已有参数构造出这个中间对象，再作为参数调用对应的方法，从而增加的代码的开发量和程序的复杂度，不利于代码的复用和优化。</p>
+<p>而DoytoQuery基于其独创的查询对象字段映射方案，可以直接从用户定义的Query对象推导出<code>WHERE</code>语句，不需要借助任何中间对象，从而大大简化了参数的构造，以及接口的定义和调用。</p>
+<p>以下接口支持在查询、更新和删除时，通过传入一个Query对象来进行数据的筛选：</p>
+<ul>
+<li>List&lt;E&gt; query(Q query);</li>
+<li>long count(Q query);</li>
+<li>int patch(E e, Q q);</li>
+<li>int delete(Q query);</li>
+</ul>
+<p>首先，我们定义一个UserQuery类如下：</p>
+<pre><code class="language-java">@Getter
+@Setter
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
+public class UserQuery extends PageQuery {
+    private String emailEnd;
+    private Boolean valid;
+}
+</code></pre>
+<p>然后创建一个新的对象并进行赋值：</p>
+<pre><code class="language-java">UserQuery userQuery = UserQuery.builder().emailEnd(&quot;@163.com&quot;).valid(true).build();
+</code></pre>
+<p>当调用方法<code>query(Q)</code>时，对应执行的SQL以及参数为：</p>
+<pre><code class="language-sql">SELECT id, username, password, mobile, email, nickname, valid FROM t_user WHERE email LIKE ? AND valid = ?
+- 参数: &quot;%@163.com&quot;, true
+</code></pre>
+<p><code>count(Q)</code>则是用于配合<code>query(Q)</code>执行分页查询的，当被调用时，执行的SQL为：</p>
+<pre><code class="language-sql">SELECT count(*) FROM t_user WHERE email LIKE ? AND valid = ?
+</code></pre>
+<p>当调用方法<code>patch(E, Q)</code>时，假设只将<code>UserEntity</code>对象的<code>valid</code>字段设为了<code>false</code>，会执行：</p>
+<pre><code class="language-sql">UPDATE t_user SET valid = ? WHERE id IN (SELECT id FROM t_user t WHERE email LIKE ? AND valid = ?)
+</code></pre>
+<blockquote>
+<p>这里采用子查询的原因是由于某些数据库不支持在<code>UPDATE</code>和<code>DELETE</code>语句上执行分页操作。</p>
+</blockquote>
+<p>最后在调用方法<code>delete(Q)</code>时执行的是：</p>
+<pre><code class="language-sql">DELETE FROM t_user WHERE id IN (SELECT id FROM t_user t WHERE email LIKE ? AND valid = ?)
+</code></pre>
+<p>另外，当给<code>UserQuery</code>传入分页参数后，对应会为括号中的<code>SELECT</code>语句加上分页语句：</p>
+<pre><code class="language-sql">DELETE FROM t_user WHERE id IN (SELECT id FROM t_user t WHERE email LIKE ? AND valid = ? LIMIT 10 OFFSET 10)
+</code></pre>
+<p>可以看到，<code>patch(E, Q)</code>和<code>delete(Q)</code>分别将<code>UPDATE</code>语句和<code>DELETE</code>语句与复杂的<code>WHERE</code>语句结合起来，充分利用了SQL语句的条件过滤特性，以封装简洁的接口，提供 了更加通用的更新和查询功能。</p>
+<h2 id="结论">结论</h2>
+<p>以上介绍了DoytoQuery中单表增删查改的解决方案和接口设计，在提供基本的增删查改方法的同时，还提供了更为便利的与动态查询相关的删改查方法，进一步满足了复杂业务场景的需要。</p>
+
+          </div>
+        </div>
+
+        
+      </div>
+
+      
+        
+          <div id="gitalk-container"></div>
+        
+
+        
+      
+
+      <div class="site-footer">
+  <div class="slogan">DOYToWin</div>
+  <div class="social-container">
+    
+      
+        <a href="https://github.com/doytowin/" target="_blank">
+          <i class="fab fa-github"></i>
+        </a>
+      
+    
+      
+        <a href="https://x.com/doytowin" target="_blank">
+          <i class="fab fa-twitter"></i>
+        </a>
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+  <a target="_blank" rel="noopener noreferrer" href="https://beian.miit.gov.cn/">鄂ICP备17018023号-1</a>
+|
+<span>Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a></span>
+|
+<span>Hosted on <a href="https://github.com/f0rb/f0rb.github.io/" target="_blank">f0rb.github.io</a></span>
+<script>
+    var _hmt = _hmt || [];
+    (function () {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?d5d7ae2ddd28b5b5061cc801ef122a66";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+    })();
+</script>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script> | <a class="rss" href="https://blog.doyto.win/atom.xml" target="_blank">RSS</a>
+</div>
+
+
+    </div>
+    <script type="application/javascript">
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: 'bba21e5713780b0ea310',
+        clientSecret: '6d4e00ab700caf5d3809bdafa989c566b458cf2b',
+        repo: 'f0rb.github.io',
+        owner: 'f0rb',
+        admin: ['f0rb'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+
+  </body>
+</html>
