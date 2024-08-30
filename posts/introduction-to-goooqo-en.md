@@ -147,7 +147,7 @@ DELETE http://localhost:9090/user/?memoNull=false
 The suffixes supported by version v0.1.3 and the corresponding query conditions can be found in this suffix mapping table:
 
 
-| 后缀名称       | 字段名称           | 字段赋值    | SQL查询条件               | MongoDB查询条件                            |
+| Suffix     | Field          | Value   | SQL Condition         | MongoDBCondition                       |
 |------------|----------------|---------|-----------------------|----------------------------------------|
 | (EMPTY)    | id             | 5       | id = 5                | {"id":5}                               |
 | Eq         | idEq           | 5       | id = 5                | {"idEq":5}                             |
@@ -170,6 +170,7 @@ The suffixes supported by version v0.1.3 and the corresponding query conditions 
 | NotContain | nameNotContain | "arg"   | name NOT LIKE '%arg%’ | {"name":{"\$not":{"$regex":"arg"}}}    |
 | Contain    | nameContain    | "arg"   | name LIKE '%arg%’     | {"name":{"$regex":"arg"}}              |
 | Rx         | nameRx         | "arg\d" | name REGEXP 'arg\d’   | {"name":{"$regex":"arg\d"}}            |
+
 
 ---
 © 2024 Yuan Zhen. All rights reserved.
