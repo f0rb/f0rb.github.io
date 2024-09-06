@@ -1,7 +1,7 @@
 ---
 title: 'What?! Go Implementation of OQM Can Build CRUD in Just Two Lines?'
 date: 2024-08-27 12:52:36
-tags: [GoooQo,Go,en,ORM,OQM,f0rb说]
+tags: [GoooQo,Go,en,ORM,OQM,Forb]
 published: true
 hideInList: false
 feature: /post-images/introduction-to-goooqo-en.png
