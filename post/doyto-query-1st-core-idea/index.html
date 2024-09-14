@@ -1,0 +1,364 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    
+<meta charset="utf-8" >
+
+<title>DoytoQuery系列一：核心理念之WHERE语句生成 | DOYToWin</title>
+<meta name="description" content="DOYToWin">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.doyto.win/favicon.ico?v=1726306213679">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://blog.doyto.win/styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+
+  
+
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-164125169-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-164125169-1');
+</script>
+
+
+  </head>
+  <body>
+    <div id="app" class="main">
+      <div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="https://blog.doyto.win">
+        <img class="avatar" src="https://blog.doyto.win/images/avatar.png?v=1726306213679" alt="" width="32px" height="32px">
+      </a>
+      <a href="https://blog.doyto.win">
+        <h1 class="site-title">DOYToWin</h1>
+      </a>
+    </div>
+    <div class="right">
+      <transition name="fade">
+        <i class="icon" :class="{ 'icon-close-outline': menuVisible, 'icon-menu-outline': !menuVisible }" @click="menuVisible = !menuVisible"></i>
+      </transition>
+    </div>
+  </div>
+</div>
+
+<transition name="fade">
+  <div class="menu-container" style="display: none;" v-show="menuVisible">
+    <div class="menu-list">
+      
+        
+          <a href="/" class="menu purple-link">
+            首页/Home
+          </a>
+        
+      
+        
+          <a href="/archives" class="menu purple-link">
+            归档/Archives
+          </a>
+        
+      
+        
+          <a href="/tags" class="menu purple-link">
+            标签/Tags
+          </a>
+        
+      
+        
+          <a href="/post/about" class="menu purple-link">
+            关于/About
+          </a>
+        
+      
+    </div>
+  </div>
+</transition>
+
+
+      <div class="content-container">
+        <div class="post-detail">
+          
+          <h2 class="post-title">DoytoQuery系列一：核心理念之WHERE语句生成</h2>
+          <div class="post-info post-detail-info">
+            <span><i class="icon-calendar-outline"></i> 2020-04-20</span>
+            <span id="busuanzi_container_page_pv"><i class="icon-eye-outline"></i> <span id="busuanzi_value_page_pv"></span></span>
+            
+              <span>
+                <i class="icon-pricetags-outline"></i>
+                
+                  <a href="https://blog.doyto.win/tag/zPv-nX5nF/">
+                    DoytoQuery
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/CcCKyUB3QV/">
+                    Java
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/7k1aGKguYI/">
+                    CRUD
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/qP6WaPh-k/">
+                    f0rb说
+                    
+                  </a>
+                
+              </span>
+            
+          </div>
+          <div class="post-content">
+            <h3 id="先说结论">先说结论</h3>
+<p><strong>SQL查询的WHERE语句是可以通过对象生成的</strong></p>
+<hr>
+<h3 id="接着论证">接着论证</h3>
+<ul>
+<li>先定义这样一个对象, 假设作如下赋值</li>
+</ul>
+<pre><code>@Getter
+@Setter
+@Table(name = &quot;t_user&quot;)
+public class UserQuery {
+     private Integer pageNumber;                // 3
+     private Integer pageSize;                  // 10
+     private String sort;                       // id,desc;create_time,asc
+
+     private String usernameOrEmailOrMobile;    // admin
+     private String nicknameLike;               // 管理员
+     private Boolean valid;                     // true
+ }
+</code></pre>
+<ul>
+<li>对于usernameOrEmailOrMobile，按Or拆开后分别接上&quot; = ?&quot;，再用&quot; OR &quot;拼接，得到</li>
+</ul>
+<pre><code>username = ? OR email = ? OR mobile = ?
+</code></pre>
+<ul>
+<li>对于nicknameLike，去掉后缀Like，拼接&quot; LIKE ?&quot;，得到</li>
+</ul>
+<pre><code>nickame LIKE ?
+</code></pre>
+<ul>
+<li>对于valid，字段名加上&quot;= ?&quot;得到</li>
+</ul>
+<pre><code>valid = ?
+</code></pre>
+<ul>
+<li>将上述3条语句用&quot; AND &quot;拼接，含OR的语句加括号，再在前面加上&quot;WHERE&quot;，得到</li>
+</ul>
+<pre><code>WHERE (username = ? OR email = ? OR mobile = ?) AND nickname LIKE ? AND valid = ?
+</code></pre>
+<ul>
+<li>对于sort字段，逗号替换为空格，分号替换为逗号，前面加上&quot;ORDER BY &quot;，得到</li>
+</ul>
+<pre><code>ORDER BY id DESC, createTime ASC
+</code></pre>
+<ul>
+<li>将pageNumber和pageSize的值代入LIMIT ${pageSize} OFFSET ${(pageNumber - 1) * pageSize}，得到</li>
+</ul>
+<pre><code>LIMIT 10 OFFSET 20
+</code></pre>
+<ul>
+<li>将上述SELECT, WHERE, ORDER BY, LIMIT语句合并，得到</li>
+</ul>
+<pre><code>WHERE (username = ? OR email = ? OR mobile = ?) AND nickname LIKE ? AND valid = ?
+ORDER BY id DESC, createTime ASC
+LIMIT 10 OFFSET 20
+</code></pre>
+<ul>
+<li>同时得到对应的参数列表</li>
+</ul>
+<pre><code>[&quot;admin&quot;, &quot;admin&quot;, &quot;admin&quot;, &quot;%管理员%&quot;, true]
+</code></pre>
+<p><em>其中WHERE语句的过滤条件根据对应字段是否赋值来决定是否拼接</em></p>
+<ul>
+<li>再从@Table注解里得到表名，代入SELECT * FROM [TABLE]，得到</li>
+</ul>
+<pre><code>SELECT * FROM t_user
+</code></pre>
+<ul>
+<li>再同上述WHERE语句拼接，即可得到一条完整的查询语句</li>
+</ul>
+<pre><code>SELECT * FROM t_user
+WHERE (username = ? OR email = ? OR mobile = ?) AND nickname LIKE ? AND valid = ?
+ORDER BY id DESC, createTime ASC
+LIMIT 10 OFFSET 20
+</code></pre>
+<p>证毕。</p>
+<hr>
+<h3 id="扩展">扩展</h3>
+<p>每条SELECT语句都需要支持分页和排序，所以可以将pageNumber，pageSize，sort提取为父类</p>
+<pre><code>public class PageQuery {
+    private Integer pageNumber;
+    private Integer pageSize;
+    private String sort;
+}
+
+@Table(name = &quot;t_user&quot;)
+public class UserQuery extends PageQuery {
+    private String usernameOrEmailOrMobile;
+    private String nicknameLike;
+    private Boolean valid;
+}
+</code></pre>
+<hr>
+<h3 id="查询构造器querybuilder">查询构造器<a href="https://github.com/f0rb/doyto-query/blob/master/src/main/java/win/doyto/query/core/QueryBuilder.java">QueryBuilder</a></h3>
+<p>基于上述分析，我们就可以编写出测试用例，通过测试用例驱动出一个自动化的查询语句构造器</p>
+<hr>
+<h3 id="单元测试用例"><a href="https://github.com/f0rb/doyto-query/blob/master/src/test/java/win/doyto/query/core/QueryBuilderTest.java">单元测试用例</a></h3>
+<pre><code>    @Test
+    public void buildSelect() {
+        TestQuery testQuery = TestQuery.builder().build();
+        assertEquals(&quot;SELECT * FROM user&quot;, testQueryBuilder.buildSelectAndArgs(testQuery, argList));
+    }
+</code></pre>
+<pre><code>    @Test
+    public void buildSelectWithWhere() {
+        TestQuery testQuery = TestQuery.builder().username(&quot;test&quot;).build();
+        assertEquals(&quot;SELECT * FROM user WHERE username = ?&quot;, testQueryBuilder.buildSelectAndArgs(testQuery, argList));
+    }
+</code></pre>
+<pre><code>    @Test
+    public void buildSelectWithWhereAndPage() {
+        TestQuery testQuery = TestQuery.builder().username(&quot;test&quot;).build();
+        testQuery.setPageNumber(3).setPageSize(10);
+        assertEquals(&quot;SELECT * FROM user WHERE username = ? LIMIT 10 OFFSET 30&quot;,
+                     testQueryBuilder.buildSelectAndArgs(testQuery, argList));
+    }
+</code></pre>
+<pre><code>    @Test
+    public void buildSelectWithArgs() {
+        argList = new ArrayList&lt;&gt;();
+        TestQuery testQuery = TestQuery.builder().username(&quot;test&quot;).build();
+        assertEquals(&quot;SELECT * FROM user WHERE username = ?&quot;,
+                     testQueryBuilder.buildSelectAndArgs(testQuery, argList));
+        assertEquals(1, argList.size());
+        assertEquals(&quot;test&quot;, argList.get(0));
+    }
+</code></pre>
+<hr>
+<h3 id="github地址">Github地址</h3>
+<p><a href="https://github.com/f0rb/doyto-query/">doyto-query</a></p>
+
+          </div>
+        </div>
+
+        
+      </div>
+
+      
+        
+          <div id="gitalk-container"></div>
+        
+
+        
+      
+
+      <div class="site-footer">
+  <div class="slogan">DOYToWin</div>
+  <div class="social-container">
+    
+      
+        <a href="https://github.com/doytowin/" target="_blank">
+          <i class="fab fa-github"></i>
+        </a>
+      
+    
+      
+        <a href="https://x.com/doytowin" target="_blank">
+          <i class="fab fa-twitter"></i>
+        </a>
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+  <a target="_blank" rel="noopener noreferrer" href="https://beian.miit.gov.cn/">鄂ICP备17018023号-1</a>
+|
+<span>Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a></span>
+|
+<span>Hosted on <a href="https://github.com/f0rb/f0rb.github.io/" target="_blank">f0rb.github.io</a></span> | <a class="rss" href="https://blog.doyto.win/atom.xml" target="_blank">RSS</a>
+</div>
+
+
+    </div>
+    <script type="application/javascript">
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function () {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?d5d7ae2ddd28b5b5061cc801ef122a66";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: 'bba21e5713780b0ea310',
+        clientSecret: '6d4e00ab700caf5d3809bdafa989c566b458cf2b',
+        repo: 'f0rb.github.io',
+        owner: 'f0rb',
+        admin: ['f0rb'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+  </body>
+</html>
