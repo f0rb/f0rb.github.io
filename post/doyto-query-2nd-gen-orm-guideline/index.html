@@ -1,0 +1,364 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    
+<meta charset="utf-8" >
+
+<title>DoytoQuery——第二代ORM框架的Java实现（提纲版） | DOYToWin</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.doyto.win/favicon.ico?v=1731590560848">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://blog.doyto.win/styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+  
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-164125169-1"></script>
+<script> window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-164125169-1');</script>
+
+
+    
+    <meta name="description" content="背景摘要
+背景：当前的ORM框架都是将数据库表映射为实体(Entity)对象来对数据库进行访问操作。
+问题：动态查询语句和复杂的连接查询需要大量编码，且有结构型重复。
+方案：既然通过SQL语句进行数据库操作，那就将SQL语句作为对象映射的目..." />
+    <meta name="keywords" content="" />
+  </head>
+  <body>
+    <div id="app" class="main">
+      <div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="https://blog.doyto.win">
+        <img class="avatar" src="https://blog.doyto.win/images/avatar.png?v=1731590560848" alt="" width="32px" height="32px">
+      </a>
+      <a href="https://blog.doyto.win">
+        <h1 class="site-title">DOYToWin</h1>
+      </a>
+    </div>
+    <div class="right">
+      <transition name="fade">
+        <i class="icon" :class="{ 'icon-close-outline': menuVisible, 'icon-menu-outline': !menuVisible }" @click="menuVisible = !menuVisible"></i>
+      </transition>
+    </div>
+  </div>
+</div>
+
+<transition name="fade">
+  <div class="menu-container" style="display: none;" v-show="menuVisible">
+    <div class="menu-list">
+      
+        
+          <a href="/" class="menu purple-link">
+            首页/Home
+          </a>
+        
+      
+        
+          <a href="/archives" class="menu purple-link">
+            归档/Archives
+          </a>
+        
+      
+        
+          <a href="/tags" class="menu purple-link">
+            标签/Tags
+          </a>
+        
+      
+        
+          <a href="/post/about" class="menu purple-link">
+            关于/About
+          </a>
+        
+      
+    </div>
+  </div>
+</transition>
+
+
+      <div class="content-container">
+        <div class="post-detail">
+          
+          <h2 class="post-title">DoytoQuery——第二代ORM框架的Java实现（提纲版）</h2>
+          <div class="post-info post-detail-info">
+            <span><i class="icon-calendar-outline"></i> 2021-05-24</span>
+            <span id="busuanzi_container_page_pv"><i class="icon-eye-outline"></i> <span id="busuanzi_value_page_pv"></span></span>
+            
+          </div>
+          <div class="post-content">
+            <h1 id="背景摘要">背景摘要</h1>
+<p>背景：当前的ORM框架都是将数据库表映射为实体(Entity)对象来对数据库进行访问操作。<br>
+问题：动态查询语句和复杂的连接查询需要大量编码，且有结构型重复。<br>
+方案：既然通过SQL语句进行数据库操作，那就将SQL语句作为对象映射的目标。<br>
+结果：动态查询和复杂查询的开发大大简化，并由此搭建了一整套闭合的Web应用分层体系。</p>
+<h1 id="第二代orm框架概述">第二代ORM框架概述</h1>
+<h2 id="一条核心理念">一条核心理念</h2>
+<p><strong>将SQL语句映射为对象进行数据库访问操作</strong></p>
+<h2 id="两大理论基础">两大理论基础</h2>
+<h4 id="一-一条sql语句最多映射为三个对象">一、一条SQL语句最多映射为三个对象</h4>
+<ol>
+<li>WHERE语句映射为Query对象
+<ul>
+<li>每条查询语句都包含了隐式分页和排序</li>
+<li>查询字段可以通过以下三种方式映射为条件语句
+<ul>
+<li>字段后缀映射</li>
+<li>嵌套查询注解</li>
+<li>自定义查询注解</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>SELECT语句映射为Entity对象</li>
+<li>水平分表的动态表名由IdWrapper对象确定</li>
+</ol>
+<h4 id="二-sql访问语句可以归为三类">二、 SQL访问语句可以归为三类</h4>
+<ol>
+<li>单表增删查改
+<ul>
+<li>基于上述三个对象映射单表的增删查改语句</li>
+</ul>
+</li>
+<li>中间表操作
+<ul>
+<li>表结构类似，变量部分有3个：表名，左表外键列名，右表外键列名</li>
+<li>只有增删查操作，没有修改操作</li>
+<li>根据上述变量可以生成对应的增删查语句</li>
+</ul>
+</li>
+<li>聚合/连接查询
+<ul>
+<li>只有查询操作</li>
+<li>复用Query对象生成查询语句</li>
+<li>Entity对象的字段的注解用于拼接SELECT语句</li>
+<li>在Entity对象上使用注解拼接JOIN和GROUP BY语句</li>
+</ul>
+</li>
+</ol>
+<h1 id="数据库访问操作的两大步骤及对应的代表框架">数据库访问操作的两大步骤及对应的代表框架</h1>
+<ol>
+<li>
+<p>SQL生成</p>
+<ul>
+<li>JPA/Hibernate</li>
+<li>MyBatis Generator</li>
+<li>MyBatis-Plus</li>
+<li>tkMapper</li>
+<li><strong>DoytoQuery</strong>(core)</li>
+</ul>
+</li>
+<li>
+<p>SQL执行</p>
+<ul>
+<li>Hibernate</li>
+<li>Mybatis</li>
+<li>Spring JDBC</li>
+<li>DbUtils</li>
+</ul>
+</li>
+</ol>
+<h2 id="doytoquery的对应实现">DoytoQuery的对应实现</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">SQL分类</th>
+<th style="text-align:center">接口</th>
+<th style="text-align:center">实现</th>
+<th style="text-align:center">SQL构建</th>
+<th style="text-align:center">SQL执行</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">单表</td>
+<td style="text-align:center">DataAccess</td>
+<td style="text-align:center">JdbcDataAccess</td>
+<td style="text-align:center">QueryBuilder/CrudBuilder</td>
+<td style="text-align:center">Spring-Jdbc</td>
+</tr>
+<tr>
+<td style="text-align:center">中间表</td>
+<td style="text-align:center">AssociativeService</td>
+<td style="text-align:center">TemplateAssociativeService</td>
+<td style="text-align:center">AssociativeSqlBuilder</td>
+<td style="text-align:center">Spring-Jdbc</td>
+</tr>
+<tr>
+<td style="text-align:center">连接表</td>
+<td style="text-align:center">QueryService</td>
+<td style="text-align:center">JoinQueryService</td>
+<td style="text-align:center">JoinQueryBuilder</td>
+<td style="text-align:center">Spring-Jdbc</td>
+</tr>
+</tbody>
+</table>
+<h1 id="基于dataaccess接口的分层体系搭建">基于DataAccess接口的分层体系搭建</h1>
+<h2 id="dataaccess层">DataAccess层</h2>
+<ul>
+<li>单表增删查改操作</li>
+<li>数据库方言扩展</li>
+<li>DataAccess接口的一个Mock实现</li>
+</ul>
+<h2 id="service层">Service层</h2>
+<ul>
+<li>增删查改接口</li>
+<li>二级缓存</li>
+<li>UserId注入</li>
+<li>EntityAspect扩展</li>
+</ul>
+<h2 id="controller层">Controller层</h2>
+<ul>
+<li>RESTFul API 接口</li>
+<li>错误码</li>
+<li>异常断言</li>
+<li>异常处理</li>
+<li>响应封装</li>
+<li>Request/Entity/Response转换</li>
+<li>分组校验</li>
+</ul>
+<h1 id="相关资源">相关资源</h1>
+<ul>
+<li>源码<br>
+<a href="">https://github.com/f0rb/doyto-query</a><br>
+<a href="">https://github.com/f0rb/doyto-query-web</a><br>
+<a href="">https://github.com/doytowin/doyto-query-dialect</a></li>
+<li>相关项目<br>
+<a href="https://github.com/f0rb/doyto-query-demo">Demo演示</a><br>
+<a href="%5Bhttps://github.com/doytowin/doyto-query-intellij-plugin">Idea插件</a> todo<br>
+<a href="https://github.com/f0rb/doyto-service-i18n">多语言管理服务</a><br>
+<a href="https://gitee.com/doyto/doyto-service-generator">代码生成服务</a></li>
+<li>文档<br>
+<a href="">https://query.doyto.win/</a></li>
+<li>Sonar<br>
+<a href="">https://sonarcloud.io/dashboard?id=win.doyto%3Adoyto-query</a></li>
+<li>Maven<br>
+<a href="">https://search.maven.org/search?q=g:win.doyto</a></li>
+</ul>
+<h1 id="扩展">扩展</h1>
+<p>话题</p>
+<p>使用其他语言实现<br>
+前缀分包vs后缀分包<br>
+安全问题和性能问题的识别和改进<br>
+重构理念在DoytoQuery演进过程中的驱动作用<br>
+更优雅的缓存清理方案<br>
+多高的测试覆盖率才能保证没有bug</p>
+<p>功能</p>
+<p>旧系统的迁移改造方案<br>
+patch(Query)和delete(Query)接口的非空检查<br>
+IDE的插件，包括查询字段的后缀提示和单表组件的代码生成等功能<br>
+相关文档和教程<br>
+流量控制功能<br>
+SQL记录功能<br>
+代码热部署</p>
+<p>一点牢骚：<br>
+面向对象开发没问题，面向的对象错了才有问题。</p>
+
+          </div>
+        </div>
+
+        
+      </div>
+
+      
+        
+          <div id="gitalk-container"></div>
+        
+
+        
+      
+
+      <div class="site-footer">
+  <div class="slogan">DOYToWin</div>
+  <div class="social-container">
+    
+      
+        <a href="https://github.com/doytowin/" target="_blank">
+          <i class="fab fa-github"></i>
+        </a>
+      
+    
+      
+        <a href="https://x.com/doytowin" target="_blank">
+          <i class="fab fa-twitter"></i>
+        </a>
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+  <a target="_blank" rel="noopener noreferrer" href="https://beian.miit.gov.cn/">鄂ICP备17018023号-1</a>
+|
+<span>Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a></span>
+|
+<span>Hosted on <a href="https://github.com/f0rb/f0rb.github.io/" target="_blank">f0rb.github.io</a></span> | <a class="rss" href="https://blog.doyto.win/atom.xml" target="_blank">RSS</a>
+</div>
+
+
+    </div>
+    <script type="application/javascript">
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function () {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?d5d7ae2ddd28b5b5061cc801ef122a66";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: 'bba21e5713780b0ea310',
+        clientSecret: '6d4e00ab700caf5d3809bdafa989c566b458cf2b',
+        repo: 'f0rb.github.io',
+        owner: 'f0rb',
+        admin: ['f0rb'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+  </body>
+</html>
