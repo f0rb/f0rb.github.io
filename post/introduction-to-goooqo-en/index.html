@@ -1,0 +1,575 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    
+<meta charset="utf-8" >
+
+<title>What?! Go Implementation of OQM Can Build CRUD in Just Two Lines? | DOYToWin</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.doyto.win/favicon.ico?v=1737547064740">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://blog.doyto.win/styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+  
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-164125169-1"></script>
+<script> window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-164125169-1');</script>
+
+
+    
+    <meta property="og:image" content="https://blog.doyto.win/post-images/introduction-to-goooqo-en.png">
+    
+    <meta name="description" content="This is all thanks to the support of OQM (Object Query-Language Mapping) technology, we developed a Go version called Go..." />
+    <meta name="keywords" content="Forb,GoooQo,Go,en,ORM,OQM" />
+  </head>
+  <body>
+    <div id="app" class="main">
+      <div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="https://blog.doyto.win">
+        <img class="avatar" src="https://blog.doyto.win/images/avatar.png?v=1737547064740" alt="" width="32px" height="32px">
+      </a>
+      <a href="https://blog.doyto.win">
+        <h1 class="site-title">DOYToWin</h1>
+      </a>
+    </div>
+    <div class="right">
+      <transition name="fade">
+        <i class="icon" :class="{ 'icon-close-outline': menuVisible, 'icon-menu-outline': !menuVisible }" @click="menuVisible = !menuVisible"></i>
+      </transition>
+    </div>
+  </div>
+</div>
+
+<transition name="fade">
+  <div class="menu-container" style="display: none;" v-show="menuVisible">
+    <div class="menu-list">
+      
+        
+          <a href="/" class="menu purple-link">
+            首页/Home
+          </a>
+        
+      
+        
+          <a href="/archives" class="menu purple-link">
+            归档/Archives
+          </a>
+        
+      
+        
+          <a href="/tags" class="menu purple-link">
+            标签/Tags
+          </a>
+        
+      
+        
+          <a href="/post/about" class="menu purple-link">
+            关于/About
+          </a>
+        
+      
+    </div>
+  </div>
+</transition>
+
+
+      <div class="content-container">
+        <div class="post-detail">
+          
+            <img src="https://blog.doyto.win/post-images/introduction-to-goooqo-en.png" alt="What?! Go Implementation of OQM Can Build CRUD in Just Two Lines?" style="width:100%">
+          
+          <h2 class="post-title">What?! Go Implementation of OQM Can Build CRUD in Just Two Lines?</h2>
+          <div class="post-info post-detail-info">
+            <span><i class="icon-calendar-outline"></i> 2024-08-27</span>
+            
+              <span>
+                <i class="icon-pricetags-outline"></i>
+                
+                  <a href="https://blog.doyto.win/tag/2ixBhtMBT/">
+                    Forb
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/OsG0ZGFVG/">
+                    GoooQo
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/wrrn0wEw0/">
+                    Go
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/XWT0z16Oz/">
+                    en
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/ivCsCBvQG/">
+                    ORM
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/iJtaxszOUH/">
+                    OQM
+                    
+                  </a>
+                
+              </span>
+            
+            <span id="busuanzi_container_page_pv" style="color: #fff"><span id="busuanzi_value_page_pv"></span></span>
+          </div>
+          <div class="post-content">
+            <p>This is all thanks to the support of OQM (Object Query-Language Mapping) technology, we developed a Go version called <a href="https://github.com/doytowin/goooqo">GoooQo</a>.</p>
+<!-- more -->
+<h2 id="introduction-to-oqm">Introduction to OQM</h2>
+<p>The biggest difference between OQM technology and traditional ORM (object-relational mapping) technology is that OQM proposes to build CRUD statements directly through objects.</p>
+<p>The core function of OQM is to build a query clause through a query object, which is the origin of the <code>Q</code> in the name of OQM.</p>
+<p>Another significant discovery in OQM technology is that the field names in query objects and the conditions in query clauses can be converted interchangeably.</p>
+<p>For example, in SQL, the query condition <code>age &gt; ?</code> can be transformed by rewriting <code>&gt;</code> as the string alias <code>Gt</code> (short for Greater Than), and then attaching <code>Gt</code> as a suffix to the column name <code>age</code>, resulting in <code>ageGt</code>, which can be used as a field name.</p>
+<p>Then we can use OQM technology to parse such objects. When a field named <code>ageGt</code> is assigned a value, the corresponding query condition can be generated by reversing the above process.</p>
+<p>In this way, we only need to create an entity object and a query object to build CRUD statements. The entity object is used to determine the table name and the column names, and the instance of the query object is used to control the construction of the query clause​​.</p>
+<p>By encapsulating all the boilerplate code, the code to build a CRUD Web API for a single table is reduced to just two lines.</p>
+<h2 id="demo-introduction">Demo Introduction</h2>
+<p>We developed a separate <a href="https://github.com/doytowin/goooqo-demo">demo</a> to demonstrate the features of GoooQo.</p>
+<p>The file <a href="https://github.com/doytowin/goooqo-demo/blob/main/test.db">test.db</a> is a SQLite database containing a table <code>t_user</code> with four rows:</p>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>username</th>
+<th>password</th>
+<th>email</th>
+<th>mobile</th>
+<th>nickname</th>
+<th>memo</th>
+<th>valid</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>f0rb</td>
+<td>123456</td>
+<td>f0rb@163.com</td>
+<td>18888888881</td>
+<td>test1</td>
+<td></td>
+<td>true</td>
+</tr>
+<tr>
+<td>2</td>
+<td>user2</td>
+<td>123456</td>
+<td>test2@qq.com</td>
+<td>18888888882</td>
+<td>test2</td>
+<td></td>
+<td>false</td>
+</tr>
+<tr>
+<td>3</td>
+<td>user3</td>
+<td>123456</td>
+<td>test3@qq.com</td>
+<td>18888888883</td>
+<td>test3</td>
+<td>memo</td>
+<td>true</td>
+</tr>
+<tr>
+<td>4</td>
+<td>user4</td>
+<td>123456</td>
+<td>test4@qq.com</td>
+<td>18888888884</td>
+<td>test4</td>
+<td></td>
+<td>true</td>
+</tr>
+</tbody>
+</table>
+<p>Using GoooQo, we only need to define two structs, <code>UserEntity</code> and <code>UserQuery</code>, for the user table in <a href="https://github.com/doytowin/goooqo-demo/blob/main/user.go">user.go</a>.</p>
+<p><code>UserEntity</code> is a traditional entity object with fields corresponding to the columns in the user table.</p>
+<p><code>UserQuery</code> is dedicated to constructing query clauses. The fields in <code>UserQuery</code> follow the format of column name plus suffix (refer to the suffix mapping table in the appendix) to generate the corresponding query conditions:</p>
+<pre><code class="language-go">type UserQuery struct {
+    goooqo.PageQuery
+    IdGt         *int     // id &gt; ?
+    IdIn         *[]int   // id IN (?,?,?)
+    EmailContain *string  // email LIKE &quot;%value%&quot;
+    MemoNull     *bool    // memo is [NOT] NULL
+}
+</code></pre>
+<p>In addition, the embedded <code>goooqo.PageQuery</code> defines three fields: <code>PageNumber</code>, <code>PageSize</code>, and <code>Sort</code>, which are used to construct the paging clause and the sorting clause.</p>
+<p>After establishing a database connection in the main method, the following two lines of code are all we need to build the CRUD APIs for the user table:</p>
+<pre><code class="language-go">userDataAccess := rdb.NewTxDataAccess[UserEntity](tm)
+goooqo.BuildRestService[UserEntity, UserQuery](&quot;/user/&quot;, userDataAccess)
+</code></pre>
+<p>The first line of the code creates a data access module for the user table, and the second line builds a web access module based on the created data access module for the user table. The web access module handles requests at http://localhost:9090/user/.</p>
+<h2 id="running-the-demo">Running the Demo</h2>
+<p>Checkout the <a href="https://github.com/doytowin/goooqo">demo</a> repository locally and run the main method in the file <a href="https://github.com/doytowin/goooqo-demo/blob/main/demo.go">demo.go</a> to start the program, and then access the following URLs to view the response:</p>
+<ul>
+<li>http://localhost:9090/user/</li>
+<li>http://localhost:9090/user/3</li>
+<li>http://localhost:9090/user/?pageNumber=2&amp;pageSize=2</li>
+<li>http://localhost:9090/user/?sort=id,desc</li>
+<li>http://localhost:9090/user/?sort=memo,desc%3Bemail,desc</li>
+<li>http://localhost:9090/user/?idIn=1,3</li>
+<li>http://localhost:9090/user/?emailContain=qq</li>
+<li>http://localhost:9090/user/?idGt=2&amp;emailContain=qq</li>
+<li>http://localhost:9090/user/?emailContain=qq&amp;memoNull=true</li>
+<li>http://localhost:9090/user/?emailContain=qq&amp;memoNull=false</li>
+</ul>
+<p>For example, the query string <code>emailContain=qq&amp;memoNull=false</code> will generate this SQL statement <code>SELECT * FROM t_user WHERE email LIKE '%qq' AND memo IS NOT NULL</code> and get a response like this:</p>
+<pre><code class="language-json">{
+  &quot;data&quot;: {
+    &quot;list&quot;: [
+      {
+        &quot;id&quot;: 3,
+        &quot;username&quot;: &quot;user3&quot;,
+        &quot;email&quot;: &quot;test3@qq.com&quot;,
+        &quot;mobile&quot;: &quot;17778888883&quot;,
+        &quot;nickname&quot;: &quot;test3&quot;,
+        &quot;memo&quot;: &quot;memo&quot;,
+        &quot;valid&quot;: true
+      }
+    ],
+    &quot;total&quot;: 1
+  },
+  &quot;success&quot;: true
+}
+</code></pre>
+<p>There are also some sample HTTP requests provided in the file <a href="https://github.com/doytowin/goooqo-demo/blob/main/user.http">user.http</a> to test the <code>POST/PUT/PATCH/DELETE</code> operations. For example:</p>
+<pre><code class="language-http">### Create new users
+POST http://localhost:9090/user/
+Content-Type: application/json
+
+[{
+  &quot;username&quot;: &quot;Ada Wong&quot;,
+  &quot;email&quot;: &quot;AdaW@gmail.com&quot;,
+  &quot;mobile&quot;: &quot;01066666&quot;,
+  &quot;nickname&quot;: &quot;ada&quot;,
+  &quot;memo&quot;: &quot;An agent.&quot;,
+  &quot;valid&quot;: true
+}, {
+  &quot;username&quot;: &quot;Leon Kennedy&quot;,
+  &quot;email&quot;: &quot;LeonKennedy@gmail.com&quot;,
+  &quot;mobile&quot;: &quot;01077777&quot;,
+  &quot;nickname&quot;: &quot;leon&quot;,
+  &quot;memo&quot;: &quot;The hero.&quot;,
+  &quot;valid&quot;: true
+}]
+
+### Update specified fields for the user 3
+
+PATCH http://localhost:9090/user/3
+Content-Type: application/json
+
+{
+  &quot;username&quot;: &quot;Leon Kennedy&quot;,
+  &quot;email&quot;: &quot;LeonKennedy@gmail.com&quot;
+}
+
+### Delete users where the memo field is not null
+DELETE http://localhost:9090/user/?memoNull=false
+</code></pre>
+<h2 id="epilogue">Epilogue</h2>
+<p><a href="https://github.com/doytowin/goooqo">GoooQo</a> is the Golang version of OQM technology following the Java version framework <a href="http://github.com/doytowin/doyto-query">DoytoQuery</a>. Currently, it is only an MVP that has undergone preliminary evaluation, and it will take multiple rounds of iterations to implement all the functions proposed by OQM technology. Please stay tuned and support us!</p>
+<h2 id="appendix-the-suffix-mapping-table">Appendix: The Suffix Mapping Table</h2>
+<p>The suffixes supported by version v0.1.3 and the corresponding query conditions can be found in this suffix mapping table:</p>
+<table>
+<thead>
+<tr>
+<th>Suffix</th>
+<th>Field</th>
+<th>Value</th>
+<th>SQL Condition</th>
+<th>MongoDBCondition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>(EMPTY)</td>
+<td>id</td>
+<td>5</td>
+<td>id = 5</td>
+<td>{&quot;id&quot;:5}</td>
+</tr>
+<tr>
+<td>Eq</td>
+<td>idEq</td>
+<td>5</td>
+<td>id = 5</td>
+<td>{&quot;idEq&quot;:5}</td>
+</tr>
+<tr>
+<td>Not</td>
+<td>idNot</td>
+<td>5</td>
+<td>id != 5</td>
+<td>{&quot;idNot&quot;:{&quot;$ne&quot;:5}}</td>
+</tr>
+<tr>
+<td>Ne</td>
+<td>idNe</td>
+<td>5</td>
+<td>id &lt;&gt; 5</td>
+<td>{&quot;idNe&quot;:{&quot;$ne&quot;:5}}</td>
+</tr>
+<tr>
+<td>Gt</td>
+<td>idGt</td>
+<td>5</td>
+<td>id &gt; 5</td>
+<td>{&quot;idGt&quot;:{&quot;$gt&quot;:5}}</td>
+</tr>
+<tr>
+<td>Ge</td>
+<td>idGe</td>
+<td>5</td>
+<td>id &gt;= 5</td>
+<td>{&quot;idGe&quot;:{&quot;$gte&quot;:5}}</td>
+</tr>
+<tr>
+<td>Lt</td>
+<td>idLt</td>
+<td>5</td>
+<td>id &lt; 5</td>
+<td>{&quot;idLt&quot;:{&quot;$lt&quot;:5}}</td>
+</tr>
+<tr>
+<td>Le</td>
+<td>idLe</td>
+<td>5</td>
+<td>id &lt;= 5</td>
+<td>{&quot;idLe&quot;:{&quot;$lte&quot;:5}}</td>
+</tr>
+<tr>
+<td>NotIn</td>
+<td>idNotIn</td>
+<td>[1,2,3]</td>
+<td>id NOT IN (1,2,3)</td>
+<td>{&quot;id&quot;:{&quot;$nin&quot;:[1, 2, 3]}}</td>
+</tr>
+<tr>
+<td>In</td>
+<td>idIn</td>
+<td>[1,2,3]</td>
+<td>id IN (1,2,3)</td>
+<td>{&quot;id&quot;:{&quot;$in&quot;:[1, 2, 3]}}</td>
+</tr>
+<tr>
+<td>Null</td>
+<td>memoNull</td>
+<td>false</td>
+<td>memo IS NOT NULL</td>
+<td>{&quot;memo&quot;:{&quot;$not&quot;:{&quot;$type&quot;, 10}}}</td>
+</tr>
+<tr>
+<td>Null</td>
+<td>memoNull</td>
+<td>true</td>
+<td>memo IS NULL</td>
+<td>{&quot;memo&quot;:{&quot;$type&quot;, 10}}</td>
+</tr>
+<tr>
+<td>NotLike</td>
+<td>nameNotLike</td>
+<td>&quot;arg&quot;</td>
+<td>name NOT LIKE '%arg%'</td>
+<td>{&quot;name&quot;:{&quot;$not&quot;:{&quot;$regex&quot;:&quot;arg&quot;}}}</td>
+</tr>
+<tr>
+<td>Like</td>
+<td>nameLike</td>
+<td>&quot;arg&quot;</td>
+<td>name LIKE '%arg%'</td>
+<td>{&quot;name&quot;:{&quot;$regex&quot;:&quot;arg&quot;}}</td>
+</tr>
+<tr>
+<td>NotStart</td>
+<td>nameNotStart</td>
+<td>&quot;arg&quot;</td>
+<td>name NOT LIKE 'arg%'</td>
+<td>{&quot;name&quot;:{&quot;$not&quot;:{&quot;$regex&quot;:&quot;^arg&quot;}}}</td>
+</tr>
+<tr>
+<td>Start</td>
+<td>nameStart</td>
+<td>&quot;arg&quot;</td>
+<td>name LIKE 'arg%'</td>
+<td>{&quot;name&quot;:{&quot;$regex&quot;:&quot;^arg&quot;}}</td>
+</tr>
+<tr>
+<td>NotEnd</td>
+<td>nameNotEnd</td>
+<td>&quot;arg&quot;</td>
+<td>name NOT LIKE '%arg'</td>
+<td>{&quot;name&quot;:{&quot;$not&quot;:{&quot;$regex&quot;:&quot;arg$&quot;}}}</td>
+</tr>
+<tr>
+<td>End</td>
+<td>nameEnd</td>
+<td>&quot;arg&quot;</td>
+<td>name LIKE '%arg'</td>
+<td>{&quot;name&quot;:{&quot;$regex&quot;:&quot;arg$&quot;}}</td>
+</tr>
+<tr>
+<td>NotContain</td>
+<td>nameNotContain</td>
+<td>&quot;arg&quot;</td>
+<td>name NOT LIKE '%arg%’</td>
+<td>{&quot;name&quot;:{&quot;$not&quot;:{&quot;$regex&quot;:&quot;arg&quot;}}}</td>
+</tr>
+<tr>
+<td>Contain</td>
+<td>nameContain</td>
+<td>&quot;arg&quot;</td>
+<td>name LIKE '%arg%’</td>
+<td>{&quot;name&quot;:{&quot;$regex&quot;:&quot;arg&quot;}}</td>
+</tr>
+<tr>
+<td>Rx</td>
+<td>nameRx</td>
+<td>&quot;arg\d&quot;</td>
+<td>name REGEXP 'arg\d’</td>
+<td>{&quot;name&quot;:{&quot;$regex&quot;:&quot;arg\d&quot;}}</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p>© 2024 Yuan Zhen. All rights reserved.</p>
+
+          </div>
+        </div>
+
+        
+          <div class="next-post">
+            <a class="purple-link" href="https://blog.doyto.win/post/introduction-to-goooqo/">
+              <h3 class="post-title">
+                下一篇：什么?！Golang里两行代码就能搞定增删查改接口了？
+              </h3>
+            </a>
+          </div>
+          
+      </div>
+
+      
+        
+          <div id="gitalk-container"></div>
+        
+
+        
+      
+
+      <div class="site-footer">
+  <div class="slogan">DOYToWin</div>
+  <div class="social-container">
+    
+      
+        <a href="https://github.com/doytowin/" target="_blank">
+          <i class="fab fa-github"></i>
+        </a>
+      
+    
+      
+        <a href="https://x.com/doytowin" target="_blank">
+          <i class="fab fa-twitter"></i>
+        </a>
+      
+    
+      
+    
+      
+        <a href="https://www.zhihu.com/people/yuan-forb/" target="_blank">
+          <i class="fab fa-zhihu"></i>
+        </a>
+      
+    
+      
+    
+  </div>
+  <a target="_blank" rel="noopener noreferrer" href="https://beian.miit.gov.cn/">鄂ICP备17018023号-1</a>
+|
+<span>Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a></span>
+|
+<span>Hosted on <a href="https://github.com/f0rb/f0rb.github.io/" target="_blank">f0rb.github.io</a></span> | <a class="rss" href="https://blog.doyto.win/atom.xml" target="_blank">RSS</a>
+</div>
+
+
+    </div>
+    <script type="application/javascript">
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function () {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?d5d7ae2ddd28b5b5061cc801ef122a66";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: 'bba21e5713780b0ea310',
+        clientSecret: '6d4e00ab700caf5d3809bdafa989c566b458cf2b',
+        repo: 'f0rb.github.io',
+        owner: 'f0rb',
+        admin: ['f0rb'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+  </body>
+</html>

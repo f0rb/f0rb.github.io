@@ -1,0 +1,298 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    
+<meta charset="utf-8" >
+
+<title>数据库查询中的分页和排序方案 | DOYToWin</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.doyto.win/favicon.ico?v=1737547064740">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://blog.doyto.win/styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+  
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-164125169-1"></script>
+<script> window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-164125169-1');</script>
+
+
+    
+    <meta name="description" content="分页和排序是数据库提供的基本功能之二。
+以MySQL为例，一条典型的SQL查询语句如下：
+SELECT * FROM t_user
+ORDER BY create_time DESC, username ASC
+LIMIT 10 OFFSE..." />
+    <meta name="keywords" content="DoytoQuery,Java,CRUD,f0rb说" />
+  </head>
+  <body>
+    <div id="app" class="main">
+      <div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="https://blog.doyto.win">
+        <img class="avatar" src="https://blog.doyto.win/images/avatar.png?v=1737547064740" alt="" width="32px" height="32px">
+      </a>
+      <a href="https://blog.doyto.win">
+        <h1 class="site-title">DOYToWin</h1>
+      </a>
+    </div>
+    <div class="right">
+      <transition name="fade">
+        <i class="icon" :class="{ 'icon-close-outline': menuVisible, 'icon-menu-outline': !menuVisible }" @click="menuVisible = !menuVisible"></i>
+      </transition>
+    </div>
+  </div>
+</div>
+
+<transition name="fade">
+  <div class="menu-container" style="display: none;" v-show="menuVisible">
+    <div class="menu-list">
+      
+        
+          <a href="/" class="menu purple-link">
+            首页/Home
+          </a>
+        
+      
+        
+          <a href="/archives" class="menu purple-link">
+            归档/Archives
+          </a>
+        
+      
+        
+          <a href="/tags" class="menu purple-link">
+            标签/Tags
+          </a>
+        
+      
+        
+          <a href="/post/about" class="menu purple-link">
+            关于/About
+          </a>
+        
+      
+    </div>
+  </div>
+</transition>
+
+
+      <div class="content-container">
+        <div class="post-detail">
+          
+          <h2 class="post-title">数据库查询中的分页和排序方案</h2>
+          <div class="post-info post-detail-info">
+            <span><i class="icon-calendar-outline"></i> 2022-02-27</span>
+            
+              <span>
+                <i class="icon-pricetags-outline"></i>
+                
+                  <a href="https://blog.doyto.win/tag/zPv-nX5nF/">
+                    DoytoQuery
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/CcCKyUB3QV/">
+                    Java
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/7k1aGKguYI/">
+                    CRUD
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/qP6WaPh-k/">
+                    f0rb说
+                    
+                  </a>
+                
+              </span>
+            
+            <span id="busuanzi_container_page_pv" style="color: #fff"><span id="busuanzi_value_page_pv"></span></span>
+          </div>
+          <div class="post-content">
+            <p>分页和排序是数据库提供的基本功能之二。</p>
+<p>以MySQL为例，一条典型的SQL查询语句如下：</p>
+<pre><code class="language-sql">SELECT * FROM t_user
+ORDER BY create_time DESC, username ASC
+LIMIT 10 OFFSET 20
+</code></pre>
+<p>那么在前后端交互中，前端应该如何向后端传递分页和排序有关的信息呢？需要传递哪些参数？参数的意义和格式又是什么？</p>
+<h2 id="分页">分页</h2>
+<p>分页的语句为<code>LIMIT 10 OFFSET 20</code>，其中<code>10</code>为每页的大小，<code>20</code>为查询的偏移量，也就是查询表中的第21到30条共计10条数据。</p>
+<p>但是在设计接口时，通常不会要求前端直接传入<code>OFFSET</code>参数，而是通过传入页号和分页大小，来计算出<code>OFFSET</code>的值。</p>
+<p>在这个例子中，假设前端的页号从1开始，那么需要查询的数据就是分页大小为10的第3页数据，对应的<code>OFFSET</code>的值的计算式为<code>(3-1)*10 = 20</code>。</p>
+<p>前端在调用后端查询接口时，通常会传入页号和每页大小，由后端计算出<code>OFFSET</code>用于分页查询。这里页号的参数名称定义为<code>pageNumber</code>，分页大小的参数名定义为<code>pageSize</code>, 则以起始页号为1为例，<code>OFFSET</code>的计算公式为：</p>
+<pre><code>(pageNumber - 1) * pageSize
+</code></pre>
+<p>而前端的传值应为</p>
+<pre><code>?pageNumber=3&amp;pageSize=10
+</code></pre>
+<h3 id="分页接口">分页接口</h3>
+<p>不同的数据库的分页语句并不一致，但是一般都需要三个参数：SQL语句，分页大小，偏移量，所以定义一个构建分页语句的接口<a href="https://github.com/doytowin/doyto-query/blob/main/doyto-query-api/src/main/java/win/doyto/query/core/Dialect.java"><code>Dialect</code></a>，根据访问的数据库提供对应的分页实现。</p>
+<pre><code class="language-java">public interface Dialect {
+    String buildPageSql(String sql, int limit, long offset);
+}
+</code></pre>
+<h2 id="排序">排序</h2>
+<p>排序的语句为<code>ORDER BY create_time DESC, username ASC</code>, 其中<code>ORDER BY</code>为SQL的关键字，可以将其定义为参数名。因为是用于排序，所以我将其取名为<code>sort</code>，对应的值为<code>create_time DESC, username ASC</code>。因为前端GET请求需要对参数值里的空格进行转义，为避免这个问题，将值里的<code>,</code>转为<code>;</code>，将<code>DESC</code>/<code>ASC</code>前的空格转为<code>,</code>，最终前端传值如下：</p>
+<pre><code>?sort=create_time,desc;username,asc
+</code></pre>
+<h2 id="请求对象">请求对象</h2>
+<p>综合以上分页和排序的参数定义和说明，前端的传值如下：</p>
+<pre><code>?pageNumber=3&amp;pageSize=10&amp;sort=create_time,desc;username,asc
+</code></pre>
+<p>那么后端就可以定义如下<a href="https://github.com/doytowin/doyto-query/blob/main/doyto-query-api/src/main/java/win/doyto/query/core/PageQuery.java"><code>PageQuery</code></a>类用于分页和排序参数的处理：</p>
+<pre><code class="language-java">public class PageQuery {
+    private Integer pageNumber;
+    private Integer pageSize;
+    private String sort;
+}
+</code></pre>
+<p>每条查询都有进行显示或隐式的分页和排序，比如：</p>
+<pre><code class="language-sql">SELECT * FROM t_user
+</code></pre>
+<p><strong>等价于</strong></p>
+<pre><code class="language-sql">SELECT * FROM t_user
+ORDER BY id ASC
+LIMIT ∞ OFFSET 0
+</code></pre>
+<p>所以<code>PageQuery</code>应当作为所有查询对象的父类，以便为数据查询提供分页和排序的能力。</p>
+<h2 id="响应对象">响应对象</h2>
+<p>对于前端的分页查询请求，除了返回对应的数据列表外，还需要返回总的数据条数<code>total</code>以帮助前端计算总页数，计算公式为<code>⌈total/size⌉</code>。对应的响应对象定义如下：</p>
+<pre><code class="language-java">public class PageList&lt;T&gt; {
+    private final List&lt;T&gt; list;
+    private final long total;
+}
+</code></pre>
+<h2 id="小结">小结</h2>
+<p>本篇主要介绍了数据库查询中有关分页和排序的一种通用的解决方案，就这。</p>
+
+          </div>
+        </div>
+
+        
+          <div class="next-post">
+            <a class="purple-link" href="https://blog.doyto.win/post/prefix-vs-suffix/">
+              <h3 class="post-title">
+                下一篇：前缀分包vs后缀分包
+              </h3>
+            </a>
+          </div>
+          
+      </div>
+
+      
+        
+          <div id="gitalk-container"></div>
+        
+
+        
+      
+
+      <div class="site-footer">
+  <div class="slogan">DOYToWin</div>
+  <div class="social-container">
+    
+      
+        <a href="https://github.com/doytowin/" target="_blank">
+          <i class="fab fa-github"></i>
+        </a>
+      
+    
+      
+        <a href="https://x.com/doytowin" target="_blank">
+          <i class="fab fa-twitter"></i>
+        </a>
+      
+    
+      
+    
+      
+        <a href="https://www.zhihu.com/people/yuan-forb/" target="_blank">
+          <i class="fab fa-zhihu"></i>
+        </a>
+      
+    
+      
+    
+  </div>
+  <a target="_blank" rel="noopener noreferrer" href="https://beian.miit.gov.cn/">鄂ICP备17018023号-1</a>
+|
+<span>Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a></span>
+|
+<span>Hosted on <a href="https://github.com/f0rb/f0rb.github.io/" target="_blank">f0rb.github.io</a></span> | <a class="rss" href="https://blog.doyto.win/atom.xml" target="_blank">RSS</a>
+</div>
+
+
+    </div>
+    <script type="application/javascript">
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function () {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?d5d7ae2ddd28b5b5061cc801ef122a66";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: 'bba21e5713780b0ea310',
+        clientSecret: '6d4e00ab700caf5d3809bdafa989c566b458cf2b',
+        repo: 'f0rb.github.io',
+        owner: 'f0rb',
+        admin: ['f0rb'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+  </body>
+</html>

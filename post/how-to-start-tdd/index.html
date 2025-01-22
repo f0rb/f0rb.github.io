@@ -1,0 +1,277 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    
+<meta charset="utf-8" >
+
+<title>TDD的起点 | DOYToWin</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.doyto.win/favicon.ico?v=1737547064740">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://blog.doyto.win/styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+  
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-164125169-1"></script>
+<script> window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-164125169-1');</script>
+
+
+    
+    <meta name="description" content="y=f(x)
+而Java8的java.util.function.Function接口的定义是这样的
+@FunctionalInterface
+public interface Function&lt;T, R&gt; {
+    R ap..." />
+    <meta name="keywords" content="f0rb说" />
+  </head>
+  <body>
+    <div id="app" class="main">
+      <div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="https://blog.doyto.win">
+        <img class="avatar" src="https://blog.doyto.win/images/avatar.png?v=1737547064740" alt="" width="32px" height="32px">
+      </a>
+      <a href="https://blog.doyto.win">
+        <h1 class="site-title">DOYToWin</h1>
+      </a>
+    </div>
+    <div class="right">
+      <transition name="fade">
+        <i class="icon" :class="{ 'icon-close-outline': menuVisible, 'icon-menu-outline': !menuVisible }" @click="menuVisible = !menuVisible"></i>
+      </transition>
+    </div>
+  </div>
+</div>
+
+<transition name="fade">
+  <div class="menu-container" style="display: none;" v-show="menuVisible">
+    <div class="menu-list">
+      
+        
+          <a href="/" class="menu purple-link">
+            首页/Home
+          </a>
+        
+      
+        
+          <a href="/archives" class="menu purple-link">
+            归档/Archives
+          </a>
+        
+      
+        
+          <a href="/tags" class="menu purple-link">
+            标签/Tags
+          </a>
+        
+      
+        
+          <a href="/post/about" class="menu purple-link">
+            关于/About
+          </a>
+        
+      
+    </div>
+  </div>
+</transition>
+
+
+      <div class="content-container">
+        <div class="post-detail">
+          
+          <h2 class="post-title">TDD的起点</h2>
+          <div class="post-info post-detail-info">
+            <span><i class="icon-calendar-outline"></i> 2022-05-15</span>
+            
+              <span>
+                <i class="icon-pricetags-outline"></i>
+                
+                  <a href="https://blog.doyto.win/tag/qP6WaPh-k/">
+                    f0rb说
+                    
+                  </a>
+                
+              </span>
+            
+            <span id="busuanzi_container_page_pv" style="color: #fff"><span id="busuanzi_value_page_pv"></span></span>
+          </div>
+          <div class="post-content">
+            <h2 id="yfx">y=f(x)</h2>
+<p>而Java8的<code>java.util.function.Function</code>接口的定义是这样的</p>
+<pre><code class="language-java">@FunctionalInterface
+public interface Function&lt;T, R&gt; {
+    R apply(T t);
+    
+    ...
+}
+</code></pre>
+<p>如果我们把这里的<code>R apply(T t)</code>改写成<code>Y f(X x)</code>，调用的代码这样写：</p>
+<pre><code class="language-c">// define
+X x;
+Y y;
+Function&lt;X, Y&gt; func;
+
+// invoke
+y = func.f(x);
+
+</code></pre>
+<p>我们就会发现，数学里的函数和编程里的函数在抽象模型上和字面写法上并没有什么本质的区别，它们都遵循同样一个模型：<strong>Input-Process-Output(<em>IPO</em>)模型</strong>。其中x表示输入，f表示处理，y表示输出，只不过在数学里x被称作自变量，y被叫作因变量，而在开发中x称作入参，y称作返回值。</p>
+<p>那么，我们对于这样的IPO模型进行测试的时候，就需要给出一个输入<code>Given</code>，等待它的执行<code>When</code>，<code>Then</code>判断它的输出是否符合我们的期望，这便是测试用例里<strong>Given-When-Then</strong>写法的由来。</p>
+<p><code>Input-Process-Output</code>是对<code>y=f(x)</code>的阐述。</p>
+<p><code>Given-When-Then</code>是对<code>y=f(x)</code>的演绎。</p>
+<h2 id="given-when-then与input-process-output">Given-When-Then与Input-Process-Output</h2>
+<p>Given-When-Then定式和Input-Process-Output模型就是TDD中的一对经典的矛盾组合，我们进行TDD的过程就是一个以Given-When-Then之矛进攻Input-Process-Output之盾的过程。</p>
+<p>我们来看一下这样一组例子。</p>
+<p>先给出一个测试用例：x=1, y=1，套用一下Given-When-Then的写法：</p>
+<pre><code>given x=1
+when y=f(x)
+then assert y=1
+</code></pre>
+<p>我们可以给出满足期望的一个函数为：<code>y=f(x)=x</code>，写成代码就是：</p>
+<pre><code class="language-c">int f(int x) {
+    return x;
+}
+</code></pre>
+<p>再给出第二个测试用例：x=2, y=4，继续套用Given-When-Then的写法：</p>
+<pre><code>given x=2
+when y=f(x)
+then assert y=4
+</code></pre>
+<p>我们可以将函数修正为：<code>y=f(x)=x^2</code>，这个函数可以同时满足以上两个测试用例，而对应的代码修改为：</p>
+<pre><code class="language-c">int f(int x) {
+    return x * x;
+}
+</code></pre>
+<p>我们可以看到在这两个例子中，最中间最核心的一句话就是<code>y=f(x)</code>，从上往下的<code>given-when-then</code>三句话依次对应了<code>y=f(x)</code>中从右往左的三个关键字<code>x</code>, <code>f</code>, <code>y</code>。而<code>f(x)=x</code>和<code>f(x)=x^2</code>就是我们通过两个测试用例(Test)驱动(Driven)出来的结果(Development)。</p>
+<h2 id="小结">小结</h2>
+<p>所以，下次当你还没想好怎么编写你的测试用例的时候，不妨从这个模板开始：</p>
+<pre><code class="language-java">    @Test
+    void name() {
+        X x;
+        Y y = f(x);
+    }
+</code></pre>
+<p>然后定义一下变量<code>x</code>的类型和初始值(重构)，再定义一下<code>y</code>的类型和期望值(重构)，最后再给函数f和测试用例<code>重命名</code>一个合适的名字(重构)，开启又一次TDD之旅。</p>
+
+          </div>
+        </div>
+
+        
+          <div class="next-post">
+            <a class="purple-link" href="https://blog.doyto.win/post/paging-and-sorting-en/">
+              <h3 class="post-title">
+                下一篇：An object-oriented solution for Paging and Sorting in database query
+              </h3>
+            </a>
+          </div>
+          
+      </div>
+
+      
+        
+          <div id="gitalk-container"></div>
+        
+
+        
+      
+
+      <div class="site-footer">
+  <div class="slogan">DOYToWin</div>
+  <div class="social-container">
+    
+      
+        <a href="https://github.com/doytowin/" target="_blank">
+          <i class="fab fa-github"></i>
+        </a>
+      
+    
+      
+        <a href="https://x.com/doytowin" target="_blank">
+          <i class="fab fa-twitter"></i>
+        </a>
+      
+    
+      
+    
+      
+        <a href="https://www.zhihu.com/people/yuan-forb/" target="_blank">
+          <i class="fab fa-zhihu"></i>
+        </a>
+      
+    
+      
+    
+  </div>
+  <a target="_blank" rel="noopener noreferrer" href="https://beian.miit.gov.cn/">鄂ICP备17018023号-1</a>
+|
+<span>Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a></span>
+|
+<span>Hosted on <a href="https://github.com/f0rb/f0rb.github.io/" target="_blank">f0rb.github.io</a></span> | <a class="rss" href="https://blog.doyto.win/atom.xml" target="_blank">RSS</a>
+</div>
+
+
+    </div>
+    <script type="application/javascript">
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function () {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?d5d7ae2ddd28b5b5061cc801ef122a66";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: 'bba21e5713780b0ea310',
+        clientSecret: '6d4e00ab700caf5d3809bdafa989c566b458cf2b',
+        repo: 'f0rb.github.io',
+        owner: 'f0rb',
+        admin: ['f0rb'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+  </body>
+</html>

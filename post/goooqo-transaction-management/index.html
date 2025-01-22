@@ -1,0 +1,362 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    
+<meta charset="utf-8" >
+
+<title>GoooQo中的事务传播管理 | DOYToWin</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.doyto.win/favicon.ico?v=1737547064740">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://blog.doyto.win/styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+  
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-164125169-1"></script>
+<script> window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-164125169-1');</script>
+
+
+    
+    <meta name="description" content="事务接口定义
+GoooQo中的事务管理通过TransactionManager和TransactionContext（以下简称TC）配合完成。
+package core
+
+import (
+	&quot;context&quot;
+	&qu..." />
+    <meta name="keywords" content="cn,GoooQo,Go,OQM,f0rb说" />
+  </head>
+  <body>
+    <div id="app" class="main">
+      <div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="https://blog.doyto.win">
+        <img class="avatar" src="https://blog.doyto.win/images/avatar.png?v=1737547064740" alt="" width="32px" height="32px">
+      </a>
+      <a href="https://blog.doyto.win">
+        <h1 class="site-title">DOYToWin</h1>
+      </a>
+    </div>
+    <div class="right">
+      <transition name="fade">
+        <i class="icon" :class="{ 'icon-close-outline': menuVisible, 'icon-menu-outline': !menuVisible }" @click="menuVisible = !menuVisible"></i>
+      </transition>
+    </div>
+  </div>
+</div>
+
+<transition name="fade">
+  <div class="menu-container" style="display: none;" v-show="menuVisible">
+    <div class="menu-list">
+      
+        
+          <a href="/" class="menu purple-link">
+            首页/Home
+          </a>
+        
+      
+        
+          <a href="/archives" class="menu purple-link">
+            归档/Archives
+          </a>
+        
+      
+        
+          <a href="/tags" class="menu purple-link">
+            标签/Tags
+          </a>
+        
+      
+        
+          <a href="/post/about" class="menu purple-link">
+            关于/About
+          </a>
+        
+      
+    </div>
+  </div>
+</transition>
+
+
+      <div class="content-container">
+        <div class="post-detail">
+          
+          <h2 class="post-title">GoooQo中的事务传播管理</h2>
+          <div class="post-info post-detail-info">
+            <span><i class="icon-calendar-outline"></i> 2024-08-30</span>
+            
+              <span>
+                <i class="icon-pricetags-outline"></i>
+                
+                  <a href="https://blog.doyto.win/tag/SPCbNe66l_/">
+                    cn
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/OsG0ZGFVG/">
+                    GoooQo
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/wrrn0wEw0/">
+                    Go
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/iJtaxszOUH/">
+                    OQM
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/qP6WaPh-k/">
+                    f0rb说
+                    
+                  </a>
+                
+              </span>
+            
+            <span id="busuanzi_container_page_pv" style="color: #fff"><span id="busuanzi_value_page_pv"></span></span>
+          </div>
+          <div class="post-content">
+            <h2 id="事务接口定义">事务接口定义</h2>
+<p><a href="http://github.com/doytowin/goooqo">GoooQo</a>中的事务管理通过<code>TransactionManager</code>和<code>TransactionContext</code>（以下简称TC）配合完成。</p>
+<pre><code class="language-go">package core
+
+import (
+	&quot;context&quot;
+	&quot;database/sql/driver&quot;
+)
+
+type TransactionManager interface {
+	GetClient() any
+	StartTransaction(ctx context.Context) (TransactionContext, error)
+	SubmitTransaction(ctx context.Context, callback func(tc TransactionContext) error) error
+}
+
+type TransactionContext interface {
+	context.Context
+	driver.Tx
+	Parent() context.Context
+	SavePoint(name string) error
+	RollbackTo(name string) error
+}
+</code></pre>
+<p><code>TransactionManager</code>中的方法<code>StartTransaction</code>负责开启事务并返回TC；TC组合了<code>driver.Tx</code>，负责事务的提交和回滚。</p>
+<p><code>TxDataAccess</code>接口组合了<code>DataAccess</code>和<code>TransactionManager</code>，可以在实现数据库访问接口的同时，更方便的进行事务管理。</p>
+<pre><code class="language-go">type TxDataAccess[E Entity] interface {
+    TransactionManager
+    DataAccess[E]
+}
+</code></pre>
+<h2 id="事务使用示例">事务使用示例</h2>
+<p>用户可以使用<code>StartTransaction</code>开启事务，手动提交或者回滚事务：</p>
+<pre><code class="language-go">tc, err := userDataAccess.StartTransaction(ctx)
+userQuery := UserQuery{ScoreLt: P(80)}
+cnt, err := userDataAccess.DeleteByQuery(tc, userQuery)
+if err != nil {
+	err = RollbackFor(tc, err)
+	return 0
+}
+err = tc.Commit()
+return cnt
+</code></pre>
+<p>或者使用<code>TransactionManager#SubmitTransaction</code>通过回调的方式提交事务：</p>
+<pre><code class="language-go">err := tm.SubmitTransaction(ctx, func(tc TransactionContext) (err error) {
+    // transaction body
+    return
+})
+</code></pre>
+<h2 id="事务的传播管理">事务的传播管理</h2>
+<p>在Spring的事务传播机制中定义了以下7个级别，<code>GoooQo</code>中的对应处理方式如下：</p>
+<ul>
+<li>
+<p>REQUIRED</p>
+<p>使用任意context调用<code>TxDataAccess</code>的<code>StartTransaction</code>：</p>
+<p>如果context为TC，则将context强制转化为TC后返回；</p>
+<p>如果context不是TC，则调用<code>db#BeginTx</code>开启事务获取<code>sql.Tx</code>，再通过context和<code>sql.Tx</code>创建TC后返回。</p>
+</li>
+<li>
+<p>SUPPORTS</p>
+<p>使用任意<code>Context</code>调用<code>TxDataAccess</code>的数据库访问方法。</p>
+</li>
+<li>
+<p>REQUIRES_NEW</p>
+<p>当<code>ctx</code>为TC时，使用<code>ctx.(TC).Context</code>开启事务；<br>
+当<code>ctx</code>不为TC时，使用<code>ctx</code>开启事务；</p>
+</li>
+<li>
+<p>NOT_SUPPORTED</p>
+<p>当<code>ctx</code>为TC时，使用<code>ctx.(TC).Context</code>调用<code>TxDataAccess</code>的数据库访问方法；<br>
+当<code>ctx</code>不为TC时，使用<code>ctx</code>调用<code>TxDataAccess</code>的数据库访问方法；</p>
+</li>
+<li>
+<p>MANDATORY:</p>
+<p>对传入的<code>ctx</code>不是TC的情况进行处理。</p>
+</li>
+<li>
+<p>NEVER</p>
+<p>对传入的<code>ctx</code>是TC的情况进行处理。</p>
+</li>
+<li>
+<p>NESTED</p>
+<p>使用TC的<code>SavePoint/RollbackTo</code>方法。</p>
+</li>
+</ul>
+<p>这里整理了一个表格对前4个传播级别进行了对比：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:center">context参数\数据库操作</th>
+<th>开启事务</th>
+<th>调用数据库</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:center">任意Context</td>
+<td>REQUIRED</td>
+<td>SUPPORTS</td>
+</tr>
+<tr>
+<td style="text-align:center">ctx.(TC).Context | ctx</td>
+<td>REQUIRES_NEW</td>
+<td>NOT_SUPPORTED</td>
+</tr>
+</tbody>
+</table>
+<h2 id="总结">总结</h2>
+<p>虽然由于Golang语法限制，无法实现类似SpringTx提供的基于注解的管理事务传播级别的方法，<br>
+但是GoooQo利用了Golang的Context机制达到了同样的效果，使得开发人员能够使用最少的代码来对事务的传播级别进行对应的处理。</p>
+<hr>
+<p>© 2024 Yuan Zhen. All rights reserved.</p>
+
+          </div>
+        </div>
+
+        
+          <div class="next-post">
+            <a class="purple-link" href="https://blog.doyto.win/post/introduction-to-goooqo-en/">
+              <h3 class="post-title">
+                下一篇：What?! Go Implementation of OQM Can Build CRUD in Just Two Lines?
+              </h3>
+            </a>
+          </div>
+          
+      </div>
+
+      
+        
+          <div id="gitalk-container"></div>
+        
+
+        
+      
+
+      <div class="site-footer">
+  <div class="slogan">DOYToWin</div>
+  <div class="social-container">
+    
+      
+        <a href="https://github.com/doytowin/" target="_blank">
+          <i class="fab fa-github"></i>
+        </a>
+      
+    
+      
+        <a href="https://x.com/doytowin" target="_blank">
+          <i class="fab fa-twitter"></i>
+        </a>
+      
+    
+      
+    
+      
+        <a href="https://www.zhihu.com/people/yuan-forb/" target="_blank">
+          <i class="fab fa-zhihu"></i>
+        </a>
+      
+    
+      
+    
+  </div>
+  <a target="_blank" rel="noopener noreferrer" href="https://beian.miit.gov.cn/">鄂ICP备17018023号-1</a>
+|
+<span>Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a></span>
+|
+<span>Hosted on <a href="https://github.com/f0rb/f0rb.github.io/" target="_blank">f0rb.github.io</a></span> | <a class="rss" href="https://blog.doyto.win/atom.xml" target="_blank">RSS</a>
+</div>
+
+
+    </div>
+    <script type="application/javascript">
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function () {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?d5d7ae2ddd28b5b5061cc801ef122a66";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: 'bba21e5713780b0ea310',
+        clientSecret: '6d4e00ab700caf5d3809bdafa989c566b458cf2b',
+        repo: 'f0rb.github.io',
+        owner: 'f0rb',
+        admin: ['f0rb'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+  </body>
+</html>

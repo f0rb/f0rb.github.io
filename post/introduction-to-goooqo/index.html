@@ -1,0 +1,569 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    
+<meta charset="utf-8" >
+
+<title>什么?！Golang里两行代码就能搞定增删查改接口了？ | DOYToWin</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.doyto.win/favicon.ico?v=1737547064740">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://blog.doyto.win/styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+  
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-164125169-1"></script>
+<script> window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-164125169-1');</script>
+
+
+    
+    <meta name="description" content="这都得益于OQM（Object Query-Language Mapping）技术的加持，我们开发了一个Go版本的实现，GoooQo 。
+
+OQM介绍
+OQM技术与传统的ORM（Object Relational Mapping）技术的最大..." />
+    <meta name="keywords" content="cn,GoooQo,Go,OQM,CRUD,f0rb说" />
+  </head>
+  <body>
+    <div id="app" class="main">
+      <div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="https://blog.doyto.win">
+        <img class="avatar" src="https://blog.doyto.win/images/avatar.png?v=1737547064740" alt="" width="32px" height="32px">
+      </a>
+      <a href="https://blog.doyto.win">
+        <h1 class="site-title">DOYToWin</h1>
+      </a>
+    </div>
+    <div class="right">
+      <transition name="fade">
+        <i class="icon" :class="{ 'icon-close-outline': menuVisible, 'icon-menu-outline': !menuVisible }" @click="menuVisible = !menuVisible"></i>
+      </transition>
+    </div>
+  </div>
+</div>
+
+<transition name="fade">
+  <div class="menu-container" style="display: none;" v-show="menuVisible">
+    <div class="menu-list">
+      
+        
+          <a href="/" class="menu purple-link">
+            首页/Home
+          </a>
+        
+      
+        
+          <a href="/archives" class="menu purple-link">
+            归档/Archives
+          </a>
+        
+      
+        
+          <a href="/tags" class="menu purple-link">
+            标签/Tags
+          </a>
+        
+      
+        
+          <a href="/post/about" class="menu purple-link">
+            关于/About
+          </a>
+        
+      
+    </div>
+  </div>
+</transition>
+
+
+      <div class="content-container">
+        <div class="post-detail">
+          
+          <h2 class="post-title">什么?！Golang里两行代码就能搞定增删查改接口了？</h2>
+          <div class="post-info post-detail-info">
+            <span><i class="icon-calendar-outline"></i> 2024-08-26</span>
+            
+              <span>
+                <i class="icon-pricetags-outline"></i>
+                
+                  <a href="https://blog.doyto.win/tag/SPCbNe66l_/">
+                    cn
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/OsG0ZGFVG/">
+                    GoooQo
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/wrrn0wEw0/">
+                    Go
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/iJtaxszOUH/">
+                    OQM
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/7k1aGKguYI/">
+                    CRUD
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/qP6WaPh-k/">
+                    f0rb说
+                    
+                  </a>
+                
+              </span>
+            
+            <span id="busuanzi_container_page_pv" style="color: #fff"><span id="busuanzi_value_page_pv"></span></span>
+          </div>
+          <div class="post-content">
+            <p>这都得益于OQM（Object Query-Language Mapping）技术的加持，我们开发了一个Go版本的实现，<a href="https://github.com/doytowin/goooqo">GoooQo</a> 。</p>
+<!-- more -->
+<h3 id="oqm介绍">OQM介绍</h3>
+<p>OQM技术与传统的ORM（Object Relational Mapping）技术的最大区别是，OQM技术提出直接基于对象构造各种增删查改语句。</p>
+<p>其中，最核心的功能就是<strong>通过查询对象构建查询子句</strong>，这也是OQM名字中Q的由来。</p>
+<p>OQM技术中另一个重要的发现就是<strong>查询对象的字段名称和查询子句的查询条件可以相互转换</strong>。</p>
+<p>例如SQL中的查询条件<code>age &gt; ?</code>，我们只需要将<code>&gt;</code>改写为字符串别名<code>Gt</code>（Greater-Than的缩写），再将Gt作为后缀附在列名age后得到<code>ageGt</code>，即可用作字段的名称。</p>
+<p>然后我们使用OQM技术对这样的对象进行解析，在遇到名称为<code>ageGt</code>的字段被赋值时，只需要逆向进行上述过程就能得到对应的查询条件。</p>
+<p>这样，我们只需要创建一个实体对象和一个查询对象，通过实体对象来确定表名和列名，通过在查询对象中定义字段和赋值来控制查询子句的构造。再将各种样板代码进行封装后，为单张表构建增删查改接口的代码就只剩下两行了。</p>
+<h3 id="demo介绍">Demo介绍</h3>
+<p>我们单独开发了一个<a href="https://github.com/doytowin/goooqo-demo">demo</a>来演示<a href="https://github.com/doytowin/goooqo">GoooQo</a>的这项功能。</p>
+<p>其中，<a href="https://github.com/doytowin/goooqo-demo/blob/main/test.db">test.db</a> 是一个 sqlite 数据库，包含一个有4行数据的表<code>t_user</code>。</p>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>username</th>
+<th>password</th>
+<th>email</th>
+<th>mobile</th>
+<th>nickname</th>
+<th>memo</th>
+<th>valid</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>f0rb</td>
+<td>123456</td>
+<td>f0rb@163.com</td>
+<td>18888888881</td>
+<td>test1</td>
+<td></td>
+<td>1</td>
+</tr>
+<tr>
+<td>2</td>
+<td>user2</td>
+<td>123456</td>
+<td>test2@qq.com</td>
+<td>18888888882</td>
+<td>test2</td>
+<td></td>
+<td>0</td>
+</tr>
+<tr>
+<td>3</td>
+<td>user3</td>
+<td>123456</td>
+<td>test3@qq.com</td>
+<td>18888888883</td>
+<td>test3</td>
+<td>memo</td>
+<td>1</td>
+</tr>
+<tr>
+<td>4</td>
+<td>user4</td>
+<td>123456</td>
+<td>test4@qq.com</td>
+<td>18888888884</td>
+<td>test4</td>
+<td></td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<p>接着我们在 <a href="https://github.com/doytowin/goooqo-demo/blob/main/user.go">user.go</a> 中为user表定义两个结构体 <code>UserEntity</code> 和 <code>UserQuery</code>。</p>
+<p><code>UserEntity</code>就是一个传统的实体对象，字段对应上述表中的列名。</p>
+<p><code>UserQuery</code>中的字段按照列名加后缀的格式定义，以便生成对应的查询语句（字段后缀请参考文末的后缀映射表）：</p>
+<pre><code class="language-go">type UserQuery struct {
+    goooqo.PageQuery
+    IdGt         *int     // id &gt; ?
+    IdIn         *[]int   // id IN (?,?,?)
+    EmailContain *string  // email LIKE &quot;%value%&quot;
+    MemoNull     *bool    // memo is [NOT] NULL
+}
+</code></pre>
+<p>此外，嵌入的<code>goooqo.PageQuery</code>中定义了<code>PageNumber</code>、<code>PageSize</code>、<code>Sort</code>3个字段，用于构造分页子句和排序子句。</p>
+<p>接下来，在main方法里建立好数据库连接后，我们即可使用下面两行代码来为user表构建一个增删查改接口：</p>
+<pre><code class="language-go">userDataAccess := rdb.NewTxDataAccess[UserEntity](tm)
+goooqo.BuildRestService[UserEntity, UserQuery](&quot;/user/&quot;, userDataAccess)
+</code></pre>
+<p>其中，第一行代码为user表创建一个数据库访问模块，第二行代码使用创建的数据库访问模块为user表创建一个web访问模块。</p>
+<p>这个web访问模块负责处理 <code>http://localhost:9090/user/</code> 上的访问请求。</p>
+<h3 id="demo运行">Demo运行</h3>
+<p>把<a href="https://github.com/doytowin/goooqo-demo">demo</a>仓库的代码克隆到本地，运行<a href="https://github.com/doytowin/goooqo-demo/blob/main/demo.go">demo.go</a>文件里的main方法启动程序，然后访问以下地址即可查看请求结果:</p>
+<ul>
+<li>http://localhost:9090/user/</li>
+<li>http://localhost:9090/user/3</li>
+<li>http://localhost:9090/user/?pageNumber=2&amp;pageSize=2</li>
+<li>http://localhost:9090/user/?sort=id,desc</li>
+<li>http://localhost:9090/user/?sort=memo,desc%3Bemail,desc</li>
+<li>http://localhost:9090/user/?idIn=1,3</li>
+<li>http://localhost:9090/user/?emailContain=qq</li>
+<li>http://localhost:9090/user/?emailContain=qq&amp;IdGt=2</li>
+<li>http://localhost:9090/user/?emailContain=qq&amp;memoNull=true</li>
+<li>http://localhost:9090/user/?emailContain=qq&amp;memoNull=false</li>
+</ul>
+<p>对于查询参数<code>?emailContain=qq&amp;memoNull=false</code>，将会生成SQL语句<code>SELECT * FROM t_user WHERE email LIKE '%qq' AND memo IS NOT NULL</code>，对应的返回结果为：</p>
+<pre><code class="language-json">{
+  &quot;data&quot;: {
+    &quot;list&quot;: [
+      {
+        &quot;id&quot;: 3,
+        &quot;username&quot;: &quot;user3&quot;,
+        &quot;email&quot;: &quot;test3@qq.com&quot;,
+        &quot;mobile&quot;: &quot;18888888883&quot;,
+        &quot;nickname&quot;: &quot;test3&quot;,
+        &quot;memo&quot;: &quot;memo&quot;,
+        &quot;valid&quot;: true
+      }
+    ],
+    &quot;total&quot;: 1
+  },
+  &quot;success&quot;: true
+}
+</code></pre>
+<p>我们还可以使用<a href="https://github.com/doytowin/goooqo-demo/blob/main/user.http">user.http</a>文件里提供的HTTP请求来测试 <code>POST/PUT/PATCH/DELETE</code> 等接口.<br>
+例如：</p>
+<pre><code class="language-http">### 添加新的用户
+POST http://localhost:9090/user/
+Content-Type: application/json
+
+[{
+  &quot;username&quot;: &quot;Ada Wong&quot;,
+  &quot;email&quot;: &quot;AdaW@gmail.com&quot;,
+  &quot;mobile&quot;: &quot;01066666&quot;,
+  &quot;nickname&quot;: &quot;ada&quot;,
+  &quot;memo&quot;: &quot;An agent.&quot;,
+  &quot;valid&quot;: true
+}, {
+  &quot;username&quot;: &quot;Leon Kennedy&quot;,
+  &quot;email&quot;: &quot;LeonKennedy@gmail.com&quot;,
+  &quot;mobile&quot;: &quot;01077777&quot;,
+  &quot;nickname&quot;: &quot;leon&quot;,
+  &quot;memo&quot;: &quot;The hero.&quot;,
+  &quot;valid&quot;: true
+}]
+
+
+### 为id为3的用户更新指定字段
+
+PATCH http://localhost:9090/user/3
+Content-Type: application/json
+
+{
+  &quot;username&quot;: &quot;Leon Kennedy&quot;,
+  &quot;email&quot;: &quot;LeonKennedy@gmail.com&quot;
+}
+
+### 删除memo字段为NULL的用户
+DELETE http://localhost:9090/user/?memoNull=false
+</code></pre>
+<h3 id="后记">后记</h3>
+<p><a href="https://github.com/doytowin/goooqo">GoooQo</a>是OQM技术在继Java版框架<a href="http://github.com/doytowin/doyto-query">DoytoQuery</a>之后的Go语言版本，现在还只是一个得到初步验证的MVP，后续还需多轮迭代才能实现OQM技术提出的所有特性。请大家保持关注，多多支持！</p>
+<h3 id="附录后缀映射表">附录：后缀映射表</h3>
+<p>当前版本支持的后缀以及对应的查询条件可以参考这张后缀映射表：</p>
+<table>
+<thead>
+<tr>
+<th>后缀名称</th>
+<th>字段名称</th>
+<th>字段赋值</th>
+<th>SQL查询条件</th>
+<th>MongoDB查询条件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>-</td>
+<td>id</td>
+<td>5</td>
+<td>id = 5</td>
+<td>{&quot;id&quot;:5}</td>
+</tr>
+<tr>
+<td>Eq</td>
+<td>idEq</td>
+<td>5</td>
+<td>id = 5</td>
+<td>{&quot;idEq&quot;:5}</td>
+</tr>
+<tr>
+<td>Ne</td>
+<td>idNe</td>
+<td>5</td>
+<td>id != 5</td>
+<td>{&quot;idNe&quot;:{&quot;$ne&quot;:5}}</td>
+</tr>
+<tr>
+<td>Gt</td>
+<td>idGt</td>
+<td>5</td>
+<td>id &gt; 5</td>
+<td>{&quot;idGt&quot;:{&quot;$gt&quot;:5}}</td>
+</tr>
+<tr>
+<td>Ge</td>
+<td>idGe</td>
+<td>5</td>
+<td>id &gt;= 5</td>
+<td>{&quot;idGe&quot;:{&quot;$gte&quot;:5}}</td>
+</tr>
+<tr>
+<td>Lt</td>
+<td>idLt</td>
+<td>5</td>
+<td>id &lt; 5</td>
+<td>{&quot;idLt&quot;:{&quot;$lt&quot;:5}}</td>
+</tr>
+<tr>
+<td>Le</td>
+<td>idLe</td>
+<td>5</td>
+<td>id &lt;= 5</td>
+<td>{&quot;idLe&quot;:{&quot;$lte&quot;:5}}</td>
+</tr>
+<tr>
+<td>In</td>
+<td>idIn</td>
+<td>[1,2,3]</td>
+<td>id IN (1,2,3)</td>
+<td>{&quot;id&quot;:{&quot;$in&quot;:[1, 2, 3]}}</td>
+</tr>
+<tr>
+<td>NotIn</td>
+<td>idNotIn</td>
+<td>[1,2,3]</td>
+<td>id NOT IN (1,2,3)</td>
+<td>{&quot;id&quot;:{&quot;$nin&quot;:[1, 2, 3]}}</td>
+</tr>
+<tr>
+<td>Null</td>
+<td>memoNull</td>
+<td>false</td>
+<td>memo IS NOT NULL</td>
+<td>{&quot;memo&quot;:{&quot;$not&quot;:{&quot;$type&quot;, 10}}}</td>
+</tr>
+<tr>
+<td>Null</td>
+<td>memoNull</td>
+<td>true</td>
+<td>memo IS NULL</td>
+<td>{&quot;memo&quot;:{&quot;$type&quot;, 10}}</td>
+</tr>
+<tr>
+<td>NotLike</td>
+<td>nameNotLike</td>
+<td>&quot;arg&quot;</td>
+<td>name NOT LIKE '%arg%'</td>
+<td>{&quot;name&quot;:{&quot;$not&quot;:{&quot;$regex&quot;:&quot;arg&quot;}}}</td>
+</tr>
+<tr>
+<td>Like</td>
+<td>nameLike</td>
+<td>&quot;arg&quot;</td>
+<td>name LIKE '%arg%'</td>
+<td>{&quot;name&quot;:{&quot;$regex&quot;:&quot;arg&quot;}}</td>
+</tr>
+<tr>
+<td>NotStart</td>
+<td>nameNotStart</td>
+<td>&quot;arg&quot;</td>
+<td>name NOT LIKE 'arg%'</td>
+<td>{&quot;name&quot;:{&quot;$not&quot;:{&quot;$regex&quot;:&quot;^arg&quot;}}}</td>
+</tr>
+<tr>
+<td>Start</td>
+<td>nameStart</td>
+<td>&quot;arg&quot;</td>
+<td>name LIKE 'arg%'</td>
+<td>{&quot;name&quot;:{&quot;$regex&quot;:&quot;^arg&quot;}}</td>
+</tr>
+<tr>
+<td>NotEnd</td>
+<td>nameNotEnd</td>
+<td>&quot;arg&quot;</td>
+<td>name NOT LIKE '%arg'</td>
+<td>{&quot;name&quot;:{&quot;$not&quot;:{&quot;$regex&quot;:&quot;arg$&quot;}}}</td>
+</tr>
+<tr>
+<td>End</td>
+<td>nameEnd</td>
+<td>&quot;arg&quot;</td>
+<td>name LIKE '%arg'</td>
+<td>{&quot;name&quot;:{&quot;$regex&quot;:&quot;arg$&quot;}}</td>
+</tr>
+<tr>
+<td>NotContain</td>
+<td>nameNotContain</td>
+<td>&quot;arg&quot;</td>
+<td>name NOT LIKE '%arg%’</td>
+<td>{&quot;name&quot;:{&quot;$not&quot;:{&quot;$regex&quot;:&quot;arg&quot;}}}</td>
+</tr>
+<tr>
+<td>Contain</td>
+<td>nameContain</td>
+<td>&quot;arg&quot;</td>
+<td>name LIKE '%arg%’</td>
+<td>{&quot;name&quot;:{&quot;$regex&quot;:&quot;arg&quot;}}</td>
+</tr>
+<tr>
+<td>Rx</td>
+<td>nameRx</td>
+<td>&quot;arg\d&quot;</td>
+<td>name REGEXP 'arg\d’</td>
+<td>{&quot;name&quot;:{&quot;$regex&quot;:&quot;arg\d&quot;}}</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p>© 2024 Yuan Zhen. All rights reserved.</p>
+
+          </div>
+        </div>
+
+        
+          <div class="next-post">
+            <a class="purple-link" href="https://blog.doyto.win/post/from-orm-to-oqm-en/">
+              <h3 class="post-title">
+                下一篇：From ORM to OQM: An Object-Only SQL Construction Solution
+              </h3>
+            </a>
+          </div>
+          
+      </div>
+
+      
+        
+          <div id="gitalk-container"></div>
+        
+
+        
+      
+
+      <div class="site-footer">
+  <div class="slogan">DOYToWin</div>
+  <div class="social-container">
+    
+      
+        <a href="https://github.com/doytowin/" target="_blank">
+          <i class="fab fa-github"></i>
+        </a>
+      
+    
+      
+        <a href="https://x.com/doytowin" target="_blank">
+          <i class="fab fa-twitter"></i>
+        </a>
+      
+    
+      
+    
+      
+        <a href="https://www.zhihu.com/people/yuan-forb/" target="_blank">
+          <i class="fab fa-zhihu"></i>
+        </a>
+      
+    
+      
+    
+  </div>
+  <a target="_blank" rel="noopener noreferrer" href="https://beian.miit.gov.cn/">鄂ICP备17018023号-1</a>
+|
+<span>Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a></span>
+|
+<span>Hosted on <a href="https://github.com/f0rb/f0rb.github.io/" target="_blank">f0rb.github.io</a></span> | <a class="rss" href="https://blog.doyto.win/atom.xml" target="_blank">RSS</a>
+</div>
+
+
+    </div>
+    <script type="application/javascript">
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function () {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?d5d7ae2ddd28b5b5061cc801ef122a66";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: 'bba21e5713780b0ea310',
+        clientSecret: '6d4e00ab700caf5d3809bdafa989c566b458cf2b',
+        repo: 'f0rb.github.io',
+        owner: 'f0rb',
+        admin: ['f0rb'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+  </body>
+</html>

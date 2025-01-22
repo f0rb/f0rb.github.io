@@ -1,0 +1,364 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    
+<meta charset="utf-8" >
+
+<title>从ORM到OQM之4：分页查询与数据访问接口 | DOYToWin</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.doyto.win/favicon.ico?v=1737547064740">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://blog.doyto.win/styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+  
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-164125169-1"></script>
+<script> window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-164125169-1');</script>
+
+
+    
+    <meta name="description" content="引言
+动态查询接口不仅为用户提供了多样的查询参数，还会根据分页和排序参数对查询结果进行处理。
+本文将在重构动态查询代码的基础上，进一步探讨对分页和排序代码的重构，设计出一套简洁高效的数据访问接口。
+分页和排序
+假设一条查询请求如下：
+/us..." />
+    <meta name="keywords" content="ORM,OQM,zh,f0rb说" />
+  </head>
+  <body>
+    <div id="app" class="main">
+      <div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="https://blog.doyto.win">
+        <img class="avatar" src="https://blog.doyto.win/images/avatar.png?v=1737547064740" alt="" width="32px" height="32px">
+      </a>
+      <a href="https://blog.doyto.win">
+        <h1 class="site-title">DOYToWin</h1>
+      </a>
+    </div>
+    <div class="right">
+      <transition name="fade">
+        <i class="icon" :class="{ 'icon-close-outline': menuVisible, 'icon-menu-outline': !menuVisible }" @click="menuVisible = !menuVisible"></i>
+      </transition>
+    </div>
+  </div>
+</div>
+
+<transition name="fade">
+  <div class="menu-container" style="display: none;" v-show="menuVisible">
+    <div class="menu-list">
+      
+        
+          <a href="/" class="menu purple-link">
+            首页/Home
+          </a>
+        
+      
+        
+          <a href="/archives" class="menu purple-link">
+            归档/Archives
+          </a>
+        
+      
+        
+          <a href="/tags" class="menu purple-link">
+            标签/Tags
+          </a>
+        
+      
+        
+          <a href="/post/about" class="menu purple-link">
+            关于/About
+          </a>
+        
+      
+    </div>
+  </div>
+</transition>
+
+
+      <div class="content-container">
+        <div class="post-detail">
+          
+          <h2 class="post-title">从ORM到OQM之4：分页查询与数据访问接口</h2>
+          <div class="post-info post-detail-info">
+            <span><i class="icon-calendar-outline"></i> 2024-11-15</span>
+            
+              <span>
+                <i class="icon-pricetags-outline"></i>
+                
+                  <a href="https://blog.doyto.win/tag/ivCsCBvQG/">
+                    ORM
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/iJtaxszOUH/">
+                    OQM
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/m_hEuiLZB/">
+                    zh
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/qP6WaPh-k/">
+                    f0rb说
+                    
+                  </a>
+                
+              </span>
+            
+            <span id="busuanzi_container_page_pv" style="color: #fff"><span id="busuanzi_value_page_pv"></span></span>
+          </div>
+          <div class="post-content">
+            <h2 id="引言">引言</h2>
+<p>动态查询接口不仅为用户提供了多样的查询参数，还会根据分页和排序参数对查询结果进行处理。</p>
+<p>本文将在重构动态查询代码的基础上，进一步探讨对分页和排序代码的重构，设计出一套简洁高效的数据访问接口。</p>
+<h2 id="分页和排序">分页和排序</h2>
+<p>假设一条查询请求如下：</p>
+<pre><code class="language-http">/user/?ageGt=3&amp;pageNumber=3&amp;pageSize=10&amp;sort=age,desc;name,asc
+</code></pre>
+<p>其中，分页参数被定义<code>pageNumber</code>（页码）和<code>pageSize</code>（每页大小），排序参数<code>sort</code>为字符串，在Controller中我们一般这样定义对应的查询方法：</p>
+<pre><code class="language-java">@GetMapping(&quot;/user/&quot;)
+public List&lt;UserEntity&gt; query(String name, String nameLike, Integer ageGt, Integer pageNumber, Integer pageSize, String sort) {
+    // ...
+}
+</code></pre>
+<h3 id="分页查询对象">分页查询对象</h3>
+<p>根据先前的重构过程，我们在使用引入参数对象（Introduce Parameter Object）手法进行重构时，将分页和排序参数也封装到查询对象<code>UserQuery</code>中。</p>
+<p>由于分页和排序是通用需求，我们进一步通过提取父类（Extract Superclass）的重构手法，将分页和排序字段提取到父类<code>PageQuery</code>，由所有查询对象继承：</p>
+<pre><code class="language-java">public class PageQuery {
+    private Integer pageNumber;
+    private Integer pageSize;
+    private String sort;
+}
+
+public class UserQuery extends PageQuery {
+    private String name;     // name = ?
+    private String nameLike; // name LIKE ?
+    private Integer ageGt;   // age &gt; ?
+}
+</code></pre>
+<p>这样做还能避免对<code>UserQuery</code>的字段进行遍历时访问到分页和排序字段。</p>
+<h3 id="响应对象">响应对象</h3>
+<p>除了返回查询数据列表外，分页查询还需返回总数据条数<code>total</code>，以便前端计算总页数。常用的计算公式为<code>⌈total/size⌉</code>。因此，我们可以为分页查询结果定义如下响应对象：</p>
+<pre><code class="language-java">public record PageList&lt;T&gt;(List&lt;T&gt; list, long total) {
+}
+</code></pre>
+<h3 id="分页子句构造">分页子句构造</h3>
+<p>根据页号<code>pageNumber</code>和每页大小<code>pageSize</code>，我们可以先计算出偏移量<code>offset</code>，再构造分页子句<code>LIMIT {pageSize} OFFSET {offset}</code>。假设页号从1开始，<code>offset</code>的计算公式为：<code>(pageNumber - 1) * pageSize</code>，</p>
+<p>后续为了支持不同的数据库方言，我们还可以定义一个接口<code>Dialect</code>，根据数据库类型执行相应的分页实现：</p>
+<pre><code class="language-java">public interface Dialect {
+    String buildPageSql(String sql, int limit, long offset);
+}
+</code></pre>
+<h3 id="排序子句构造">排序子句构造</h3>
+<p>对于排序参数<code>sort=age,desc;name</code>，首先我们将逗号<code>,</code>转为空格，再将分号<code>;</code>转为逗号<code>,</code>，并加上<code>ORDER BY</code>关键字，最终得到排序子句<code>ORDER BY age desc, name</code>。</p>
+<p>由于排序参数是字符串类型，为防止出现SQL注入问题，我们可以使用<code>Validation</code>提供的注解对<code>sort</code>字段进行校验。</p>
+<h2 id="数据访问接口">数据访问接口</h2>
+<p>现在，我们通过查询对象构建了数据库访问语句中需要由用户提供参数的查询子句、排序子句和分页子句，再结合从实体对象中获取的表名和列名，便能为单张数据表构建全部增删查改语句。</p>
+<p>而表名和列名这些信息并不会改变，所以我们可以将对实体对象的解析代码移至构造函数，将表名和列名保存起来避免重复处理。这样，在查询方法中只需要处理查询对象。以下是优化后的查询方法：</p>
+<pre><code class="language-java">public class JdbcDataAccess&lt;E&gt; {
+    private JdbcTemplate jdbcTemplate;
+    private RowMapper&lt;E&gt; rowMapper;
+    private String table;
+    private String columns;
+
+    public JdbcDataAccess(JdbcTemplate jdbcTemplate, Class&lt;E&gt; clazz) {
+        this.jdbcTemplate = jdbcTemplate;
+        this.rowMapper = new BeanPropertyRowMapper&lt;&gt;(clazz);
+        this.table = clazz.getAnnotation(Table.class).name();
+        this.columns = QueryBuilder.buildColumns(clazz);
+    }
+
+    public List&lt;E&gt; query(PageQuery query) {
+        String sql = &quot;SELECT &quot; + columns + &quot; FROM &quot; + table;
+        ArrayList&lt;Object&gt; argList = new ArrayList&lt;&gt;();
+        sql += QueryBuilder.buildWhere(query, argList); // WHERE ...
+        sql += QueryBuilder.buildOrderBy(query); // ORDER BY ...
+        sql += QueryBuilder.buildPaging(query); // LIMIT ... OFFSET ...
+        return jdbcTemplate.query(sql, rowMapper, argList.toArray());
+    }
+
+    public long count(PageQuery query) {
+        String sql = &quot;SELECT count(*) FROM &quot; + table;
+        ArrayList&lt;Object&gt; argList = new ArrayList&lt;&gt;();
+        sql += QueryBuilder.buildWhere(query, argList);
+        return jdbcTemplate.queryForObject(sql, argList.toArray(), long.class);
+    }
+
+    public PageList&lt;E&gt; page(PageQuery query) {
+        return new PageList&lt;&gt;(query(query), count(query));
+    }
+}
+</code></pre>
+<p>接着，我们参考SpringDataJPA的<code>CrudRepository</code>接口，围绕实体对象和查询对象为单表交互设计了一套新的数据访问接口<code>DataAccess&lt;E, I, Q&gt;</code>，其中，<code>E</code>表示实体对象的类型，<code>Q</code>表示查询对象的类型。</p>
+<pre><code class="language-java">public interface DataAccess&lt;E extends Persistable&lt;I&gt;, I extends Serializable, Q extends PageQuery&gt; {
+    List&lt;E&gt; query(Q query);
+    long count(Q query);
+    PageList&lt;E&gt; page(Q query);
+    &lt;V&gt; List&lt;V&gt; queryColumns(Q q, Class&lt;V&gt; clazz, String... columns);
+    int delete(Q query);
+    int patch(E entity, Q query);
+
+    E get(I id);
+    int delete(I id);
+    void create(E e);
+    int create(List&lt;E&gt; entities);
+    int update(E e); // update all fields
+    int patch(E e);  // update non-null fields
+}
+</code></pre>
+<p>此接口提供了一套标准化的数据操作方法，进而帮助Controller层实现一套通用的RESTful接口：</p>
+<pre><code class="language-java">public class AbstractController&lt;E extends Persistable&lt;I&gt;, I extends Serializable, Q extends PageQuery&gt; {
+    @Resource
+    private DataAccess&lt;E, I, Q&gt; dataAccess;
+
+    @GetMapping(&quot;/&quot;)
+    public PageList&lt;E&gt; page(Q query) {
+        return dataAccess.page(query);
+    }
+
+    @GetMapping(&quot;/{id}&quot;)
+    public E get(@PathVariable I id) {
+        return dataAccess.get(id);
+    }
+
+    // POST/PUT/PATCH/DELETE methods
+}
+</code></pre>
+<h2 id="总结">总结</h2>
+<p>我们通过合理运用重构方法得到了一个查询对象，可以用于构建数据库访问语句中需要由用户提供参数的查询子句、排序子句和分页子句，这一部分可以视为查询语句中的动态部分。而从实体对象中获取的表名和列名可以视为查询语句中的静态部分。</p>
+<p>于是，SQL语句就被分为动静两部分由查询对象和实体对象分别映射得到。在此基础之上，我们为面向对象开发中单表的数据库交互设计了一套简单且完整的访问接口。</p>
+<p>显然，我们也可以根据查询对象构建复杂查询语句里的动态部分，那么复杂查询语句里的静态部分如何构造呢？我们将在下一篇文章中继续探讨复杂查询语句的面向对象的构造方法。</p>
+<p style="color:white">© 2024 Yuan Zhen. All rights reserved.</p>
+
+          </div>
+        </div>
+
+        
+          <div class="next-post">
+            <a class="purple-link" href="https://blog.doyto.win/post/from-orm-to-oqm-3-en/">
+              <h3 class="post-title">
+                下一篇：Refactor ORM 2: The Query Object and Dynamic Query Language
+              </h3>
+            </a>
+          </div>
+          
+      </div>
+
+      
+        
+          <div id="gitalk-container"></div>
+        
+
+        
+      
+
+      <div class="site-footer">
+  <div class="slogan">DOYToWin</div>
+  <div class="social-container">
+    
+      
+        <a href="https://github.com/doytowin/" target="_blank">
+          <i class="fab fa-github"></i>
+        </a>
+      
+    
+      
+        <a href="https://x.com/doytowin" target="_blank">
+          <i class="fab fa-twitter"></i>
+        </a>
+      
+    
+      
+    
+      
+        <a href="https://www.zhihu.com/people/yuan-forb/" target="_blank">
+          <i class="fab fa-zhihu"></i>
+        </a>
+      
+    
+      
+    
+  </div>
+  <a target="_blank" rel="noopener noreferrer" href="https://beian.miit.gov.cn/">鄂ICP备17018023号-1</a>
+|
+<span>Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a></span>
+|
+<span>Hosted on <a href="https://github.com/f0rb/f0rb.github.io/" target="_blank">f0rb.github.io</a></span> | <a class="rss" href="https://blog.doyto.win/atom.xml" target="_blank">RSS</a>
+</div>
+
+
+    </div>
+    <script type="application/javascript">
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function () {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?d5d7ae2ddd28b5b5061cc801ef122a66";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: 'bba21e5713780b0ea310',
+        clientSecret: '6d4e00ab700caf5d3809bdafa989c566b458cf2b',
+        repo: 'f0rb.github.io',
+        owner: 'f0rb',
+        admin: ['f0rb'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+  </body>
+</html>

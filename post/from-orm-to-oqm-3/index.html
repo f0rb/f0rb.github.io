@@ -1,0 +1,584 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    
+<meta charset="utf-8" >
+
+<title>从ORM到OQM之3：查询对象和动态查询语言 | DOYToWin</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.doyto.win/favicon.ico?v=1737547064740">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://blog.doyto.win/styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+  
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-164125169-1"></script>
+<script> window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-164125169-1');</script>
+
+
+    
+    <meta property="og:image" content="https://blog.doyto.win/post-images/from-orm-to-oqm-3.png">
+    
+    <meta name="description" content="本文探讨了如何利用查询对象实例自动生成动态查询条件，通过将查询条件抽象为四种字段类型（谓词后缀字段、逻辑后缀字段、子查询字段和实体关系字段）以实现查询条件的自动构造。
+
+1. 引言
+在对使用if语句构建动态查询的代码进行重构后，我们实现了一..." />
+    <meta name="keywords" content="ORM,OQM,zh,f0rb说" />
+  </head>
+  <body>
+    <div id="app" class="main">
+      <div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="https://blog.doyto.win">
+        <img class="avatar" src="https://blog.doyto.win/images/avatar.png?v=1737547064740" alt="" width="32px" height="32px">
+      </a>
+      <a href="https://blog.doyto.win">
+        <h1 class="site-title">DOYToWin</h1>
+      </a>
+    </div>
+    <div class="right">
+      <transition name="fade">
+        <i class="icon" :class="{ 'icon-close-outline': menuVisible, 'icon-menu-outline': !menuVisible }" @click="menuVisible = !menuVisible"></i>
+      </transition>
+    </div>
+  </div>
+</div>
+
+<transition name="fade">
+  <div class="menu-container" style="display: none;" v-show="menuVisible">
+    <div class="menu-list">
+      
+        
+          <a href="/" class="menu purple-link">
+            首页/Home
+          </a>
+        
+      
+        
+          <a href="/archives" class="menu purple-link">
+            归档/Archives
+          </a>
+        
+      
+        
+          <a href="/tags" class="menu purple-link">
+            标签/Tags
+          </a>
+        
+      
+        
+          <a href="/post/about" class="menu purple-link">
+            关于/About
+          </a>
+        
+      
+    </div>
+  </div>
+</transition>
+
+
+      <div class="content-container">
+        <div class="post-detail">
+          
+            <img src="https://blog.doyto.win/post-images/from-orm-to-oqm-3.png" alt="从ORM到OQM之3：查询对象和动态查询语言" style="width:100%">
+          
+          <h2 class="post-title">从ORM到OQM之3：查询对象和动态查询语言</h2>
+          <div class="post-info post-detail-info">
+            <span><i class="icon-calendar-outline"></i> 2024-11-09</span>
+            
+              <span>
+                <i class="icon-pricetags-outline"></i>
+                
+                  <a href="https://blog.doyto.win/tag/ivCsCBvQG/">
+                    ORM
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/iJtaxszOUH/">
+                    OQM
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/m_hEuiLZB/">
+                    zh
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/qP6WaPh-k/">
+                    f0rb说
+                    
+                  </a>
+                
+              </span>
+            
+            <span id="busuanzi_container_page_pv" style="color: #fff"><span id="busuanzi_value_page_pv"></span></span>
+          </div>
+          <div class="post-content">
+            <p>本文探讨了如何利用查询对象实例自动生成动态查询条件，通过将查询条件抽象为四种字段类型（谓词后缀字段、逻辑后缀字段、子查询字段和实体关系字段）以实现查询条件的自动构造。</p>
+<!-- more -->
+<h2 id="1-引言">1. 引言</h2>
+<p>在对使用if语句构建动态查询的代码进行<a href="https://blog.doyto.win/post/from-orm-to-oqm-2/">重构</a>后，我们实现了一种可以通过查询对象的实例直接构建动态查询的方法。这种方法包括以下步骤：</p>
+<ol>
+<li>遍历查询对象的所有字段；</li>
+<li>通过反射获取字段的赋值，根据已赋值字段的注解得到对应的查询条件，并将字段的赋值添加到参数列表。</li>
+<li>使用<code>AND</code>将多个查询条件组合成查询子句。</li>
+</ol>
+<p>借助这种方法，每新增一个查询条件，只需在查询对象中添加一个字段和声明了SQL条件的注解即可。<br>
+并且由于其通用性，构建动态查询的实现方法可以放在单独的仓库中进行维护和发布。</p>
+<p>然而，随着查询条件的类型和数量的增加，通过注解声明查询条件的弊端也逐渐显现，主要存在以下问题：</p>
+<ol>
+<li>查询条件中的列名和字段名称存在重复;</li>
+<li>IN操作符的变长占位符需要特殊处理；</li>
+<li>需要使用OR运算符连接多个查询条件;</li>
+<li>需要支持子查询。</li>
+</ol>
+<p>通过分析，我们发现操作符为等号的查询条件可以直接从字段名映射而得，从而避免在注解中重复编写SQL条件。这也让我们发现了消除SQL注解这个优化方向。</p>
+<h2 id="2-查询条件归类">2. 查询条件归类</h2>
+<p>基于查询条件的特性，我们将其分为以下四类，每类查询条件由一种类型的字段映射得到：</p>
+<ul>
+<li>包含列名、运算符和参数的基础查询条件</li>
+<li>使用AND/OR连接的查询条件</li>
+<li>含有子查询的查询条件</li>
+<li>涉及多对多关系的查询条件</li>
+</ul>
+<h3 id="21-谓词后缀字段">2.1. 谓词后缀字段</h3>
+<p>基础查询条件由列名、比较运算符和参数三部分构成，可以通过谓词后缀字段自动映射。</p>
+<p>谓词后缀字段的命名格式通常为列名加上一个谓词后缀，这些后缀可以直接表示常见的比较运算符，例如，<code>Eq</code>代表等于<code>=</code>、<code>Gt</code>代表大于<code>&gt;</code>等等。这种设计在DSL（领域特定语言）中非常常见。</p>
+<p>使用谓词后缀对字段进行命名还有另一个好处。当需要为某列定义比较符不同的多个查询条件时，不同的谓词后缀可以避免字段间的命名冲突。</p>
+<p>以<code>UserQuery</code>类为例，原先通过<code>@QueryField</code>注解声明查询条件的代码可以被简化成以下形式：</p>
+<pre><code class="language-java">public class UserQuery {
+    private String name;     // name = ?
+    private String nameLike; // name LIKE ?
+    private Integer ageGt;   // age &gt; ?
+}
+</code></pre>
+<p>在根据谓词后缀构造查询条件时，我们还会根据字段的赋值情况动态生成占位符和处理参数。例如：</p>
+<ul>
+<li>对于IN查询条件，可以根据参数个数自动生成对应个数的占位符；</li>
+<li>对于LIKE查询条件，则根据谓词后缀为字段值自动添加<code>%</code>。详见附录A谓词后缀表的对应部分。</li>
+</ul>
+<p>这种设计还让查询对象的构建更加直观。当为查询对象的字段赋值时，开发者可以直接根据字段名及其后缀的含义明确对应的SQL查询条件。</p>
+<p>附录A中的谓词后缀表列出了常见的谓词后缀和SQL查询条件的映射关系，为使用这些字段定义提供了参考。</p>
+<h3 id="22-逻辑后缀字段">2.2. 逻辑后缀字段</h3>
+<p>由逻辑运算符AND或OR连接的多个查询条件，由逻辑后缀字段映射得到。<br>
+逻辑后缀字段的类型为集合或者查询对象，用于映射多个查询条件，其中每个字段或元素映射为一个查询条件。<br>
+逻辑后缀字段的名称中包含逻辑后缀And/Or，用于指定连接多个查询条件的逻辑运算符。</p>
+<p>这张表格展示了以Or为后缀的三种字段类型的逻辑后缀字段的映射示例：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>取值 (JSON格式)</th>
+<th>查询条件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>List&lt;String&gt; nameOr</code></td>
+<td><code>[&quot;test1&quot;,&quot;test2&quot;]</code></td>
+<td><code>name = ? OR name = ?</code></td>
+</tr>
+<tr>
+<td><code>UserQuery userOr</code></td>
+<td><code>{&quot;name&quot;: &quot;John&quot;, &quot;age&quot;: 30}</code></td>
+<td><code>name = ? OR age = ?</code></td>
+</tr>
+<tr>
+<td><code>List&lt;UserQuery&gt; usersOr</code></td>
+<td><code>[{&quot;name&quot;: &quot;test&quot;, &quot;ageGe&quot;: 30, &quot;ageLt&quot;: 40}, {&quot;nameLike&quot;: &quot;admin&quot;, &quot;age&quot;: 40}]</code></td>
+<td><code>(name = ? AND age &gt;= ? AND age &lt; ?) OR (name LIKE ? AND age = ?)</code></td>
+</tr>
+</tbody>
+</table>
+<p>例如，查询条件<code>id = ? OR name = ? AND age &gt; ?</code>，我们可以在<code>UserQuery</code>类中添加字段<code>userAnd</code>和<code>userOr</code>，用于映射逻辑运算符连接的查询条件。</p>
+<pre><code class="language-java">public class UserQuery {
+    Integer id; 
+    String name; 
+    String nameLike;
+    Integer ageGt; 
+    UserQuery userAnd; 
+    UserQuery userOr; 
+}
+</code></pre>
+<p>再通过以下代码构建出<code>UserQuery</code>的实例，由字段<code>userOr</code>生成对应的查询条件：</p>
+<pre><code class="language-java">UserQuery userAnd = UserQuery.builder().name(&quot;John&quot;).ageGt(30).build()；
+UserQuery userOr = UserQuery.builder().id(5).userAnd(userAnd).build();
+UserQuery userQuery = UserQuery.builder().userOr(userOr).build();
+
+List&lt;Object&gt; argList = new ArrayList&lt;&gt;();
+String where = buildWhere(query, argList); 
+// SQL: WHERE id = ? OR name = ? AND age &gt; ?
+</code></pre>
+<p>在这个示例当中，同时存在逻辑运算符AND和OR，其中，AND的优先级高于OR。<br>
+由于逻辑运算符的运算优先级不同，我们认为SQL中的组合条件不是平面的，而是有层级的。<br>
+通过AND连接的查询条件位于一个层级，<br>
+通过OR连接的查询条件位于另一个层级。<br>
+不同层级的查询条件由相同的逻辑运算符组合而成。<br>
+基于以上发现，我们可以利用对象的层级关系来表达查询子句的层级关系。</p>
+<p>下图展示了<code>UserQuery</code>的实例中的赋值字段与查询条件的层级对应关系：<br>
+<img src="https://blog.doyto.win/post-images/1731141462478.webp" alt="逻辑运算符层级对比图" loading="lazy"></p>
+<h3 id="23-子查询字段">2.3. 子查询字段</h3>
+<p>对于一般的子查询条件，例如<code>age &gt; (SELECT avg(age) FROM t_user [WHERE])</code>，我们可以将其分为三个部分分别进行映射：</p>
+<ol>
+<li>
+<p>条件部分<code>age &gt;</code>，我们可以复用谓词后缀字段的格式进行映射。但是为了避免和原有的谓词后缀字段ageGt产生命名冲突，我们需要在谓词后缀后再加一些字符进行区分，例如ageGtAvg。在映射时，忽略谓词后缀后的额外字符；</p>
+</li>
+<li>
+<p>子查询的主句部分<code>SELECT avg(age) FROM t_user</code>：将列名和表名作为不变的静态变量，通过注解声明，例如<code>@Subquery(select = &quot;avg(age)&quot;, from = &quot;t_user&quot;)</code>；</p>
+</li>
+<li>
+<p>子查询的WHERE子句部分：通过复用查询对象映射方法进行构建。子查询字段的类型需要为查询对象。</p>
+</li>
+</ol>
+<p>通过这种方法，我们可以在<code>UserQuery</code>中添加如下<code>ageGtAvg</code>字段，用于构建上述查询条件：</p>
+<pre><code class="language-java">public class UserQuery {
+  // age &gt; (SELECT avg(age) FROM t_user [WHERE])
+  @Subquery(select = &quot;avg(age)&quot;, from = &quot;t_user&quot;)
+  UserQuery ageGtAvg;
+}
+</code></pre>
+<p>这样，我们仅使用一个字段便可以构建包含子查询的查询条件，且能为子查询构建动态查询语句。</p>
+<h3 id="24-实体关系查询字段">2.4. 实体关系查询字段</h3>
+<p>为符合第三范式，对于具有多对多关系的两个实体，我们通常引入一个中间表，将多对多关系拆分为两个一对多关系。而这类中间表的表名和字段都具有特定的格式：表名包含两个实体的名称；两个外键也以entity_id的格式命名。这使得我们可以通过两个实体的名称就能推导出查询条件。</p>
+<p>以RBAC模型为例，具有用户、角色和权限三个实体。其中，用户和角色具有多对多关系。其中间表的表名就可以由user和role推出，例如a_user_and_role，中间表的两个外键名称可以是user_id和role_id。那么，通过角色查询用户的查询条件为：</p>
+<pre><code class="language-SQL">SELECT * FORM t_user
+WHERE id IN (SELECT user_id FROM a_user_and_role WHERE role_id IN (
+  SELECT id FROM t_role [WHERE]))
+</code></pre>
+<p>由于我们可以由实体名称user和role推出各自对应的表名，以及对应的中间表的表名和两个外键名称，进而推出上述的查询条件，我们通过表达式<code>&lt;user,role&gt;</code>来表示上述查询条件。而对于role表后的WHERE子句，我们可以通过对实体role对应的查询对象复用查询对象映射方法得到。</p>
+<p>由于角色和权限也具有多对多关系，这使得用户和权限也符合多对多关系的特征，我们使用表达式<code>&lt;user,role,perm&gt;</code>来表示用户和权限通过角色形成的这种多对多关系，对应的推出根据权限查询所分配给的用户的查询语句为：</p>
+<pre><code class="language-sql">SELECT * FORM t_user
+WHERE id IN (SELECT user_id FROM a_user_and_role WHERE role_id IN (
+  SELECT role_id FROM a_role_and_perm WHERE perm_id IN (
+    SELECT id FROM t_perm [WHERE])))
+</code></pre>
+<p>由于表达式<code>&lt;user,role,perm&gt;</code>在表示user和perm的关系时，形成了一条从user到perm的路径，并且路径的节点为具有多对多关系的实体的名称，所以我称之为抽象实体路径。</p>
+<p>抽象实体路径可以包含任意多个节点来表示两个实体间的关系。例如，当系统中的权限和菜单也具有多对多关系时，可以使用表达式<code>&lt;user,role,perm,menu&gt;</code>表示用户和菜单中间的多对多关系。以此类推。</p>
+<p>根据以上分析，我们将通过角色和权限查询用户的字段分别定义如下：</p>
+<pre><code class="language-java">public class UserQuery {
+  //...
+  @DomainPath({&quot;user&quot;, &quot;role&quot;})
+  RoleQuery role;
+  @DomainPath({&quot;user&quot;, &quot;role&quot;, &quot;perm&quot;})
+  PermQuery perm;
+}
+</code></pre>
+<p>根据角色名称查询所授予的用户，使用角色名称构建RoleQuery对象，再将其赋给UserQuery实例的role字段即可：</p>
+<pre><code class="language-java">RoleQuery roleQuery = RoleQuery.builder().roleName(&quot;vip&quot;).build();
+UserQuery userQuery = UserQuery.builder().role(roleQuery).build();
+String where = buildWhere(userQuery, argList);
+</code></pre>
+<p>对应的查询子句如下：</p>
+<pre><code class="language-sql">WHERE id IN (SELECT user_id FROM a_user_and_role WHERE role_id IN (
+  SELECT id FROM t_role WHERE role_name = ?))
+</code></pre>
+<p>不仅如此，当抽象实体路径仅包含一个节点时，还能用于表示一对多/多对一关系，仅仅需要再指定一个外键的名称。</p>
+<p>例如在菜单实体中，通过外键<code>parent_id</code>连接父菜单的id，其查询字段看定义如下：</p>
+<pre><code class="language-java">public class MenuQuery extends PageQuery {
+
+    // many-to-one: query submenus by parent's conditions
+    // parent_id IN (SELECT id FROM t_menu [WHERE])
+    @DomainPath(value = &quot;menu&quot;, localField = &quot;parentId&quot;)
+    private MenuQuery parent;
+
+    // one-to-many: query parent menus by children's conditions
+    // id IN (SELECT parent_id FROM t_menu [WHERE])
+    @DomainPath(value = &quot;menu&quot;, foreignField = &quot;parentId&quot;)
+    private MenuQuery children;
+}
+</code></pre>
+<p>我们可以把父子菜单的关系表示为&lt;menu:menu|parentId,id&gt;和&lt;menu:menu|id,parentId&gt;。</p>
+<p>实体关系查询字段为我们提供了一种开箱即用的针对实体关系的查询模式。</p>
+<h2 id="3-应用范围">3. 应用范围</h2>
+<p>由于查询对象的定义仅依赖于面向对象语言的基本特性，这使得这种方法能够适用于不同的面向对象编程语言。不同类型的数据库在查询条件的语法上具有一定的共性，因此，基于查询对象的映射方案不仅能够生成SQL语句，还能够为MongoDB等NoSQL数据库构建查询语句。</p>
+<p>下图展示了如何通过统一的查询对象模型，构建适用于不同数据库的查询条件。该方法的通用性使得我们能够在多个数据库系统之间共享相同的查询构建逻辑，从而提高了代码的复用性和系统的灵活性。</p>
+<figure data-type="image" tabindex="1"><img src="https://blog.doyto.win/post-images/1731299720100.png" alt="查询对象对比图" loading="lazy"></figure>
+<h2 id="4-总结">4. 总结</h2>
+<p>本文详细介绍了如何基于查询对象实例自动生成动态查询条件，提出一种以字段特征映射查询条件的改进方法。该方法将查询条件抽象为四种字段类型以实现查询条件的自动构造。该方法减少了手动SQL编写的需求，大幅提高了代码的通用性和扩展性，为复杂查询提供了一种清晰高效的实现方案。</p>
+<hr>
+<h2 id="附录a谓词后缀表">附录A：谓词后缀表</h2>
+<table>
+<thead>
+<tr>
+<th>后缀名称</th>
+<th>字段名称</th>
+<th>字段赋值</th>
+<th>SQL查询条件</th>
+<th>MongoDB查询条件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>-</td>
+<td>id</td>
+<td>5</td>
+<td>id = 5</td>
+<td>{&quot;id&quot;:5}</td>
+</tr>
+<tr>
+<td>Eq</td>
+<td>idEq</td>
+<td>5</td>
+<td>id = 5</td>
+<td>{&quot;idEq&quot;:5}</td>
+</tr>
+<tr>
+<td>Ne</td>
+<td>idNe</td>
+<td>5</td>
+<td>id != 5</td>
+<td>{&quot;idNe&quot;:{&quot;$ne&quot;:5}}</td>
+</tr>
+<tr>
+<td>Gt</td>
+<td>idGt</td>
+<td>5</td>
+<td>id &gt; 5</td>
+<td>{&quot;idGt&quot;:{&quot;$gt&quot;:5}}</td>
+</tr>
+<tr>
+<td>Ge</td>
+<td>idGe</td>
+<td>5</td>
+<td>id &gt;= 5</td>
+<td>{&quot;idGe&quot;:{&quot;$gte&quot;:5}}</td>
+</tr>
+<tr>
+<td>Lt</td>
+<td>idLt</td>
+<td>5</td>
+<td>id &lt; 5</td>
+<td>{&quot;idLt&quot;:{&quot;$lt&quot;:5}}</td>
+</tr>
+<tr>
+<td>Le</td>
+<td>idLe</td>
+<td>5</td>
+<td>id &lt;= 5</td>
+<td>{&quot;idLe&quot;:{&quot;$lte&quot;:5}}</td>
+</tr>
+<tr>
+<td>In</td>
+<td>idIn</td>
+<td>[1,2,3]</td>
+<td>id IN (1,2,3)</td>
+<td>{&quot;id&quot;:{&quot;$in&quot;:[1, 2, 3]}}</td>
+</tr>
+<tr>
+<td>NotIn</td>
+<td>idNotIn</td>
+<td>[1,2,3]</td>
+<td>id NOT IN (1,2,3)</td>
+<td>{&quot;id&quot;:{&quot;$nin&quot;:[1, 2, 3]}}</td>
+</tr>
+<tr>
+<td>Null</td>
+<td>memoNull</td>
+<td>false</td>
+<td>memo IS NOT NULL</td>
+<td>{&quot;memo&quot;:{&quot;$not&quot;:{&quot;$type&quot;, 10}}}</td>
+</tr>
+<tr>
+<td>Null</td>
+<td>memoNull</td>
+<td>true</td>
+<td>memo IS NULL</td>
+<td>{&quot;memo&quot;:{&quot;$type&quot;, 10}}</td>
+</tr>
+<tr>
+<td>NotLike</td>
+<td>nameNotLike</td>
+<td>&quot;arg&quot;</td>
+<td>name NOT LIKE '%arg%'</td>
+<td>{&quot;name&quot;:{&quot;$not&quot;:{&quot;$regex&quot;:&quot;arg&quot;}}}</td>
+</tr>
+<tr>
+<td>Like</td>
+<td>nameLike</td>
+<td>&quot;arg&quot;</td>
+<td>name LIKE '%arg%'</td>
+<td>{&quot;name&quot;:{&quot;$regex&quot;:&quot;arg&quot;}}</td>
+</tr>
+<tr>
+<td>NotStart</td>
+<td>nameNotStart</td>
+<td>&quot;arg&quot;</td>
+<td>name NOT LIKE 'arg%'</td>
+<td>{&quot;name&quot;:{&quot;$not&quot;:{&quot;$regex&quot;:&quot;^arg&quot;}}}</td>
+</tr>
+<tr>
+<td>Start</td>
+<td>nameStart</td>
+<td>&quot;arg&quot;</td>
+<td>name LIKE 'arg%'</td>
+<td>{&quot;name&quot;:{&quot;$regex&quot;:&quot;^arg&quot;}}</td>
+</tr>
+<tr>
+<td>NotEnd</td>
+<td>nameNotEnd</td>
+<td>&quot;arg&quot;</td>
+<td>name NOT LIKE '%arg'</td>
+<td>{&quot;name&quot;:{&quot;$not&quot;:{&quot;$regex&quot;:&quot;arg$&quot;}}}</td>
+</tr>
+<tr>
+<td>End</td>
+<td>nameEnd</td>
+<td>&quot;arg&quot;</td>
+<td>name LIKE '%arg'</td>
+<td>{&quot;name&quot;:{&quot;$regex&quot;:&quot;arg$&quot;}}</td>
+</tr>
+<tr>
+<td>NotContain</td>
+<td>nameNotContain</td>
+<td>&quot;arg&quot;</td>
+<td>name NOT LIKE '%arg%’</td>
+<td>{&quot;name&quot;:{&quot;$not&quot;:{&quot;$regex&quot;:&quot;arg&quot;}}}</td>
+</tr>
+<tr>
+<td>Contain</td>
+<td>nameContain</td>
+<td>&quot;arg&quot;</td>
+<td>name LIKE '%arg%’</td>
+<td>{&quot;name&quot;:{&quot;$regex&quot;:&quot;arg&quot;}}</td>
+</tr>
+<tr>
+<td>Rx</td>
+<td>nameRx</td>
+<td>&quot;arg\d&quot;</td>
+<td>name REGEXP 'arg\d’</td>
+<td>{&quot;name&quot;:{&quot;$regex&quot;:&quot;arg\d&quot;}}</td>
+</tr>
+</tbody>
+</table>
+<h2 id="附录bgithub">附录B：GitHub</h2>
+<p>Java version: <a href="">http://github.com/doytowin/doyto-query</a></p>
+<p>Golang version: <a href="">http://github.com/doytowin/goooqo</a></p>
+
+          </div>
+        </div>
+
+        
+          <div class="next-post">
+            <a class="purple-link" href="https://blog.doyto.win/post/from-orm-to-oqm-2-en/">
+              <h3 class="post-title">
+                下一篇：Refactor ORM: Property-Related Duplication in Dynamic Queries and its Refactor Approach
+              </h3>
+            </a>
+          </div>
+          
+      </div>
+
+      
+        
+          <div id="gitalk-container"></div>
+        
+
+        
+      
+
+      <div class="site-footer">
+  <div class="slogan">DOYToWin</div>
+  <div class="social-container">
+    
+      
+        <a href="https://github.com/doytowin/" target="_blank">
+          <i class="fab fa-github"></i>
+        </a>
+      
+    
+      
+        <a href="https://x.com/doytowin" target="_blank">
+          <i class="fab fa-twitter"></i>
+        </a>
+      
+    
+      
+    
+      
+        <a href="https://www.zhihu.com/people/yuan-forb/" target="_blank">
+          <i class="fab fa-zhihu"></i>
+        </a>
+      
+    
+      
+    
+  </div>
+  <a target="_blank" rel="noopener noreferrer" href="https://beian.miit.gov.cn/">鄂ICP备17018023号-1</a>
+|
+<span>Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a></span>
+|
+<span>Hosted on <a href="https://github.com/f0rb/f0rb.github.io/" target="_blank">f0rb.github.io</a></span> | <a class="rss" href="https://blog.doyto.win/atom.xml" target="_blank">RSS</a>
+</div>
+
+
+    </div>
+    <script type="application/javascript">
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function () {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?d5d7ae2ddd28b5b5061cc801ef122a66";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: 'bba21e5713780b0ea310',
+        clientSecret: '6d4e00ab700caf5d3809bdafa989c566b458cf2b',
+        repo: 'f0rb.github.io',
+        owner: 'f0rb',
+        admin: ['f0rb'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+  </body>
+</html>

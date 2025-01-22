@@ -1,0 +1,353 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    
+<meta charset="utf-8" >
+
+<title>DoytoQuery中的关联查询方案 | DOYToWin</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.doyto.win/favicon.ico?v=1737547064740">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://blog.doyto.win/styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+  
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-164125169-1"></script>
+<script> window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-164125169-1');</script>
+
+
+    
+    <meta property="og:image" content="https://blog.doyto.win/post-images/the-related-query-solution-in-doyto-query-zh.png">
+    
+    <meta name="description" content="本文介绍了DoytoQuery对N+1查询问题的解决方案，以及实体间关系的查询方案。
+
+
+1. 背景
+Java Persistence with Hibernate 在12.2.1小节使用如下例子描述 n+1查询问题:
+List&lt;It..." />
+    <meta name="keywords" content="DoytoQuery,Java,CRUD,f0rb说" />
+  </head>
+  <body>
+    <div id="app" class="main">
+      <div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="https://blog.doyto.win">
+        <img class="avatar" src="https://blog.doyto.win/images/avatar.png?v=1737547064740" alt="" width="32px" height="32px">
+      </a>
+      <a href="https://blog.doyto.win">
+        <h1 class="site-title">DOYToWin</h1>
+      </a>
+    </div>
+    <div class="right">
+      <transition name="fade">
+        <i class="icon" :class="{ 'icon-close-outline': menuVisible, 'icon-menu-outline': !menuVisible }" @click="menuVisible = !menuVisible"></i>
+      </transition>
+    </div>
+  </div>
+</div>
+
+<transition name="fade">
+  <div class="menu-container" style="display: none;" v-show="menuVisible">
+    <div class="menu-list">
+      
+        
+          <a href="/" class="menu purple-link">
+            首页/Home
+          </a>
+        
+      
+        
+          <a href="/archives" class="menu purple-link">
+            归档/Archives
+          </a>
+        
+      
+        
+          <a href="/tags" class="menu purple-link">
+            标签/Tags
+          </a>
+        
+      
+        
+          <a href="/post/about" class="menu purple-link">
+            关于/About
+          </a>
+        
+      
+    </div>
+  </div>
+</transition>
+
+
+      <div class="content-container">
+        <div class="post-detail">
+          
+            <img src="https://blog.doyto.win/post-images/the-related-query-solution-in-doyto-query-zh.png" alt="DoytoQuery中的关联查询方案" style="width:100%">
+          
+          <h2 class="post-title">DoytoQuery中的关联查询方案</h2>
+          <div class="post-info post-detail-info">
+            <span><i class="icon-calendar-outline"></i> 2022-12-09</span>
+            
+              <span>
+                <i class="icon-pricetags-outline"></i>
+                
+                  <a href="https://blog.doyto.win/tag/zPv-nX5nF/">
+                    DoytoQuery
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/CcCKyUB3QV/">
+                    Java
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/7k1aGKguYI/">
+                    CRUD
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/qP6WaPh-k/">
+                    f0rb说
+                    
+                  </a>
+                
+              </span>
+            
+            <span id="busuanzi_container_page_pv" style="color: #fff"><span id="busuanzi_value_page_pv"></span></span>
+          </div>
+          <div class="post-content">
+            <p>本文介绍了DoytoQuery对N+1查询问题的解决方案，以及实体间关系的查询方案。</p>
+<!-- more -->
+<figure data-type="image" tabindex="1"><img src="https://blog.doyto.win/post-images/1670558022938.png" alt="" loading="lazy"></figure>
+<h2 id="1-背景">1. 背景</h2>
+<p><em>Java Persistence with Hibernate</em> 在12.2.1小节使用如下例子描述 <em>n+1查询问题</em>:</p>
+<pre><code class="language-java">List&lt;Item&gt; items = em.createQuery(&quot;select i from Item i&quot;).getResultList();
+// select * from ITEM
+for (Item item : items) {
+    assertTrue(item.getBids().size() &gt; 0);
+    // select * from BID where ITEM_ID = ?
+}
+</code></pre>
+<p>在这个例子中，每个bids集合的加载都需要执行一条额外的查询语句，当item有N条记录，一共就会执行N+1条查询语句：</p>
+<pre><code class="language-sql">SELECT * FROM item;
+SELECT * FROM bid WHERE item_id = ?;
+SELECT * FROM bid WHERE item_id = ?;
+SELECT * FROM bid WHERE item_id = ?;
+SELECT * FROM bid WHERE item_id = ?;
+</code></pre>
+<h1 id="2-sql层的解决方案">2. SQL层的解决方案</h1>
+<p>在本方案中，首先通过两个步骤对SQL语句加以改造，从SQL层面上解决这个问题。</p>
+<ol>
+<li>
+<p>使用关键字<code>UNION ALL</code>将N条查询语句合为一条语句，便将N+1次查询转化为了1+1次查询。</p>
+</li>
+<li>
+<p>由于第二次查询的所有记录被一次性返回，而我们需要将<code>Bid</code>实体关联到相关的<code>Item</code>实体上，因此我们需要添加一个额外的<code>item_id</code>列以便进行实体关联。</p>
+</li>
+</ol>
+<p>以下是改造后的两条查询语句。</p>
+<pre><code class="language-sql">SELECT * FROM item;
+SELECT ? AS item_id, b.* FROM bid b WHERE item_id = ? UNION ALL
+SELECT ? AS item_id, b.* FROM bid b WHERE item_id = ? UNION ALL
+SELECT ? AS item_id, b.* FROM bid b WHERE item_id = ? UNION ALL
+SELECT ? AS item_id, b.* FROM bid b WHERE item_id = ?;
+</code></pre>
+<p>When we want to query a bid list and every bid entity to carry its item, we can execute two query statements as follows:</p>
+<pre><code class="language-sql">SELECT * FROM bid;
+SELECT ? AS bid_id, i.* FROM item i WHERE id IN (SELECT item_id FROM bid WHERE id = ?) UNION ALL
+SELECT ? AS bid_id, i.* FROM item i WHERE id IN (SELECT item_id FROM bid WHERE id = ?) UNION ALL
+SELECT ? AS bid_id, i.* FROM item i WHERE id IN (SELECT item_id FROM bid WHERE id = ?) UNION ALL
+SELECT ? AS bid_id, i.* FROM item i WHERE id IN (SELECT item_id FROM bid WHERE id = ?);
+</code></pre>
+<p><code>Item</code>和<code>Bid</code>之间的关系是典型的一对多/多对一关系。以上这一解决方案也可用于多对多关系。</p>
+<h2 id="3-orm应用层面的解决方案">3. ORM应用层面的解决方案</h2>
+<p>对于ORM层，我们需要想办法从表结构的信息中映射到第二条查询语句，Java中常用注解的方式。</p>
+<p>上面的SQL语句中只有四个要素，两个表名<code>item</code>和<code>bid</code>，表<code>bid</code>中的外键列<code>item_id</code>和表<code>item</code>中的引用列<code>id</code>。 其中，查询实体的表名是已知的，于是便只剩下三个要素。 DoytoQuery定义了一个注解<code>@DomainPath</code>来配置这三个要素，用以映射第二条查询语句。</p>
+<pre><code class="language-java">@Target(FIELD)
+@Retention(RUNTIME)
+public @interface DomainPath {
+    String[] value();
+    String localField() default &quot;id&quot;;
+    String foreignField() default &quot;id&quot;;
+}
+</code></pre>
+<p>由于第二条查询语句中附加的<code>id</code>列仅用于实体赋值，因此我们将附加列的别名统一命名为 <code>MAIN_ENTITY_ID</code>。<code>Item</code>和<code>Bid</code>的类定义如下：</p>
+<pre><code class="language-java">@Getter
+@Setter
+public class ItemView extends AbstractPersistable&lt;Integer&gt; {
+    // other fields in Item
+
+    // one-to-many
+    // SELECT ? AS MAIN_ENTITY_ID, b.*
+    //              FROM bid b           WHERE item_id = ? [UNION ALL ...]
+    @DomainPath(value = &quot;bid&quot;, foreignField = &quot;item_id&quot;)
+    private List&lt;BidView&gt; bids;
+}
+
+@Getter
+@Setter
+public class BidView extends AbstractPersistable&lt;Integer&gt; {
+    // other fields in Bid
+
+    // many-to-one
+    // SELECT ? AS MAIN_ENTITY_ID, i.*
+    //              FROM item i           WHERE id      IN (SELECT item_id FROM bid WHERE id = ?)  [UNION ALL ...]
+    @DomainPath(value = &quot;item&quot;, foreignField = &quot;id&quot;, localField = &quot;item_id&quot;)
+    private ItemView item;
+}  
+</code></pre>
+<p>假设<code>Item</code>和<code>Category</code>之间的多对多关系存放于中间表<code>CATEGORY_ITEM</code>中，我们可以使用<code>@DomainPath</code>来定义如下实体，用以映射第二条查询语句：</p>
+<pre><code class="language-java">@Getter
+@Setter
+public class ItemView extends AbstractPersistable&lt;Integer&gt; {
+    // other fields in Item
+
+    // many-to-many
+    @DomainPath({&quot;item&quot;, &quot;~&quot;, &quot;category&quot;})
+    private List&lt;CategoryView&gt; categories;
+}
+
+@Getter
+@Setter
+public class CategoryView extends AbstractPersistable&lt;Integer&gt; {
+    // other fields in Category
+
+    // many-to-many
+    @DomainPath({&quot;category&quot;, &quot;item&quot;})
+    private List&lt;ItemView&gt; items;
+}
+</code></pre>
+<h2 id="4-小结">4. 小结</h2>
+<p>在本文中，我们介绍了<code>DoytoQuery</code>中的一种可以避免n+1查询问题的关联查询方案。并且，我们只需要通过一个注解<code>@DomainPath</code>便可管理ERM中定义的四种实体关系。</p>
+<div id="busuanzi_container_page_pv">
+  本文总阅读量<span id="busuanzi_value_page_pv"></span>次
+</div>
+
+          </div>
+        </div>
+
+        
+          <div class="next-post">
+            <a class="purple-link" href="https://blog.doyto.win/post/the-related-query-solution-in-doyto-query/">
+              <h3 class="post-title">
+                下一篇：The Related Query Solution in DoytoQuery (for n+1 selects problem)
+              </h3>
+            </a>
+          </div>
+          
+      </div>
+
+      
+        
+          <div id="gitalk-container"></div>
+        
+
+        
+      
+
+      <div class="site-footer">
+  <div class="slogan">DOYToWin</div>
+  <div class="social-container">
+    
+      
+        <a href="https://github.com/doytowin/" target="_blank">
+          <i class="fab fa-github"></i>
+        </a>
+      
+    
+      
+        <a href="https://x.com/doytowin" target="_blank">
+          <i class="fab fa-twitter"></i>
+        </a>
+      
+    
+      
+    
+      
+        <a href="https://www.zhihu.com/people/yuan-forb/" target="_blank">
+          <i class="fab fa-zhihu"></i>
+        </a>
+      
+    
+      
+    
+  </div>
+  <a target="_blank" rel="noopener noreferrer" href="https://beian.miit.gov.cn/">鄂ICP备17018023号-1</a>
+|
+<span>Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a></span>
+|
+<span>Hosted on <a href="https://github.com/f0rb/f0rb.github.io/" target="_blank">f0rb.github.io</a></span> | <a class="rss" href="https://blog.doyto.win/atom.xml" target="_blank">RSS</a>
+</div>
+
+
+    </div>
+    <script type="application/javascript">
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function () {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?d5d7ae2ddd28b5b5061cc801ef122a66";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: 'bba21e5713780b0ea310',
+        clientSecret: '6d4e00ab700caf5d3809bdafa989c566b458cf2b',
+        repo: 'f0rb.github.io',
+        owner: 'f0rb',
+        admin: ['f0rb'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+  </body>
+</html>

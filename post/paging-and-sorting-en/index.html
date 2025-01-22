@@ -1,0 +1,298 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    
+<meta charset="utf-8" >
+
+<title>An object-oriented solution for Paging and Sorting in database query | DOYToWin</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.doyto.win/favicon.ico?v=1737547064740">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://blog.doyto.win/styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+  
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-164125169-1"></script>
+<script> window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-164125169-1');</script>
+
+
+    
+    <meta name="description" content="Introduction
+Paging and sorting are two of the basic functions provided by databases.
+For example, a typical SQL query s..." />
+    <meta name="keywords" content="DoytoQuery,Java,CRUD,f0rb说" />
+  </head>
+  <body>
+    <div id="app" class="main">
+      <div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="https://blog.doyto.win">
+        <img class="avatar" src="https://blog.doyto.win/images/avatar.png?v=1737547064740" alt="" width="32px" height="32px">
+      </a>
+      <a href="https://blog.doyto.win">
+        <h1 class="site-title">DOYToWin</h1>
+      </a>
+    </div>
+    <div class="right">
+      <transition name="fade">
+        <i class="icon" :class="{ 'icon-close-outline': menuVisible, 'icon-menu-outline': !menuVisible }" @click="menuVisible = !menuVisible"></i>
+      </transition>
+    </div>
+  </div>
+</div>
+
+<transition name="fade">
+  <div class="menu-container" style="display: none;" v-show="menuVisible">
+    <div class="menu-list">
+      
+        
+          <a href="/" class="menu purple-link">
+            首页/Home
+          </a>
+        
+      
+        
+          <a href="/archives" class="menu purple-link">
+            归档/Archives
+          </a>
+        
+      
+        
+          <a href="/tags" class="menu purple-link">
+            标签/Tags
+          </a>
+        
+      
+        
+          <a href="/post/about" class="menu purple-link">
+            关于/About
+          </a>
+        
+      
+    </div>
+  </div>
+</transition>
+
+
+      <div class="content-container">
+        <div class="post-detail">
+          
+          <h2 class="post-title">An object-oriented solution for Paging and Sorting in database query</h2>
+          <div class="post-info post-detail-info">
+            <span><i class="icon-calendar-outline"></i> 2022-03-04</span>
+            
+              <span>
+                <i class="icon-pricetags-outline"></i>
+                
+                  <a href="https://blog.doyto.win/tag/zPv-nX5nF/">
+                    DoytoQuery
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/CcCKyUB3QV/">
+                    Java
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/7k1aGKguYI/">
+                    CRUD
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/qP6WaPh-k/">
+                    f0rb说
+                    
+                  </a>
+                
+              </span>
+            
+            <span id="busuanzi_container_page_pv" style="color: #fff"><span id="busuanzi_value_page_pv"></span></span>
+          </div>
+          <div class="post-content">
+            <h2 id="introduction">Introduction</h2>
+<p>Paging and sorting are two of the basic functions provided by databases.</p>
+<p>For example, a typical SQL query statement in MySQL is as follows:</p>
+<pre><code class="language-sql">SELECT * FROM t_user
+ORDER BY create_time DESC, username ASC
+LIMIT 10 OFFSET 20
+</code></pre>
+<p>Then, how should the frontend pass the parameters of paging and sorting to the backend? What parameters need to pass? What is the meaning and format of the parameters?</p>
+<h2 id="paging">Paging</h2>
+<p>The paging statement is <code>LIMIT 10 OFFSET 20</code>, where <code>10</code> is the size of each page, and <code>20</code> is the offset of the query, that is, the 21st to 30th items in the query table, 10 pieces of data totally.</p>
+<p>However, when designing the interface, the frontend is usually not required to directly pass in the <code>OFFSET</code> parameter. In fact, the value of <code>OFFSET</code> is calculated by passing in the page number and page size.</p>
+<p>In this case, assuming that the frontend page number starts from 1, the data to be queried is the data on the third page with a page size of 10, and the corresponding <code>OFFSET</code> value is calculated as <code>(3-1)*10 = 20</code>.</p>
+<p>When the frontend calls the backend query interface, it usually passes in the page number and the size of each page, and the backend calculates <code>OFFSET</code> to do paging query. Here, the parameter name of the page number is defined as <code>pageNumber</code>, and the parameter name of the page size is defined as <code>pageSize</code>, and assuming that the page number starts from 1, then the calculation formula of <code>OFFSET</code> would be:</p>
+<pre><code>(pageNumber - 1) * pageSize
+</code></pre>
+<p>Then the frontend should pass the parameters like this:</p>
+<pre><code>?pageNumber=3&amp;pageSize=10
+</code></pre>
+<h2 id="paging-dialect">Paging Dialect</h2>
+<p>The paging statements for different databases are not consistent, but they generally require three parameters: SQL statement, page size and offset.</p>
+<p>So we can define an interface <a href="https://github.com/doytowin/doyto-query/blob/main/doyto-query-api/src/main/java/win/doyto/query/core/Dialect.java"><code>Dialect</code></a> for building paging statements, and provide the corresponding paging implementation according to the database used.</p>
+<pre><code class="language-java">public interface Dialect {
+    String buildPageSql(String sql, int limit, long offset);
+}
+</code></pre>
+<h2 id="sorting">Sorting</h2>
+<p>The sorting statement is <code>ORDER BY create_time DESC, username ASC</code>, where <code>ORDER BY</code> is a SQL keyword, which can be defined as a parameter name. I named it <code>sort</code> since it is used for sorting, and the corresponding value is <code>create_time DESC, username ASC</code>. The GET request needs to escape the space in the parameter value. In order to avoid this problem, we can convert the <code>,</code> in the value to <code>;</code>, and convert the space before <code>DESC</code>/<code>ASC</code> to <code>,</code>. The final parameter sent by frontend will look like this:</p>
+<pre><code>?sort=create_time,desc;username,asc
+</code></pre>
+<h2 id="request-object">Request Object</h2>
+<p>Combining the above parameter definitions and descriptions for paging and sorting, the frontend values can send parameters as follows:</p>
+<pre><code>?pageNumber=3&amp;pageSize=10&amp;sort=create_time,desc;username,asc
+</code></pre>
+<p>Then we can define a class <a href="https://github.com/doytowin/doyto-query/blob/main/doyto-query-api/src/main/java/win/doyto/query/core/PageQuery.java"><code>PageQuery</code></a> to process paging and sorting parameters:</p>
+<pre><code class="language-java">public class PageQuery {
+    private Integer pageNumber;
+    private Integer pageSize;
+    private String sort;
+}
+</code></pre>
+<p>Each query has explicit or implicit paging and sorting, such as:</p>
+<pre><code class="language-sql">SELECT * FROM t_user
+</code></pre>
+<p>is EQUAL to</p>
+<pre><code class="language-sql">SELECT * FROM t_user
+ORDER BY id ASC
+LIMIT ∞ OFFSET 0
+</code></pre>
+<p>So <code>PageQuery</code> should be used as the parent class of all query objects in order to provide paging and sorting capabilities for data queries.</p>
+<h2 id="response-object">Response Object</h2>
+<p>For the frontend paging query request, in addition to returning the corresponding data list, it also needs to return the total number of data <code>total</code> to help the frontend calculate the total number of pages. The calculation formula is <code>⌈total/size⌉</code>. The corresponding response object is defined as follows:</p>
+<pre><code class="language-java">public class PageList&lt;T&gt; {
+    private final List&lt;T&gt; list;
+    private final long total;
+}
+</code></pre>
+<h2 id="conclusion">Conclusion</h2>
+<p>This article mainly introduces the object-oriented solution for paging and sorting in database queries, that's all.</p>
+
+          </div>
+        </div>
+
+        
+          <div class="next-post">
+            <a class="purple-link" href="https://blog.doyto.win/post/paging-and-sorting/">
+              <h3 class="post-title">
+                下一篇：数据库查询中的分页和排序方案
+              </h3>
+            </a>
+          </div>
+          
+      </div>
+
+      
+        
+          <div id="gitalk-container"></div>
+        
+
+        
+      
+
+      <div class="site-footer">
+  <div class="slogan">DOYToWin</div>
+  <div class="social-container">
+    
+      
+        <a href="https://github.com/doytowin/" target="_blank">
+          <i class="fab fa-github"></i>
+        </a>
+      
+    
+      
+        <a href="https://x.com/doytowin" target="_blank">
+          <i class="fab fa-twitter"></i>
+        </a>
+      
+    
+      
+    
+      
+        <a href="https://www.zhihu.com/people/yuan-forb/" target="_blank">
+          <i class="fab fa-zhihu"></i>
+        </a>
+      
+    
+      
+    
+  </div>
+  <a target="_blank" rel="noopener noreferrer" href="https://beian.miit.gov.cn/">鄂ICP备17018023号-1</a>
+|
+<span>Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a></span>
+|
+<span>Hosted on <a href="https://github.com/f0rb/f0rb.github.io/" target="_blank">f0rb.github.io</a></span> | <a class="rss" href="https://blog.doyto.win/atom.xml" target="_blank">RSS</a>
+</div>
+
+
+    </div>
+    <script type="application/javascript">
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function () {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?d5d7ae2ddd28b5b5061cc801ef122a66";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: 'bba21e5713780b0ea310',
+        clientSecret: '6d4e00ab700caf5d3809bdafa989c566b458cf2b',
+        repo: 'f0rb.github.io',
+        owner: 'f0rb',
+        admin: ['f0rb'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+  </body>
+</html>

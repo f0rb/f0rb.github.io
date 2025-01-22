@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://blog.doyto.win</id>
+    <title>DOYToWin</title>
+    <updated>2025-01-22T12:01:51.794Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://blog.doyto.win"/>
+    <link rel="self" href="https://blog.doyto.win/atom.xml"/>
+    <subtitle>DOYToWin</subtitle>
+    <logo>https://blog.doyto.win/images/avatar.png</logo>
+    <icon>https://blog.doyto.win/favicon.ico</icon>
+    <rights>All rights reserved 2025, DOYToWin</rights>
+    <entry>
+        <title type="html"><![CDATA[真的假的？GoooQo的动态查询生成工具帮助代码量减少80%]]></title>
+        <id>https://blog.doyto.win/post/gooogen-reduce-80-percent-code/</id>
+        <link href="https://blog.doyto.win/post/gooogen-reduce-80-percent-code/">
+        </link>
+        <updated>2025-01-22T11:52:13.000Z</updated>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[What‘s the Real Problem for ORMs]]></title>
+        <id>https://blog.doyto.win/post/what-is-the-real-problem-for-orms-en/</id>
+        <link href="https://blog.doyto.win/post/what-is-the-real-problem-for-orms-en/">
+        </link>
+        <updated>2024-12-19T09:38:26.000Z</updated>
+        <summary type="html"><![CDATA[<p>The designers and developers of ORMs have never truly understood the real problems they need to address. Once this problem is solved, the ORM will no longer be an ORM.</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>The designers and developers of ORMs have never truly understood the real problems they need to address. Once this problem is solved, the ORM will no longer be an ORM.</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[ORM真正需要解决的问题是什么？]]></title>
+        <id>https://blog.doyto.win/post/what-is-the-real-problem-for-orms/</id>
+        <link href="https://blog.doyto.win/post/what-is-the-real-problem-for-orms/">
+        </link>
+        <updated>2024-12-19T04:54:02.000Z</updated>
+        <summary type="html"><![CDATA[<p>ORM的设计者和开发者从来没有意识到他们真正需要面对和解决的问题是什么？一旦这个问题得到解决，ORM将不再是ORM。</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>ORM的设计者和开发者从来没有意识到他们真正需要面对和解决的问题是什么？一旦这个问题得到解决，ORM将不再是ORM。</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Refactor ORM 3: The PageQuery Object and DataAccess Interface]]></title>
+        <id>https://blog.doyto.win/post/from-orm-to-oqm-4-en/</id>
+        <link href="https://blog.doyto.win/post/from-orm-to-oqm-4-en/">
+        </link>
+        <updated>2024-11-16T05:04:42.000Z</updated>
+        <summary type="html"><![CDATA[<p>This article explores refactoring dynamic query interfaces by encapsulating pagination and sorting logic into a reusable superclass <code>PageQuery</code> to generate the dynamic components of the SQL statements.</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>This article explores refactoring dynamic query interfaces by encapsulating pagination and sorting logic into a reusable superclass <code>PageQuery</code> to generate the dynamic components of the SQL statements.</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[从ORM到OQM之4：分页查询与数据访问接口]]></title>
+        <id>https://blog.doyto.win/post/from-orm-to-oqm-4/</id>
+        <link href="https://blog.doyto.win/post/from-orm-to-oqm-4/">
+        </link>
+        <updated>2024-11-15T05:02:54.000Z</updated>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Refactor ORM 2: The Query Object and Dynamic Query Language]]></title>
+        <id>https://blog.doyto.win/post/from-orm-to-oqm-3-en/</id>
+        <link href="https://blog.doyto.win/post/from-orm-to-oqm-3-en/">
+        </link>
+        <updated>2024-11-10T13:17:08.000Z</updated>
+        <summary type="html"><![CDATA[<p>This article explores how to use query object instances to automatically generate dynamic query conditions. By abstracting query conditions into four types of fields—predicate suffix fields, logical suffix fields, subquery fields, and entity relationship fields—it achieves automatic construction of different kind of query conditions.</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>This article explores how to use query object instances to automatically generate dynamic query conditions. By abstracting query conditions into four types of fields—predicate suffix fields, logical suffix fields, subquery fields, and entity relationship fields—it achieves automatic construction of different kind of query conditions.</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[从ORM到OQM之3：查询对象和动态查询语言]]></title>
+        <id>https://blog.doyto.win/post/from-orm-to-oqm-3/</id>
+        <link href="https://blog.doyto.win/post/from-orm-to-oqm-3/">
+        </link>
+        <updated>2024-11-09T07:27:40.000Z</updated>
+        <summary type="html"><![CDATA[<p>本文探讨了如何利用查询对象实例自动生成动态查询条件，通过将查询条件抽象为四种字段类型（谓词后缀字段、逻辑后缀字段、子查询字段和实体关系字段）以实现查询条件的自动构造。</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>本文探讨了如何利用查询对象实例自动生成动态查询条件，通过将查询条件抽象为四种字段类型（谓词后缀字段、逻辑后缀字段、子查询字段和实体关系字段）以实现查询条件的自动构造。</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Refactor ORM: Property-Related Duplication in Dynamic Queries and its Refactor Approach]]></title>
+        <id>https://blog.doyto.win/post/from-orm-to-oqm-2-en/</id>
+        <link href="https://blog.doyto.win/post/from-orm-to-oqm-2-en/">
+        </link>
+        <updated>2024-10-22T07:49:42.000Z</updated>
+        <summary type="html"><![CDATA[<h2 id="introduction">Introduction</h2>
+<p>The dynamic queries is a long-standing pain point in ORM frameworks.<br>
+Solving this problem will have a profound impact on simplifying the interaction logic of the database and improving the maintainability of the code.<br>
+This article locates a structural duplication in dynamic queries and proposes a general reconstruction method to optimize the code related to dynamic queries.</p>
+]]></summary>
+        <content type="html"><![CDATA[<h2 id="introduction">Introduction</h2>
+<p>The dynamic queries is a long-standing pain point in ORM frameworks.<br>
+Solving this problem will have a profound impact on simplifying the interaction logic of the database and improving the maintainability of the code.<br>
+This article locates a structural duplication in dynamic queries and proposes a general reconstruction method to optimize the code related to dynamic queries.</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[从ORM到OQM之2：动态查询中的属性相关型重复及其重构方法]]></title>
+        <id>https://blog.doyto.win/post/from-orm-to-oqm-2/</id>
+        <link href="https://blog.doyto.win/post/from-orm-to-oqm-2/">
+        </link>
+        <updated>2024-10-22T07:49:42.000Z</updated>
+        <summary type="html"><![CDATA[<h2 id="介绍">介绍</h2>
+<p>动态查询问题是ORM框架中一个长期存在的痛点。<br>
+解决这个问题将对简化数据库的交互逻辑和提高代码的可维护性产生深远影响。<br>
+本文定位了动态查询中的一种结构型重复，并提出了一种通用的重构方法，以优化动态查询相关的代码。</p>
+]]></summary>
+        <content type="html"><![CDATA[<h2 id="介绍">介绍</h2>
+<p>动态查询问题是ORM框架中一个长期存在的痛点。<br>
+解决这个问题将对简化数据库的交互逻辑和提高代码的可维护性产生深远影响。<br>
+本文定位了动态查询中的一种结构型重复，并提出了一种通用的重构方法，以优化动态查询相关的代码。</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[GoooQo中的数据访问接口]]></title>
+        <id>https://blog.doyto.win/post/goooqo-crud/</id>
+        <link href="https://blog.doyto.win/post/goooqo-crud/">
+        </link>
+        <updated>2024-09-14T08:23:41.000Z</updated>
+    </entry>
+</feed>

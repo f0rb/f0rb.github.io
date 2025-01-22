@@ -1,0 +1,322 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    
+<meta charset="utf-8" >
+
+<title>真的假的？GoooQo的动态查询生成工具帮助代码量减少80% | DOYToWin</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.doyto.win/favicon.ico?v=1737547064740">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://blog.doyto.win/styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+  
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-164125169-1"></script>
+<script> window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-164125169-1');</script>
+
+
+    
+    <meta name="description" content="GoooQo是一款动态查询语言的Golang引擎，支持通过对象直接构建查询语句，特别是通过查询对象动态构建查询语句。它通过反射技术读取查询字段的名称和赋值，实现动态生成查询条件，从而简化开发工作。
+为了优化性能，GoooQo 推出了代码生成..." />
+    <meta name="keywords" content="GoooQo,Go,OQM,zh,f0rb说" />
+  </head>
+  <body>
+    <div id="app" class="main">
+      <div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="https://blog.doyto.win">
+        <img class="avatar" src="https://blog.doyto.win/images/avatar.png?v=1737547064740" alt="" width="32px" height="32px">
+      </a>
+      <a href="https://blog.doyto.win">
+        <h1 class="site-title">DOYToWin</h1>
+      </a>
+    </div>
+    <div class="right">
+      <transition name="fade">
+        <i class="icon" :class="{ 'icon-close-outline': menuVisible, 'icon-menu-outline': !menuVisible }" @click="menuVisible = !menuVisible"></i>
+      </transition>
+    </div>
+  </div>
+</div>
+
+<transition name="fade">
+  <div class="menu-container" style="display: none;" v-show="menuVisible">
+    <div class="menu-list">
+      
+        
+          <a href="/" class="menu purple-link">
+            首页/Home
+          </a>
+        
+      
+        
+          <a href="/archives" class="menu purple-link">
+            归档/Archives
+          </a>
+        
+      
+        
+          <a href="/tags" class="menu purple-link">
+            标签/Tags
+          </a>
+        
+      
+        
+          <a href="/post/about" class="menu purple-link">
+            关于/About
+          </a>
+        
+      
+    </div>
+  </div>
+</transition>
+
+
+      <div class="content-container">
+        <div class="post-detail">
+          
+          <h2 class="post-title">真的假的？GoooQo的动态查询生成工具帮助代码量减少80%</h2>
+          <div class="post-info post-detail-info">
+            <span><i class="icon-calendar-outline"></i> 2025-01-22</span>
+            
+              <span>
+                <i class="icon-pricetags-outline"></i>
+                
+                  <a href="https://blog.doyto.win/tag/OsG0ZGFVG/">
+                    GoooQo
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/wrrn0wEw0/">
+                    Go
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/iJtaxszOUH/">
+                    OQM
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/m_hEuiLZB/">
+                    zh
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/qP6WaPh-k/">
+                    f0rb说
+                    
+                  </a>
+                
+              </span>
+            
+            <span id="busuanzi_container_page_pv" style="color: #fff"><span id="busuanzi_value_page_pv"></span></span>
+          </div>
+          <div class="post-content">
+            <p>GoooQo是一款动态查询语言的Golang引擎，支持通过对象直接构建查询语句，特别是通过查询对象动态构建查询语句。它通过反射技术读取查询字段的名称和赋值，实现动态生成查询条件，从而简化开发工作。</p>
+<p>为了优化性能，GoooQo 推出了代码生成工具 gooogen。该工具通过抽象语法树(AST)技术读取查询字段名称，自动生成查询语句构建方法，提供了一种替代反射技术构建动态查询的方法。</p>
+<h2 id="反射技术">反射技术</h2>
+<p>在GoooQo中，开发者只需定义一个实体对象和一个包含有查询字段的查询对象，即可完成单表的增删查改操作。以查询对象UserQuery为例，该结构体包含了多个可选的查询条件字段：</p>
+<pre><code class="language-go">type UserQuery struct {
+  PageQuery
+  Name        *string
+  NameContain *string
+  AgeGt       *int
+  AgeLt       *int
+  UserOr      *UserQuery
+  AgeLtAvg    *UserQuery `select:&quot;avg(age)&quot; from:&quot;t_user&quot;`
+}
+</code></pre>
+<p><strong>谓词后缀字段</strong>的名称由属性和谓词组成，通过反射技术读取字段名称后即可直接映射为SQL查询条件，如<code>NameContain</code>表示<code>name LIKE ?</code>，<code>AgeGt</code>表示<code>age &gt; ?</code>。</p>
+<p><strong>逻辑后缀字段</strong>的名称包括逻辑连接词<code>And</code>或<code>Or</code>，用于指定多个<br>
+查询条件的连接方式，如<code>UserOr</code>。</p>
+<p><strong>子查询字段</strong>通过名称构建基础条件，通过标签和赋值构建子查询条件，如<code>AgeLtAvg</code>。</p>
+<p>GoooQo通过反射技术为每个字段构建查询条件，并根据字段赋值确定组合的查询条件。但是这也带来了一定的性能问题。</p>
+<h2 id="代码生成技术">代码生成技术</h2>
+<p>为了消除反射引入的性能问题，GoooQo推出了一款代码生成工具gooogen，可以自动为用户定义的查询对象生成对应的动态查询构建代码，大大提高了代码的编写效率。</p>
+<p>首先，通过下面这条命令安装gooogen：</p>
+<pre><code class="language-bash">go install github.com/doytowin/goooqo/gooogen@latest
+</code></pre>
+<p>然后，在查询对象的定义上添加注释：</p>
+<pre><code class="language-go">//go:generate gooogen -type sql -o user_query_builder.go
+type UserQuery struct {
+  //...
+}
+</code></pre>
+<p>最后，执行<code>go generate</code>命令便会生成一个<code>user_query_builder.go</code>文件，其中包含了根据<code>UserQuery</code>结构体自动构建SQL查询条件的方法：</p>
+<pre><code class="language-go">func (q UserQuery) BuildConditions() ([]string, []any) {
+  conditions := make([]string, 0, 4)
+  args := make([]any, 0, 4)
+  if q.Name != nil {
+    conditions = append(conditions, &quot;name = ?&quot;)
+    args = append(args, *q.Name)
+  }
+  if q.NameContain != nil {
+    conditions = append(conditions, &quot;name LIKE ?&quot;)
+    args = append(args, &quot;%&quot;+*q.NameContain+&quot;%&quot;)
+  }
+  if q.AgeGt != nil {
+    conditions = append(conditions, &quot;age &gt; ?&quot;)
+    args = append(args, *q.AgeGt)
+  }
+  if q.AgeLt != nil {
+    conditions = append(conditions, &quot;age &lt; ?&quot;)
+    args = append(args, *q.AgeLt)
+  }
+  if q.UserOr != nil {
+    cond, args0 := BuildConditions(q.UserOr, &quot;(&quot;, &quot; OR &quot;, &quot;)&quot;)
+    conditions = append(conditions, cond)
+    args = append(args, args0...)
+  }
+  if q.AgeLtAvg != nil {
+    where, args0 := BuildConditions(q.AgeLtAvg, &quot; WHERE &quot;, &quot; AND &quot;, &quot;&quot;)
+    conditions = append(conditions, &quot;age &lt; (SELECT avg(age) FROM t_user&quot;+where+&quot;)&quot;)
+    args = append(args, args0...)
+  }
+  return conditions, args
+}
+</code></pre>
+<p>这段代码会根据UserQuery对象的赋值构建一组查询条件以及对应的参数，通过WHERE和AND连接便能得到对应的查询子句，进而构建完整的查询语句并执行。</p>
+<pre><code class="language-go">query := UserQuery{Name: P(&quot;Tim&quot;), UserOr: &amp;UserQuery{AgeGt: P(10), AgeLt: P(20)}}
+where, args := rdb.BuildWhereClause(query)
+// where: WHERE name = ? AND (age &gt; ? OR age &lt; ?)
+            
+query := UserQuery{AgeGt: P(10), AgeLtAvg: &amp;UserQuery{NameContain: P(&quot;J&quot;)}}
+where, args := rdb.BuildWhereClause(query)
+// where: WHERE age &gt; ? AND age &lt; (SELECT avg(age) FROM t_user WHERE name LIKE ?)
+</code></pre>
+<p>通过对比<code>UserQuery</code>对象和生成的<code>BuildConditions</code>方法可知，<br>
+在<code>UserQuery</code>对象中每添加一个字段，就需要在<code>BuildConditions</code>方法中对应添加4行代码用于查询条件的拼接，代码量对比为1比4，生成的代码数量占了80%。再加上围绕<code>BuildConditions</code>方法封装的代码，GoooQo可以帮助减少至少80%以上的数据库访问代码。</p>
+<h2 id="总结">总结</h2>
+<p>GoooQo的代码生成工具<code>gooogen</code>通过自动化生成动态查询构建代码，有效替代了反射技术，既保证了高效运行性能，又大幅提升了开发效率。开发者只需定义查询对象，便可自动生成复杂的查询条件构建器，在保证性能的同时，大幅提升开发效率。</p>
+
+          </div>
+        </div>
+
+        
+          <div class="next-post">
+            <a class="purple-link" href="https://blog.doyto.win/post/what-is-the-real-problem-for-orms-en/">
+              <h3 class="post-title">
+                下一篇：What‘s the Real Problem for ORMs
+              </h3>
+            </a>
+          </div>
+          
+      </div>
+
+      
+        
+          <div id="gitalk-container"></div>
+        
+
+        
+      
+
+      <div class="site-footer">
+  <div class="slogan">DOYToWin</div>
+  <div class="social-container">
+    
+      
+        <a href="https://github.com/doytowin/" target="_blank">
+          <i class="fab fa-github"></i>
+        </a>
+      
+    
+      
+        <a href="https://x.com/doytowin" target="_blank">
+          <i class="fab fa-twitter"></i>
+        </a>
+      
+    
+      
+    
+      
+        <a href="https://www.zhihu.com/people/yuan-forb/" target="_blank">
+          <i class="fab fa-zhihu"></i>
+        </a>
+      
+    
+      
+    
+  </div>
+  <a target="_blank" rel="noopener noreferrer" href="https://beian.miit.gov.cn/">鄂ICP备17018023号-1</a>
+|
+<span>Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a></span>
+|
+<span>Hosted on <a href="https://github.com/f0rb/f0rb.github.io/" target="_blank">f0rb.github.io</a></span> | <a class="rss" href="https://blog.doyto.win/atom.xml" target="_blank">RSS</a>
+</div>
+
+
+    </div>
+    <script type="application/javascript">
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function () {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?d5d7ae2ddd28b5b5061cc801ef122a66";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: 'bba21e5713780b0ea310',
+        clientSecret: '6d4e00ab700caf5d3809bdafa989c566b458cf2b',
+        repo: 'f0rb.github.io',
+        owner: 'f0rb',
+        admin: ['f0rb'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+  </body>
+</html>

@@ -1,0 +1,580 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    
+<meta charset="utf-8" >
+
+<title>Refactor ORM 2: The Query Object and Dynamic Query Language | DOYToWin</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.doyto.win/favicon.ico?v=1737547064740">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://blog.doyto.win/styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+  
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-164125169-1"></script>
+<script> window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-164125169-1');</script>
+
+
+    
+    <meta property="og:image" content="https://blog.doyto.win/post-images/from-orm-to-oqm-3-en.png">
+    
+    <meta name="description" content="This article explores how to use query object instances to automatically generate dynamic query conditions. By abstracti..." />
+    <meta name="keywords" content="Forb,en,ORM,OQM" />
+  </head>
+  <body>
+    <div id="app" class="main">
+      <div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="https://blog.doyto.win">
+        <img class="avatar" src="https://blog.doyto.win/images/avatar.png?v=1737547064740" alt="" width="32px" height="32px">
+      </a>
+      <a href="https://blog.doyto.win">
+        <h1 class="site-title">DOYToWin</h1>
+      </a>
+    </div>
+    <div class="right">
+      <transition name="fade">
+        <i class="icon" :class="{ 'icon-close-outline': menuVisible, 'icon-menu-outline': !menuVisible }" @click="menuVisible = !menuVisible"></i>
+      </transition>
+    </div>
+  </div>
+</div>
+
+<transition name="fade">
+  <div class="menu-container" style="display: none;" v-show="menuVisible">
+    <div class="menu-list">
+      
+        
+          <a href="/" class="menu purple-link">
+            首页/Home
+          </a>
+        
+      
+        
+          <a href="/archives" class="menu purple-link">
+            归档/Archives
+          </a>
+        
+      
+        
+          <a href="/tags" class="menu purple-link">
+            标签/Tags
+          </a>
+        
+      
+        
+          <a href="/post/about" class="menu purple-link">
+            关于/About
+          </a>
+        
+      
+    </div>
+  </div>
+</transition>
+
+
+      <div class="content-container">
+        <div class="post-detail">
+          
+            <img src="https://blog.doyto.win/post-images/from-orm-to-oqm-3-en.png" alt="Refactor ORM 2: The Query Object and Dynamic Query Language" style="width:100%">
+          
+          <h2 class="post-title">Refactor ORM 2: The Query Object and Dynamic Query Language</h2>
+          <div class="post-info post-detail-info">
+            <span><i class="icon-calendar-outline"></i> 2024-11-10</span>
+            
+              <span>
+                <i class="icon-pricetags-outline"></i>
+                
+                  <a href="https://blog.doyto.win/tag/2ixBhtMBT/">
+                    Forb
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/XWT0z16Oz/">
+                    en
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/ivCsCBvQG/">
+                    ORM
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/iJtaxszOUH/">
+                    OQM
+                    
+                  </a>
+                
+              </span>
+            
+            <span id="busuanzi_container_page_pv" style="color: #fff"><span id="busuanzi_value_page_pv"></span></span>
+          </div>
+          <div class="post-content">
+            <p>This article explores how to use query object instances to automatically generate dynamic query conditions. By abstracting query conditions into four types of fields—predicate suffix fields, logical suffix fields, subquery fields, and entity relationship fields—it achieves automatic construction of different kind of query conditions.</p>
+<!-- more -->
+<h2 id="1-introduction">1. Introduction</h2>
+<p>After refactoring the code that uses <code>if</code> statements to build dynamic queries, we implemented a method to directly construct dynamic queries using instances of query objects. This approach involves the following steps:</p>
+<ol>
+<li>Iterating over all fields of the query object.</li>
+<li>Using reflection to obtain field values, deriving corresponding query conditions based on annotations on the fields, and adding these values to a parameter list.</li>
+<li>Combining multiple query conditions into query clauses using <code>AND</code>.</li>
+</ol>
+<p>With this approach, adding a new query condition only requires adding a field to the query object and annotating it with the corresponding SQL condition. Additionally, due to its generality, the implementation of dynamic query construction can be maintained and released in a separate repository.</p>
+<p>However, as the number and type of query conditions increase, the drawbacks of declaring query conditions using annotations gradually become apparent. The main issues are:</p>
+<ol>
+<li>There is redundancy between column names and field names in query conditions;</li>
+<li>Variable-length placeholders for <code>IN</code> operators require special handling;</li>
+<li>Multiple query conditions need to be combined using the <code>OR</code> operator;</li>
+<li>Subqueries need to be supported.</li>
+</ol>
+<p>Upon analysis, we found that query conditions involving the equality operator can be directly derived from field names, thus avoiding redundant SQL conditions in annotations. This led us to an optimization direction—eliminating SQL annotations.</p>
+<h2 id="2-categorization-of-query-conditions">2. Categorization of Query Conditions</h2>
+<p>Based on the characteristics of query conditions, we categorize them into the following four types, each derived from a specific type of field mapping:</p>
+<ul>
+<li>Basic query conditions, including column names, operators, and parameters</li>
+<li>Query conditions connected using <code>AND</code>/<code>OR</code></li>
+<li>Query conditions with subqueries</li>
+<li>Query conditions involving many-to-many relationships</li>
+</ul>
+<h3 id="21-predicate-suffix-fields">2.1. Predicate Suffix Fields</h3>
+<p>Basic query conditions consist of column names, comparison operators, and parameters, and can be automatically mapped using predicate suffix fields.</p>
+<p>The naming convention for predicate suffix fields typically includes the column name followed by a predicate suffix, which directly represents common comparison operators. For example, <code>Eq</code> represents <code>=</code>, <code>Gt</code> represents <code>&gt;</code>, etc.</p>
+<p>This approch is very common in DSLs (Domain-Specific Languages). For example, in Spring Data JPA, the <code>findBy</code> method generates queries by concatenating attribute names and conditions in the method name (e.g., <code>findByAgeGreaterThanAndNameContaining</code>).</p>
+<p>Another advantage of naming fields with predicate suffixes is that when multiple query conditions for a column require different comparison operators, different suffixes can avoid naming conflicts between fields.</p>
+<p>For instance, in the <code>UserQuery</code> class, the code that originally declared query conditions using the <code>@QueryField</code> annotation can be simplified as follows:</p>
+<pre><code class="language-java">public class UserQuery {
+    private String name;     // name = ?
+    private String nameLike; // name LIKE ?
+    private Integer ageGt;   // age &gt; ?
+}
+</code></pre>
+<p>When constructing query conditions based on predicate suffixes, placeholders and parameters are dynamically generated based on the field values. For example:</p>
+<ul>
+<li>For <code>IN</code> query conditions, the number of placeholders is automatically generated according to the number of parameters.</li>
+<li>For <code>LIKE</code> conditions, the <code>%</code> is automatically added to the field value based on the predicate suffix. See Appendix A for a corresponding table of predicate suffixes.</li>
+</ul>
+<p>This design also makes the construction of query objects more intuitive. Developers can directly map field names and their suffixes to corresponding SQL conditions when assigning values to fields.</p>
+<p>The predicate suffix table in Appendix A lists common predicate suffixes and their corresponding SQL query conditions, providing a reference for defining these fields.</p>
+<h3 id="22-logical-suffix-fields">2.2. Logical Suffix Fields</h3>
+<p>Multiple query conditions connected by logical operators <code>AND</code> or <code>OR</code> are mapped using logical suffix fields.</p>
+<p>The logical suffix field is of type <code>Collection</code> or a query object, used to map multiple query conditions. The name of the logical suffix field includes the logical suffix (<code>AND</code>/<code>OR</code>), specifying the logical operator connecting the query conditions.</p>
+<p>The type of the logical suffix field can be a query object or a collection, where each field or element maps to a query condition. All mapped conditions are combined using the logical operator specified by the logical suffix.</p>
+<p>The table below shows examples of mapping three types of logical suffix fields with the suffix <code>Or</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value (JSON format)</th>
+<th>Query Condition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>List&lt;String&gt; nameOr</code></td>
+<td><code>[&quot;test1&quot;, &quot;test2&quot;]</code></td>
+<td><code>name = ? OR name = ?</code></td>
+</tr>
+<tr>
+<td><code>UserQuery userOr</code></td>
+<td><code>{&quot;name&quot;: &quot;John&quot;, &quot;age&quot;: 30}</code></td>
+<td><code>name = ? OR age = ?</code></td>
+</tr>
+<tr>
+<td><code>List&lt;UserQuery&gt; usersOr</code></td>
+<td><code>[{&quot;name&quot;: &quot;test&quot;, &quot;ageGe&quot;: 30, &quot;ageLt&quot;: 40}, {&quot;nameLike&quot;: &quot;admin&quot;, &quot;age&quot;: 40}]</code></td>
+<td><code>(name = ? AND age &gt;= ? AND age &lt; ?) OR (name LIKE ? AND age = ?)</code></td>
+</tr>
+</tbody>
+</table>
+<p>For example, the query condition <code>id = ? OR name = ? AND age &gt; ?</code> can be represented in the <code>UserQuery</code> class by adding fields <code>userAnd</code> and <code>userOr</code>, which map query conditions connected by logical operators:</p>
+<pre><code class="language-java">public class UserQuery {
+    Integer id; 
+    String name; 
+    String nameLike;
+    Integer ageGt; 
+    UserQuery userAnd; 
+    UserQuery userOr; 
+}
+</code></pre>
+<p>Then, using the following code, the instance of <code>UserQuery</code> is created, and query conditions are generated from the <code>userOr</code> field:</p>
+<pre><code class="language-java">UserQuery userAnd = UserQuery.builder().name(&quot;John&quot;).ageGt(30).build();
+UserQuery userOr = UserQuery.builder().id(5).userAnd(userAnd).build();
+UserQuery userQuery = UserQuery.builder().userOr(userOr).build();
+
+List&lt;Object&gt; argList = new ArrayList&lt;&gt;();
+String where = buildWhere(query, argList); 
+// SQL: WHERE id = ? OR name = ? AND age &gt; ?
+</code></pre>
+<p>In this example, both <code>AND</code> and <code>OR</code> operators are used, where <code>AND</code> has higher precedence than <code>OR</code>. Since the precedence of logical operators differs, we view the combination of conditions in SQL as hierarchical, not flat. Conditions connected by <code>AND</code> form one level, while those connected by <code>OR</code> form another level. Conditions from different levels are combined using the same logical operator. By exploiting the hierarchical structure of objects, we can express the hierarchy of query clauses.</p>
+<p>The following diagram shows the relationship between the assigned fields in the <code>UserQuery</code> instance and the hierarchical structure of query conditions:<br>
+<img src="https://blog.doyto.win/post-images/1731141462478.webp" alt="Logical Operator Hierarchy Comparison" loading="lazy"></p>
+<h3 id="23-subquery-fields">2.3. Subquery Fields</h3>
+<p>For general subquery conditions, such as <code>age &gt; (SELECT avg(age) FROM t_user [WHERE])</code>, we can divide them into three parts for mapping:</p>
+<ol>
+<li>
+<p>The condition part <code>age &gt;</code>, which can reuse the format of predicate suffix fields. To avoid conflicts with the existing <code>ageGt</code> predicate suffix, we can append additional characters, such as <code>ageGtAvg</code>, to the suffix. When mapping, we ignore these additional characters.</p>
+</li>
+<li>
+<p>The main part of the subquery <code>SELECT avg(age) FROM t_user</code>, which can be declared using annotations for the column and table names, such as <code>@Subquery(select = &quot;avg(age)&quot;, from = &quot;t_user&quot;)</code>.</p>
+</li>
+<li>
+<p>The <code>WHERE</code> clause of the subquery, which can be constructed by reusing the query object mapping method.</p>
+</li>
+</ol>
+<p>Subquery fields should be of type <code>UserQuery</code>, which allows the subquery to be dynamically constructed.</p>
+<p>For example, in the <code>UserQuery</code> class, we can add an <code>ageGtAvg</code> field to build the query condition with a subquery:</p>
+<pre><code class="language-java">public class UserQuery {
+  // age &gt; (SELECT avg(age) FROM t_user [WHERE])
+  @Subquery(select = &quot;avg(age)&quot;, from = &quot;t_user&quot;)
+  UserQuery ageGtAvg;
+}
+</code></pre>
+<p>Thus, a single field can be used to construct a query condition that includes a subquery, dynamically building the query statement.</p>
+<h3 id="24-entity-relationship-query-fields">2.4. Entity Relationship Query Fields</h3>
+<p>To conform to the third normal form (3NF), for two entities with a many-to-many relationship, we usually introduce an intermediate table, transforming the many-to-many relationship into two one-to-many relationships. The table name and field names in such intermediate tables have a specific format: the table name includes both entity names, and the foreign keys are named <code>entity_id</code>. This allows us to derive query conditions from the names of the entities.</p>
+<p>For example, in the RBAC model, there are three entities: <code>user</code>, <code>role</code>, and <code>permission</code>. Users and roles have a many-to-many relationship, and the intermediate table's name can be derived from <code>user</code> and <code>role</code>, such as <code>a_user_and_role</code>, with foreign keys named <code>user_id</code> and <code>role_id</code>. The query condition to find users by role would be:</p>
+<pre><code class="language-SQL">SELECT * FROM t_user
+WHERE id IN (SELECT user_id FROM a_user_and_role WHERE role_id IN (
+  SELECT id FROM t_role [WHERE]))
+</code></pre>
+<p>By deriving the table and foreign key names from the entities <code>user</code> and <code>role</code>, we can represent this query condition using the expression <code>&lt;user,role&gt;</code>.</p>
+<p>Similarly, if <code>role</code> and <code>permission</code> have a many-to-many relationship, we use the expression <code>&lt;user,role,perm&gt;</code> to represent the relationship between <code>user</code> and <code>permission</code> through <code>role</code>. This expression would produce a query to find users with specific permissions:</p>
+<pre><code class="language-sql">SELECT * FROM t_user
+WHERE id IN (SELECT user_id FROM a_user_and_role WHERE role_id IN (
+
+
+  SELECT role_id FROM a_role_and_perm WHERE perm_id IN (
+    SELECT id FROM t_perm [WHERE])))
+
+</code></pre>
+<p>In these cases, the abstract entity path is used to represent the relationship between two entities. This abstract path can contain any number of nodes to express the relationships between entities.</p>
+<p>For example, when permissions and menus also have a many-to-many relationship, the expression <code>&lt;user,role,perm,menu&gt;</code> can represent the relationship between users and menus.</p>
+<p>We define the fields for querying users by their roles and permissions as follows:</p>
+<pre><code class="language-java">public class UserQuery {
+  //...
+  @DomainPath({&quot;user&quot;, &quot;role&quot;})
+  RoleQuery role;
+  @DomainPath({&quot;user&quot;, &quot;role&quot;, &quot;perm&quot;})
+  PermQuery perm;
+}
+</code></pre>
+<p>To query users assigned to a role, we can build a <code>RoleQuery</code> object using the role name and assign it to the <code>role</code> field of the <code>UserQuery</code> instance:</p>
+<pre><code class="language-java">RoleQuery roleQuery = RoleQuery.builder().roleName(&quot;vip&quot;).build();
+UserQuery userQuery = UserQuery.builder().role(roleQuery).build();
+String where = buildWhere(userQuery, argList);
+</code></pre>
+<p>The corresponding query clause is:</p>
+<pre><code class="language-sql">WHERE id IN (SELECT user_id FROM a_user_and_role WHERE role_id IN (
+  SELECT id FROM t_role WHERE role_name = ?))
+</code></pre>
+<p>Moreover, when the abstract entity path contains only one node, it can represent one-to-many or many-to-one relationships by specifying a foreign key name.</p>
+<p>For example, in the <code>Menu</code> entity, which uses the foreign key <code>parent_id</code> to link the parent menu's ID, the query fields are defined as follows:</p>
+<pre><code class="language-java">public class MenuQuery extends PageQuery {
+
+    // many-to-one: query submenus by parent's conditions
+    // parent_id IN (SELECT id FROM t_menu [WHERE])
+    @DomainPath(value = &quot;menu&quot;, localField = &quot;parentId&quot;)
+    private MenuQuery parent;
+
+    // one-to-many: query parent menus by children's conditions
+    // id IN (SELECT parent_id FROM t_menu [WHERE])
+    @DomainPath(value = &quot;menu&quot;, foreignField = &quot;parentId&quot;)
+    private MenuQuery children;
+}
+</code></pre>
+<p>The relationships between parent and child menus are represented as <code>&lt;menu:menu|parentId,id&gt;</code> and <code>&lt;menu:menu|id,parentId&gt;</code>.</p>
+<p>Entity relationship query fields provide an out-of-the-box query pattern for entity relationships.</p>
+<h2 id="3-application-scope">3. Application Scope</h2>
+<p>Since the definition of query objects only relies on basic features of object-oriented languages, this approach can be applied to various object-oriented programming languages. Different database types share commonalities in query condition syntax, so the object-based mapping approach can generate SQL statements and also construct query statements for NoSQL databases like MongoDB.</p>
+<p>The diagram below illustrates how the unified query object model can be used to construct query conditions for different databases. This approach's versatility enables us to share the same query construction logic across multiple database systems, improving code reuse and system flexibility.</p>
+<figure data-type="image" tabindex="1"><img src="https://blog.doyto.win/post-images/1731299720100.png" alt="Query Object Comparison" loading="lazy"></figure>
+<h2 id="4-conclusion">4. Conclusion</h2>
+<p>This article introduces an improved method for automatically generating dynamic query conditions based on query object instances, which maps query conditions to field features. This approach abstracts query conditions into four field types to enable automatic construction. It reduces the need for manual SQL writing, significantly enhancing code generality and extensibility, and provides a clear and efficient solution for complex queries.</p>
+<hr>
+<h2 id="appendix-a-predicate-suffix-table">Appendix A: Predicate Suffix Table</h2>
+<table>
+<thead>
+<tr>
+<th>Suffix Name</th>
+<th>Field Name</th>
+<th>Field Value</th>
+<th>SQL Query Condition</th>
+<th>MongoDB Query Condition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>-</td>
+<td>id</td>
+<td>5</td>
+<td>id = 5</td>
+<td>{&quot;id&quot;:5}</td>
+</tr>
+<tr>
+<td>Eq</td>
+<td>idEq</td>
+<td>5</td>
+<td>id = 5</td>
+<td>{&quot;idEq&quot;:5}</td>
+</tr>
+<tr>
+<td>Ne</td>
+<td>idNe</td>
+<td>5</td>
+<td>id != 5</td>
+<td>{&quot;idNe&quot;:{&quot;$ne&quot;:5}}</td>
+</tr>
+<tr>
+<td>Gt</td>
+<td>idGt</td>
+<td>5</td>
+<td>id &gt; 5</td>
+<td>{&quot;idGt&quot;:{&quot;$gt&quot;:5}}</td>
+</tr>
+<tr>
+<td>Ge</td>
+<td>idGe</td>
+<td>5</td>
+<td>id &gt;= 5</td>
+<td>{&quot;idGe&quot;:{&quot;$gte&quot;:5}}</td>
+</tr>
+<tr>
+<td>Lt</td>
+<td>idLt</td>
+<td>5</td>
+<td>id &lt; 5</td>
+<td>{&quot;idLt&quot;:{&quot;$lt&quot;:5}}</td>
+</tr>
+<tr>
+<td>Le</td>
+<td>idLe</td>
+<td>5</td>
+<td>id &lt;= 5</td>
+<td>{&quot;idLe&quot;:{&quot;$lte&quot;:5}}</td>
+</tr>
+<tr>
+<td>In</td>
+<td>idIn</td>
+<td>[1,2,3]</td>
+<td>id IN (1,2,3)</td>
+<td>{&quot;id&quot;:{&quot;$in&quot;:[1, 2, 3]}}</td>
+</tr>
+<tr>
+<td>NotIn</td>
+<td>idNotIn</td>
+<td>[1,2,3]</td>
+<td>id NOT IN (1,2,3)</td>
+<td>{&quot;id&quot;:{&quot;$nin&quot;:[1, 2, 3]}}</td>
+</tr>
+<tr>
+<td>Null</td>
+<td>memoNull</td>
+<td>false</td>
+<td>memo IS NOT NULL</td>
+<td>{&quot;memo&quot;:{&quot;$not&quot;:{&quot;$type&quot;, 10}}}</td>
+</tr>
+<tr>
+<td>Null</td>
+<td>memoNull</td>
+<td>true</td>
+<td>memo IS NULL</td>
+<td>{&quot;memo&quot;:{&quot;$type&quot;, 10}}</td>
+</tr>
+<tr>
+<td>NotLike</td>
+<td>nameNotLike</td>
+<td>&quot;arg&quot;</td>
+<td>name NOT LIKE '%arg%'</td>
+<td>{&quot;name&quot;:{&quot;$not&quot;:{&quot;$regex&quot;:&quot;arg&quot;}}}</td>
+</tr>
+<tr>
+<td>Like</td>
+<td>nameLike</td>
+<td>&quot;arg&quot;</td>
+<td>name LIKE '%arg%'</td>
+<td>{&quot;name&quot;:{&quot;$regex&quot;:&quot;arg&quot;}}</td>
+</tr>
+<tr>
+<td>NotStart</td>
+<td>nameNotStart</td>
+<td>&quot;arg&quot;</td>
+<td>name NOT LIKE 'arg%'</td>
+<td>{&quot;name&quot;:{&quot;$not&quot;:{&quot;$regex&quot;:&quot;^arg&quot;}}}</td>
+</tr>
+<tr>
+<td>Start</td>
+<td>nameStart</td>
+<td>&quot;arg&quot;</td>
+<td>name LIKE 'arg%'</td>
+<td>{&quot;name&quot;:{&quot;$regex&quot;:&quot;^arg&quot;}}</td>
+</tr>
+<tr>
+<td>NotEnd</td>
+<td>nameNotEnd</td>
+<td>&quot;arg&quot;</td>
+<td>name NOT LIKE '%arg'</td>
+<td>{&quot;name&quot;:{&quot;$not&quot;:{&quot;$regex&quot;:&quot;arg$&quot;}}}</td>
+</tr>
+<tr>
+<td>End</td>
+<td>nameEnd</td>
+<td>&quot;arg&quot;</td>
+<td>name LIKE '%arg'</td>
+<td>{&quot;name&quot;:{&quot;$regex&quot;:&quot;arg$&quot;}}</td>
+</tr>
+<tr>
+<td>NotContain</td>
+<td>nameNotContain</td>
+<td>&quot;arg&quot;</td>
+<td>name NOT LIKE '%arg%'</td>
+<td>{&quot;name&quot;:{&quot;$not&quot;:{&quot;$regex&quot;:&quot;arg&quot;}}}</td>
+</tr>
+<tr>
+<td>Contain</td>
+<td>nameContain</td>
+<td>&quot;arg&quot;</td>
+<td>name LIKE '%arg%'</td>
+<td>{&quot;name&quot;:{&quot;$regex&quot;:&quot;arg&quot;}}</td>
+</tr>
+<tr>
+<td>Rx</td>
+<td>nameRx</td>
+<td>&quot;arg\d&quot;</td>
+<td>name REGEXP 'arg\d'</td>
+<td>{&quot;name&quot;:{&quot;$regex&quot;:&quot;arg\d&quot;}}</td>
+</tr>
+</tbody>
+</table>
+<h2 id="appendix-b-github-repos">Appendix B: GitHub Repos</h2>
+<p>Java version: <a href="http://github.com/doytowin/doyto-query">http://github.com/doytowin/doyto-query</a></p>
+<p>Golang version: <a href="http://github.com/doytowin/goooqo">http://github.com/doytowin/goooqo</a></p>
+
+          </div>
+        </div>
+
+        
+          <div class="next-post">
+            <a class="purple-link" href="https://blog.doyto.win/post/from-orm-to-oqm-3/">
+              <h3 class="post-title">
+                下一篇：从ORM到OQM之3：查询对象和动态查询语言
+              </h3>
+            </a>
+          </div>
+          
+      </div>
+
+      
+        
+          <div id="gitalk-container"></div>
+        
+
+        
+      
+
+      <div class="site-footer">
+  <div class="slogan">DOYToWin</div>
+  <div class="social-container">
+    
+      
+        <a href="https://github.com/doytowin/" target="_blank">
+          <i class="fab fa-github"></i>
+        </a>
+      
+    
+      
+        <a href="https://x.com/doytowin" target="_blank">
+          <i class="fab fa-twitter"></i>
+        </a>
+      
+    
+      
+    
+      
+        <a href="https://www.zhihu.com/people/yuan-forb/" target="_blank">
+          <i class="fab fa-zhihu"></i>
+        </a>
+      
+    
+      
+    
+  </div>
+  <a target="_blank" rel="noopener noreferrer" href="https://beian.miit.gov.cn/">鄂ICP备17018023号-1</a>
+|
+<span>Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a></span>
+|
+<span>Hosted on <a href="https://github.com/f0rb/f0rb.github.io/" target="_blank">f0rb.github.io</a></span> | <a class="rss" href="https://blog.doyto.win/atom.xml" target="_blank">RSS</a>
+</div>
+
+
+    </div>
+    <script type="application/javascript">
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function () {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?d5d7ae2ddd28b5b5061cc801ef122a66";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: 'bba21e5713780b0ea310',
+        clientSecret: '6d4e00ab700caf5d3809bdafa989c566b458cf2b',
+        repo: 'f0rb.github.io',
+        owner: 'f0rb',
+        admin: ['f0rb'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+  </body>
+</html>

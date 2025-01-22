@@ -1,0 +1,228 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    
+<meta charset="utf-8" >
+
+<title>前缀分包vs后缀分包 | DOYToWin</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.doyto.win/favicon.ico?v=1737547064740">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://blog.doyto.win/styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+  
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-164125169-1"></script>
+<script> window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-164125169-1');</script>
+
+
+    
+    <meta name="description" content="
+很多Java后端的项目都会采用这种后缀分包的方式。但这种分包方式很违反常理。
+这里类名的前缀表示主体，后缀表示组件。比如ModuleService，Module表示这个类是属于模块这个主体的，Service表示这个类是一个处理业务逻辑的组..." />
+    <meta name="keywords" content="" />
+  </head>
+  <body>
+    <div id="app" class="main">
+      <div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="https://blog.doyto.win">
+        <img class="avatar" src="https://blog.doyto.win/images/avatar.png?v=1737547064740" alt="" width="32px" height="32px">
+      </a>
+      <a href="https://blog.doyto.win">
+        <h1 class="site-title">DOYToWin</h1>
+      </a>
+    </div>
+    <div class="right">
+      <transition name="fade">
+        <i class="icon" :class="{ 'icon-close-outline': menuVisible, 'icon-menu-outline': !menuVisible }" @click="menuVisible = !menuVisible"></i>
+      </transition>
+    </div>
+  </div>
+</div>
+
+<transition name="fade">
+  <div class="menu-container" style="display: none;" v-show="menuVisible">
+    <div class="menu-list">
+      
+        
+          <a href="/" class="menu purple-link">
+            首页/Home
+          </a>
+        
+      
+        
+          <a href="/archives" class="menu purple-link">
+            归档/Archives
+          </a>
+        
+      
+        
+          <a href="/tags" class="menu purple-link">
+            标签/Tags
+          </a>
+        
+      
+        
+          <a href="/post/about" class="menu purple-link">
+            关于/About
+          </a>
+        
+      
+    </div>
+  </div>
+</transition>
+
+
+      <div class="content-container">
+        <div class="post-detail">
+          
+          <h2 class="post-title">前缀分包vs后缀分包</h2>
+          <div class="post-info post-detail-info">
+            <span><i class="icon-calendar-outline"></i> 2021-11-21</span>
+            
+            <span id="busuanzi_container_page_pv" style="color: #fff"><span id="busuanzi_value_page_pv"></span></span>
+          </div>
+          <div class="post-content">
+            <p><img src="https://blog.doyto.win/post-images/1637503408049.png" alt="" loading="lazy"><br>
+很多Java后端的项目都会采用这种后缀分包的方式。但这种分包方式很违反常理。</p>
+<p>这里类名的前缀表示主体，后缀表示组件。比如ModuleService，Module表示这个类是属于模块这个主体的，Service表示这个类是一个处理业务逻辑的组件。后缀分包的方式就会像这样把所有名称中以Service结尾的类都放到service这个包下面。</p>
+<p>我们平时开发时对这种分包方式已经司空见惯了，但我这里做个类比，你马上就会发现事情并不对劲。</p>
+<p>我们把主体Module看作一个人，起个名字叫Bob，把Service、Controller这些换成随身物品，比如衣服鞋子之类，这样Bob的衣服鞋子就可以称为BobClothes，BobShoes等等，再把package比作一个行李箱，用于装Bob的个人物品。然后就有这样一组场景。</p>
+<p>场景1：<br>
+我们的Bob拎着装满自己物品的行李箱参加了一个旅行团，这个旅行团有一个规定，就是要求你将衣服放进装衣服的箱子里，鞋子放进装鞋子的箱子里，以此类推。如果你是Bob，你遇到这样的规定会不会觉得很奇葩？<br>
+这就跟我们写新业务的时候一样，XxxService放在service包下，XxxController放在controller包下，但是大家都默认了。</p>
+<p>场景2：<br>
+当Bob某天想换洗衣服的时候，尴尬事来了，Bob需要去不同的箱子去翻找自己的东西。<br>
+这就好比我们开发一个业务的时候，需要去不同包下去修改这个业务相关的组件的代码。</p>
+<p>场景3：<br>
+当Bob准备离开这个旅行团的时候，麻烦的事情又来了，Bob需要一个一个箱子去找出他自己的东西再装回他自己的箱子。<br>
+对应的开发场景就是当进行微服务拆分的时候，我们需要一个包一个包里面找到对应的类，然后拷贝的新项目上。</p>
+<p>还有一些其他的场景就不再一一列举了。通过这些场景我们可以看出这种后缀分包的方式是多么违反生活常识，正常人在生活中肯定都不会做的事情我们在做项目开发时却习以为常，见怪不怪。</p>
+<p>后缀分包带来的问题解决起来也很简单，那就是依据前缀来进行分包。Menu的归menu，User的归user，Bob的东西就放在Bob的箱子里好了。一切自然而然，一个重要原因就是前缀分包的方案符合高内聚这一原则，而后缀分包下的类，互相之间基本不会有依赖关系。<br>
+<img src="https://blog.doyto.win/post-images/1637503742539.png" alt="" loading="lazy"><br>
+那么后缀分包就一无是处吗？当然不是。当一个主体下的某个组件特别多时，就可以适当依据后缀来进行分包。比如说业务功能多了之后就会有很多DTO，VO这样的类，这时再在该业务的包下创建dto，vo的包来存放这些类，以保持主包下类的整洁和可读性。</p>
+<p>这就是我在项目中组织包结构的一项工程实践，好处多多，欢迎讨论和落地。</p>
+
+          </div>
+        </div>
+
+        
+          <div class="next-post">
+            <a class="purple-link" href="https://blog.doyto.win/post/spring-data-jpa-from-start-to-deprecated/">
+              <h3 class="post-title">
+                下一篇：SpringDataJPA之从入门到弃用
+              </h3>
+            </a>
+          </div>
+          
+      </div>
+
+      
+        
+          <div id="gitalk-container"></div>
+        
+
+        
+      
+
+      <div class="site-footer">
+  <div class="slogan">DOYToWin</div>
+  <div class="social-container">
+    
+      
+        <a href="https://github.com/doytowin/" target="_blank">
+          <i class="fab fa-github"></i>
+        </a>
+      
+    
+      
+        <a href="https://x.com/doytowin" target="_blank">
+          <i class="fab fa-twitter"></i>
+        </a>
+      
+    
+      
+    
+      
+        <a href="https://www.zhihu.com/people/yuan-forb/" target="_blank">
+          <i class="fab fa-zhihu"></i>
+        </a>
+      
+    
+      
+    
+  </div>
+  <a target="_blank" rel="noopener noreferrer" href="https://beian.miit.gov.cn/">鄂ICP备17018023号-1</a>
+|
+<span>Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a></span>
+|
+<span>Hosted on <a href="https://github.com/f0rb/f0rb.github.io/" target="_blank">f0rb.github.io</a></span> | <a class="rss" href="https://blog.doyto.win/atom.xml" target="_blank">RSS</a>
+</div>
+
+
+    </div>
+    <script type="application/javascript">
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function () {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?d5d7ae2ddd28b5b5061cc801ef122a66";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: 'bba21e5713780b0ea310',
+        clientSecret: '6d4e00ab700caf5d3809bdafa989c566b458cf2b',
+        repo: 'f0rb.github.io',
+        owner: 'f0rb',
+        admin: ['f0rb'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+  </body>
+</html>

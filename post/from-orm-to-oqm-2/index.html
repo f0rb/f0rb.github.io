@@ -1,0 +1,417 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    
+<meta charset="utf-8" >
+
+<title>从ORM到OQM之2：动态查询中的属性相关型重复及其重构方法 | DOYToWin</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.doyto.win/favicon.ico?v=1737547064740">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://blog.doyto.win/styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+  
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-164125169-1"></script>
+<script> window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-164125169-1');</script>
+
+
+    
+    <meta name="description" content="介绍
+动态查询问题是ORM框架中一个长期存在的痛点。
+解决这个问题将对简化数据库的交互逻辑和提高代码的可维护性产生深远影响。
+本文定位了动态查询中的一种结构型重复，并提出了一种通用的重构方法，以优化动态查询相关的代码。
+
+背景
+信息系统的交..." />
+    <meta name="keywords" content="cn,ORM,OQM,f0rb说" />
+  </head>
+  <body>
+    <div id="app" class="main">
+      <div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="https://blog.doyto.win">
+        <img class="avatar" src="https://blog.doyto.win/images/avatar.png?v=1737547064740" alt="" width="32px" height="32px">
+      </a>
+      <a href="https://blog.doyto.win">
+        <h1 class="site-title">DOYToWin</h1>
+      </a>
+    </div>
+    <div class="right">
+      <transition name="fade">
+        <i class="icon" :class="{ 'icon-close-outline': menuVisible, 'icon-menu-outline': !menuVisible }" @click="menuVisible = !menuVisible"></i>
+      </transition>
+    </div>
+  </div>
+</div>
+
+<transition name="fade">
+  <div class="menu-container" style="display: none;" v-show="menuVisible">
+    <div class="menu-list">
+      
+        
+          <a href="/" class="menu purple-link">
+            首页/Home
+          </a>
+        
+      
+        
+          <a href="/archives" class="menu purple-link">
+            归档/Archives
+          </a>
+        
+      
+        
+          <a href="/tags" class="menu purple-link">
+            标签/Tags
+          </a>
+        
+      
+        
+          <a href="/post/about" class="menu purple-link">
+            关于/About
+          </a>
+        
+      
+    </div>
+  </div>
+</transition>
+
+
+      <div class="content-container">
+        <div class="post-detail">
+          
+          <h2 class="post-title">从ORM到OQM之2：动态查询中的属性相关型重复及其重构方法</h2>
+          <div class="post-info post-detail-info">
+            <span><i class="icon-calendar-outline"></i> 2024-10-22</span>
+            
+              <span>
+                <i class="icon-pricetags-outline"></i>
+                
+                  <a href="https://blog.doyto.win/tag/SPCbNe66l_/">
+                    cn
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/ivCsCBvQG/">
+                    ORM
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/iJtaxszOUH/">
+                    OQM
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/qP6WaPh-k/">
+                    f0rb说
+                    
+                  </a>
+                
+              </span>
+            
+            <span id="busuanzi_container_page_pv" style="color: #fff"><span id="busuanzi_value_page_pv"></span></span>
+          </div>
+          <div class="post-content">
+            <h2 id="介绍">介绍</h2>
+<p>动态查询问题是ORM框架中一个长期存在的痛点。<br>
+解决这个问题将对简化数据库的交互逻辑和提高代码的可维护性产生深远影响。<br>
+本文定位了动态查询中的一种结构型重复，并提出了一种通用的重构方法，以优化动态查询相关的代码。</p>
+<!-- more -->
+<h2 id="背景">背景</h2>
+<p>信息系统的交互界面通常会提供若干个输入控件，用户通过这些控件输入查询条件，而后台则根据用户输入的参数动态构造SQL查询语句。</p>
+<p>为了实现查询代码的复用，我们通常使用多个<code>if</code>语句来对查询参数的有效性进行校验，并对相应的查询条件进行拼接。例如，使用<code>if</code>语句拼接查询条件的常见做法如下：</p>
+<pre><code class="language-java">@RestController
+@RequestMapping(&quot;user&quot;)
+public class UserController {
+    @Resource
+    private JdbcTemplate jdbcTemplate;
+
+    @GetMapping(&quot;/&quot;)
+    public List&lt;UserEntity&gt; query(UserQuery query) {
+        List&lt;Object&gt; argList = new ArrayList&lt;&gt;();
+        StringJoiner where = new StringJoiner(&quot; AND &quot;, &quot; WHERE &quot;, &quot;&quot;);
+        where.setEmptyValue(&quot;&quot;);
+        if (query.getName() != null &amp;&amp; !query.getName().isBlank()) {
+            where.add(&quot;name = ?&quot;);
+            argList.add(query.getName());
+        }
+        if (query.getNameLike() != null &amp;&amp; !query.getNameLike().isBlank()) {
+            where.add(&quot;name LIKE CONCAT('%', ?, '%')&quot;);
+            argList.add(query.getNameLike());
+        }
+        if (query.getAgeGt() != null) {
+            where.add(&quot;age &gt; ?&quot;);
+            argList.add(query.getAgeGt());
+        }
+        String sql = &quot;SELECT * FROM user&quot; + where;
+        return jdbcTemplate.query(sql, new BeanPropertyRowMapper&lt;&gt;(UserEntity.class), argList.toArray());
+    }
+}
+</code></pre>
+<p>然而，随着查询参数的增加，拼接查询添加的代码变得越来越长。这就意味着我们需要对这段代码进行重构了。</p>
+<h2 id="分析">分析</h2>
+<p>这段代码的问题在于，每增加一个新的查询参数，我们就需要复制粘贴一段if语句，然后修改一下参数名称和查询条件。这显然违反了DRY原则。</p>
+<p>在代码中，每段<code>if</code>语句包含了相似的结构，除了参数名称和查询条件，其他代码几乎一样，因此，我把这种结构相似属性不同的代码重复称为<strong>属性相关型重复</strong>。</p>
+<p>为了消除这种代码重复，我们可以使用<strong>反射替换方法</strong>进行重构，即使用反射方法替换属性访问方法来动态获取属性的值，同时利用注解来定义各个属性的查询条件。</p>
+<p>如果代码像下面一样，将参数直接平铺在方法签名中，这是无法直接应用反射技术进行替换的。</p>
+<pre><code class="language-java">public List&lt;UserEntity&gt; query(String name, String nameLike, Integer ageGt) {
+    //...
+    if (ageGt != null) {
+        where.add(&quot;age &gt; ?&quot;);
+        argList.add(ageGt);
+    }
+    //...
+}
+</code></pre>
+<p>这种代码被识别为一种被称为<code>长参数列表</code>（Long Parameter List）的坏味道。我们需要先使用<code>引入参数对象</code>（Introduce Parameter Object）的重构手法，通过将多个查询参数封装为一个对象，得到类似上一节的示例代码。</p>
+<p>这类对象由于定义的都是用于查询的字段，被称为<strong>查询对象</strong>。</p>
+<h2 id="重构方法">重构方法</h2>
+<p>接下来，我们开始进行代码重构。</p>
+<p>首先，我们需要抽取查询参数的校验代码，通过isValid方法来判断查询参数是否有效：</p>
+<pre><code class="language-java">private boolean isValid(Object value) {
+    return value != null &amp;&amp; (!(value instanceof String str) || !str.isBlank());
+}
+</code></pre>
+<p>于是if语句可被整理如下：</p>
+<pre><code class="language-java">String value = userQuery.getName();
+String condition = &quot;name = ?&quot;;
+if (isValid(value)) {
+    where.add(condition);
+    argList.add(value);
+}
+</code></pre>
+<p>接着，我们使用反射方法来获取属性的值，同时通过注解获取属性对应的查询条件：</p>
+<pre><code class="language-java">Field field = query.getClass().getDeclaredField(&quot;name&quot;);
+field.setAccessible(true);
+Object value = field.get(query);
+String condition = field.getAnnotation(QueryField.class).and();
+if (isValid(value)) {
+    where.add(condition);
+    argList.add(value);
+}
+</code></pre>
+<p>对应地，在<code>UserQuery</code>类中通过注解声明属性绑定的查询条件：</p>
+<pre><code class="language-java">public class UserQuery {
+    @QueryField(and = &quot;name = ?&quot;)
+    private String name;
+    
+    @QueryField(and = &quot;name LIKE CONCAT('%', ?, '%')&quot;)
+    private String nameLike;
+    
+    @QueryField(and = &quot;age &gt; ?&quot;)
+    private Integer ageGt;
+}
+</code></pre>
+<p>由于我们通过<code>getDeclaredField</code>方法访问了<code>UserQuery</code>中的每一个字段，而<code>Class#getDeclaredFields</code>方法会返回类中声明的所有字段，所以我们可以把拼接查询语句的代码合并为一个循环：</p>
+<pre><code class="language-java">for (Field field : query.getClass().getDeclaredFields()) {
+    field.setAccessible(true);
+    Object value = field.get(query);
+    String condition = field.getAnnotation(QueryField.class).and();
+    if (isValid(value)) {
+        where.add(condition);
+        argList.add(value);
+    }
+}
+</code></pre>
+<p>此时，代码中已不再依赖<code>UserQuery</code>中的方法，于是我们可以把构造动态查询条件的代码抽取为一个适用任意类型的通用方法：</p>
+<pre><code class="language-java">public static String buildWhere(Object query, List&lt;Object&gt; argList) throws Exception {
+    StringJoiner where = new StringJoiner(&quot; AND &quot;, &quot; WHERE &quot;, &quot;&quot;);
+    where.setEmptyValue(&quot;&quot;);
+    for (Field field : query.getClass().getDeclaredFields()) {
+        //...
+    }
+    return where.toString();
+}
+</code></pre>
+<p>整段代码宣告重构完毕的同时，我们也得到了一段构造动态查询条件的算法：</p>
+<ol>
+<li>使用反射获取查询对象的所有字段。</li>
+<li>遍历这些字段，并读取它们的值。</li>
+<li>如果字段的值有效（非空或满足特定条件），则根据字段上的注解配置，将对应的SQL片段拼接到查询语句中，并将字段值添加到参数列表中。</li>
+</ol>
+<p>当开发者再需要增加新的查询条件时，只需在<code>UserQuery</code>中添加新的字段，并在注解中声明对应的查询条件，而无需修改构造动态查询条件的代码。</p>
+<h2 id="类似案例">类似案例</h2>
+<p>类似的属性相关型重复还可以在其他场景中找到。例如，从<code>ResultSet</code>中读取数据并映射到属性的代码就符合这样的模式：</p>
+<pre><code class="language-java">public RoleEntity mapRow(ResultSet rs, int rowNum) throws SQLException {
+    RoleEntity roleEntity = new RoleEntity();
+    roleEntity.setId(rs.getInt(&quot;id&quot;));
+    roleEntity.setRoleName(rs.getString(&quot;roleName&quot;));
+    roleEntity.setRoleCode(rs.getString(&quot;roleCode&quot;));
+    roleEntity.setValid(rs.getBoolean(&quot;valid&quot;));
+    return roleEntity;
+}
+</code></pre>
+<p>我们可以采用上述重构方法，通过反射遍历<code>RoleEntity</code>的字段，读取数据并设值，便能消除这些重复代码。这也是开发ORM框架的基础。</p>
+<h2 id="后续优化">后续优化</h2>
+<p>我们还可以进一步围绕重构后的buildWhere方法做优化。</p>
+<h3 id="外部优化">外部优化</h3>
+<p>由于<code>buildWhere</code>方法现在已经支持为任意查询对象构建查询子句，所以我们可以把UserController中有关SQL执行的代码也抽取为一个通用的数据查询方法。</p>
+<pre><code class="language-java">@RestController
+@RequestMapping(&quot;user&quot;)
+public class UserController {
+    @Resource
+    private JdbcDataAccess jdbcDataAccess;
+
+    @GetMapping(&quot;/&quot;)
+    public List&lt;UserEntity&gt; query(UserQuery query) throws Exception {
+        return jdbcDataAccess.query(UserEntity.class, query);
+    }
+}
+
+@Repository
+@AllArgsConstructor
+public class JdbcDataAccess {
+    private JdbcTemplate jdbcTemplate;
+
+    public &lt;E&gt; List&lt;E&gt; query(Class&lt;E&gt; clazz, Object query) throws Exception {
+        RowMapper&lt;E&gt; rowMapper = new BeanPropertyRowMapper&lt;&gt;(clazz);
+        List&lt;Object&gt; argList = new ArrayList&lt;&gt;();
+        String where = buildWhere(query, argList);
+        String table = clazz.getAnnotation(Table.class).name();
+        String sql = &quot;SELECT * FROM &quot; + table + where;
+        return jdbcTemplate.query(sql, rowMapper, argList.toArray());
+    }
+}
+</code></pre>
+<h3 id="内部优化">内部优化</h3>
+<p>目前，我们需要在注解中通过文本来声明字段绑定的查询条件，而字段名称中就包含了查询条件中的列名，例如，查询条件<code>name = ?</code>中包含了字段名称<code>name</code>，因此，我们可以尝试去掉注解，直接从字段定义的信息中推导出查询条件的列名和操作符。于是，便诞生了一门基于查询对象的支持动态查询的领域特定语言(DSL)。</p>
+<pre><code class="language-java">public class UserQuery {
+    private String name;     // name = ?
+    private String nameLike; // name LIKE ?
+    private Integer ageGt;   // age &gt; ?
+}
+</code></pre>
+<h2 id="总结">总结</h2>
+<p>本文定位了动态查询代码中的属性相关型重复问题，并介绍了一种反射替换方法来对这种类型的重复进行重构。</p>
+<p>重构后的代码分离了查询条件的定义逻辑和拼接逻辑。当需要增加新的查询条件时，开发者只需在查询对象中添加字段，并通过注解等方式定义对应的查询条件，而无需修改查询条件的拼接逻辑。</p>
+<p>这一改进不仅简化了动态查询代码，也为基于查询对象的领域特定语言的设计打下了基础。</p>
+
+          </div>
+        </div>
+
+        
+          <div class="next-post">
+            <a class="purple-link" href="https://blog.doyto.win/post/goooqo-crud/">
+              <h3 class="post-title">
+                下一篇：GoooQo中的数据访问接口
+              </h3>
+            </a>
+          </div>
+          
+      </div>
+
+      
+        
+          <div id="gitalk-container"></div>
+        
+
+        
+      
+
+      <div class="site-footer">
+  <div class="slogan">DOYToWin</div>
+  <div class="social-container">
+    
+      
+        <a href="https://github.com/doytowin/" target="_blank">
+          <i class="fab fa-github"></i>
+        </a>
+      
+    
+      
+        <a href="https://x.com/doytowin" target="_blank">
+          <i class="fab fa-twitter"></i>
+        </a>
+      
+    
+      
+    
+      
+        <a href="https://www.zhihu.com/people/yuan-forb/" target="_blank">
+          <i class="fab fa-zhihu"></i>
+        </a>
+      
+    
+      
+    
+  </div>
+  <a target="_blank" rel="noopener noreferrer" href="https://beian.miit.gov.cn/">鄂ICP备17018023号-1</a>
+|
+<span>Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a></span>
+|
+<span>Hosted on <a href="https://github.com/f0rb/f0rb.github.io/" target="_blank">f0rb.github.io</a></span> | <a class="rss" href="https://blog.doyto.win/atom.xml" target="_blank">RSS</a>
+</div>
+
+
+    </div>
+    <script type="application/javascript">
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function () {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?d5d7ae2ddd28b5b5061cc801ef122a66";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: 'bba21e5713780b0ea310',
+        clientSecret: '6d4e00ab700caf5d3809bdafa989c566b458cf2b',
+        repo: 'f0rb.github.io',
+        owner: 'f0rb',
+        admin: ['f0rb'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+  </body>
+</html>

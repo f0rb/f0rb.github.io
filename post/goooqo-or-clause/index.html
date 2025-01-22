@@ -1,0 +1,382 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    
+<meta charset="utf-8" >
+
+<title>在GoooQo中怎么表达select * from user where id = ? or (name = ? and age = ?) | DOYToWin</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.doyto.win/favicon.ico?v=1737547064740">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://blog.doyto.win/styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+  
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-164125169-1"></script>
+<script> window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-164125169-1');</script>
+
+
+    
+    <meta property="og:image" content="https://blog.doyto.win/post-images/goooqo-or-clause.webp">
+    
+    <meta name="description" content="前言
+GoooQo是一个可以仅根据对象自动构建SQL语句并执行的OQM框架。
+OQM是一项仅通过对象来构建数据库查询语句的技术，专注于研究面向对象编程语言和数据库查询语言之间的映射关系。
+本文就标题中的问题来探讨一下SQL语句中逻辑运算符和..." />
+    <meta name="keywords" content="cn,GoooQo,Go,OQM,CRUD,f0rb说" />
+  </head>
+  <body>
+    <div id="app" class="main">
+      <div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="https://blog.doyto.win">
+        <img class="avatar" src="https://blog.doyto.win/images/avatar.png?v=1737547064740" alt="" width="32px" height="32px">
+      </a>
+      <a href="https://blog.doyto.win">
+        <h1 class="site-title">DOYToWin</h1>
+      </a>
+    </div>
+    <div class="right">
+      <transition name="fade">
+        <i class="icon" :class="{ 'icon-close-outline': menuVisible, 'icon-menu-outline': !menuVisible }" @click="menuVisible = !menuVisible"></i>
+      </transition>
+    </div>
+  </div>
+</div>
+
+<transition name="fade">
+  <div class="menu-container" style="display: none;" v-show="menuVisible">
+    <div class="menu-list">
+      
+        
+          <a href="/" class="menu purple-link">
+            首页/Home
+          </a>
+        
+      
+        
+          <a href="/archives" class="menu purple-link">
+            归档/Archives
+          </a>
+        
+      
+        
+          <a href="/tags" class="menu purple-link">
+            标签/Tags
+          </a>
+        
+      
+        
+          <a href="/post/about" class="menu purple-link">
+            关于/About
+          </a>
+        
+      
+    </div>
+  </div>
+</transition>
+
+
+      <div class="content-container">
+        <div class="post-detail">
+          
+            <img src="https://blog.doyto.win/post-images/goooqo-or-clause.webp" alt="在GoooQo中怎么表达select * from user where id = ? or (name = ? and age = ?)" style="width:100%">
+          
+          <h2 class="post-title">在GoooQo中怎么表达select * from user where id = ? or (name = ? and age = ?)</h2>
+          <div class="post-info post-detail-info">
+            <span><i class="icon-calendar-outline"></i> 2024-09-02</span>
+            
+              <span>
+                <i class="icon-pricetags-outline"></i>
+                
+                  <a href="https://blog.doyto.win/tag/SPCbNe66l_/">
+                    cn
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/OsG0ZGFVG/">
+                    GoooQo
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/wrrn0wEw0/">
+                    Go
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/iJtaxszOUH/">
+                    OQM
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/7k1aGKguYI/">
+                    CRUD
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/qP6WaPh-k/">
+                    f0rb说
+                    
+                  </a>
+                
+              </span>
+            
+            <span id="busuanzi_container_page_pv" style="color: #fff"><span id="busuanzi_value_page_pv"></span></span>
+          </div>
+          <div class="post-content">
+            <h2 id="前言">前言</h2>
+<p>GoooQo是一个可以仅根据对象自动构建SQL语句并执行的OQM框架。</p>
+<p>OQM是一项仅通过对象来构建数据库查询语句的技术，专注于研究面向对象编程语言和数据库查询语言之间的映射关系。</p>
+<p>本文就标题中的问题来探讨一下SQL语句中逻辑运算符和对象结构之间的关系。</p>
+<h2 id="查询子句的层级结构">查询子句的层级结构</h2>
+<p>对于SQL语言中的WHERE子句，OQM技术提出一个新的观点：查询子句并不是扁平的，而是有层级的。</p>
+<p>其中，使用AND连接的查询条件位于一个层级，使用OR连接的查询条件位于一个层级，每一层级的查询条件使用同一种逻辑运算符进行连接。</p>
+<p>查询子句之所以有层级划分，是因为逻辑运算符的优先级不同，AND的优先级高于OR。</p>
+<p>一般情况下，多个查询条件是用AND连接的，我们默认AND作为第一层级，那么标题中的查询语句里，OR连接的两个条件就在第二层级，OR语句的第二个条件里用AND连接的两个条件就在第三层级。</p>
+<p>使用JSON表示这样的层级结构如下:</p>
+<pre><code class="language-json">{
+  &quot;userOr&quot;: {
+    &quot;id&quot;: 5,
+    &quot;userAnd&quot;: {
+      &quot;name&quot;: &quot;John&quot;,
+      &quot;age&quot;: 30
+    }
+  }
+}
+</code></pre>
+<p>在这条数据中，我们通过键名称的后缀Or和And来确定子查询条件的逻辑运算符。</p>
+<p>这条数据转换为WHERE子句的构建过程如下：</p>
+<ul>
+<li>第一层级只有一个键userOr，可以省掉AND连接；</li>
+<li>userOr下的多个查询条件使用OR进行连接；</li>
+<li>第一个键值对<code>&quot;id&quot;: 5</code>对应的查询条件为<code>id = ?</code>；</li>
+<li>第二个键userAnd的后缀为And，使用AND连接子查询条件，得到<code>name = ? ADN age = ?</code>；</li>
+<li>再把这个条件加上括号和查询条件<code>id = ?</code>用OR连起来。</li>
+</ul>
+<p>这样，我们就得到了标题中的查询子句：<code>id = ? OR (name = ? AND age = ?)</code>，以及对应的三个参数：[5, name, 30]。</p>
+<p>由于AND的优先级高于OR，这里的括号也可以省略。</p>
+<figure data-type="image" tabindex="1"><img src="https://blog.doyto.win/post-images/1725275009209.webp" alt="对比图" loading="lazy"></figure>
+<p>通过这张对比图，我们可以更清晰的看清楚查询子句和JSON数据库之间的对应关系。</p>
+<h2 id="数据构造和映射关系">数据构造和映射关系</h2>
+<p>然后我们尝试使用Go语言来构造这条JSON数据。</p>
+<p>首先，我们定义对应的结构体<code>UserQuery</code>，可以使用如下嵌套的方式来定义：</p>
+<pre><code class="language-go">type UserQuery struct {
+    Id      *int       `json:&quot;id,omitempty&quot;`
+    Name    *string    `json:&quot;name,omitempty&quot;`
+    Age     *int       `json:&quot;age,omitempty&quot;`
+    UserOr  *UserQuery `json:&quot;userOr,omitempty&quot;`
+    UserAnd *UserQuery `json:&quot;userAnd,omitempty&quot;`
+}
+</code></pre>
+<p>然后，根据JSON数据中的赋值构造对应的变量：</p>
+<pre><code class="language-go">func P[T any](t T) *T { return &amp;t }
+
+func main() {
+    userQuery := UserQuery{UserOr: &amp;UserQuery{Id: P(1), UserAnd: &amp;UserQuery{Name: P(&quot;John&quot;), Age: P(30)}}}
+    bytes, _ := json.Marshal(query)
+    print(string(bytes))
+}
+</code></pre>
+<p>运行后输出如下，没有赋值的字段都被忽略了：</p>
+<pre><code class="language-json">{&quot;userOr&quot;:{&quot;id&quot;:1,&quot;userAnd&quot;:{&quot;name&quot;:&quot;John&quot;,&quot;age&quot;:30}}}
+</code></pre>
+<p>这与上面的JSON数据完全一致。也就是说，我们可以根据这里的<code>userQuery</code>变量构造出同样的查询子句。</p>
+<h2 id="goooqo接口调用">GoooQo接口调用</h2>
+<p>GoooQo就是利用对象结构和查询子句的层级之间的联系来构造包含AND和OR的查询子句的。</p>
+<p>首先为user表定义实体对象和查询对象：</p>
+<pre><code class="language-go">type UserEntity struct {
+    goooqo.IntId
+    Name     *string `json:&quot;name,omitempty&quot;`
+    Age      *int    `json:&quot;age,omitempty&quot;`\
+}
+
+func (u UserEntity) GetTableName() string { return &quot;user&quot; }
+
+type UserQuery struct {
+    goooqo.PageQuery
+    Id      *int       `json:&quot;id,omitempty&quot;`
+    Name    *string    `json:&quot;name,omitempty&quot;`
+    Age     *int       `json:&quot;age,omitempty&quot;`
+    UserOr  *UserQuery `json:&quot;userOr,omitempty&quot;`
+    UserAnd *UserQuery `json:&quot;userAnd,omitempty&quot;`
+}
+</code></pre>
+<p>再根据数据库连接为user表创建数据访问接口：</p>
+<pre><code class="language-go">db := rdb.Connect(&quot;local.properties&quot;)
+defer rdb.Disconnect(db)
+tm := rdb.NewTransactionManager(db)
+
+userDataAccess := rdb.NewTxDataAccess[UserEntity](tm)
+</code></pre>
+<p>最后，根据需要执行的SQL语句，使用创建的查询对象调用<code>userDataAccess</code>的Query方法即可:</p>
+<pre><code class="language-go">userQuery := UserQuery{UserOr: &amp;UserQuery{Id: P(1), UserAnd: &amp;UserQuery{Name: P(&quot;John&quot;), Age: P(30)}}}
+userEntities, err := userDataAccess.Query(context.Background(), userQuery)
+</code></pre>
+<p>对应的日志信息如下，与标题中的SQL语句基本一致：</p>
+<pre><code>time=&quot;2024-09-02T17:11:27+08:00&quot; level=info msg=Executing SQL=&quot;SELECT id, name, age FROM user WHERE (id = ? OR name = ? AND age = ?)&quot; args=&quot;[5 John 30]&quot;
+</code></pre>
+<p>这样，当我们需要执行不同的SQL语句的时候，只需要根据查询条件给对应的字段赋值即可。对于前后端交互的项目，使用这类查询对象接收前端传入的参数，可以极大地减少后端的编码量。</p>
+<h2 id="改进">改进</h2>
+<p>这里还有个小问题，当Or后缀的字段的类型是个数组呢，例如<code>UserOr *[]UserQuery</code>？</p>
+<p>GoooQo里的处理如下：</p>
+<ul>
+<li>数组中每个结构体内部字段映射得到的查询条件采用AND连接；</li>
+<li>多个结构体对应的每组查询条件再用OR连接。</li>
+</ul>
+<p>新的结构体定义如下：</p>
+<pre><code class="language-go">type UserQuery struct {
+    goooqo.PageQuery
+    Id      *int         `json:&quot;id,omitempty&quot;`
+    Name    *string      `json:&quot;name,omitempty&quot;`
+    Age     *int         `json:&quot;age,omitempty&quot;`
+    UserOr  *[]UserQuery `json:&quot;userOr,omitempty&quot;`
+    UserAnd *UserQuery   `json:&quot;userAnd,omitempty&quot;`
+}
+</code></pre>
+<p>然后我们使用新的结构体构造同样的查询语句如下：</p>
+<pre><code>userQuery := UserQuery{UserOr: &amp;[]UserQuery{ {Id: P(1)}, {Name: P(&quot;John&quot;), Age: P(30)}}}
+//json: {&quot;userOr&quot;:[{&quot;id&quot;:1},{&quot;name&quot;:&quot;John&quot;,&quot;age&quot;:30}]}
+</code></pre>
+<p>此时，键userOr变为了一个包含两个元素的数组，元素之间的运算符为OR，元素内部的运算符为AND。</p>
+<p>于是，查询语句的每个查询条件和对象字段的对应关系表示如下：<br>
+<img src="https://blog.doyto.win/post-images/1725615897117.webp" alt="对比图" loading="lazy"></p>
+<p>另外，我们还可以发现，当数组userOr中仅包含一个元素时，它实际上与字段<code>UserAnd</code>映射得到的条件相同，于是，我们可以进一步优化掉<code>UserAnd</code>字段。</p>
+<h2 id="结语">结语</h2>
+<p>本文介绍了查询子句的层级关系以及与对象结构之间的联系，并详细介绍了OQM技术中如何利用对象结构来构造包含AND和OR运算符的查询子句。</p>
+<p>传统的ORM技术专注于对象模型和关系模型的映射，并没有指出对象语言和查询语言的这种联系，因而ORM框架对于含OR的查询子句的构造没有统一的实现方式。</p>
+<p>而且进一步研究我们会发现，这样的查询条件既然能用JSON数据表示出来，那就意味着只要是支持JSON的编程语言都可以构造出这样的查询条件。下一步，我们可以尝试在不同的编程语言中实现本文所述方案。</p>
+<hr>
+<p>© 2024 Yuan Zhen. All rights reserved.</p>
+
+          </div>
+        </div>
+
+        
+          <div class="next-post">
+            <a class="purple-link" href="https://blog.doyto.win/post/goooqo-transaction-management/">
+              <h3 class="post-title">
+                下一篇：GoooQo中的事务传播管理
+              </h3>
+            </a>
+          </div>
+          
+      </div>
+
+      
+        
+          <div id="gitalk-container"></div>
+        
+
+        
+      
+
+      <div class="site-footer">
+  <div class="slogan">DOYToWin</div>
+  <div class="social-container">
+    
+      
+        <a href="https://github.com/doytowin/" target="_blank">
+          <i class="fab fa-github"></i>
+        </a>
+      
+    
+      
+        <a href="https://x.com/doytowin" target="_blank">
+          <i class="fab fa-twitter"></i>
+        </a>
+      
+    
+      
+    
+      
+        <a href="https://www.zhihu.com/people/yuan-forb/" target="_blank">
+          <i class="fab fa-zhihu"></i>
+        </a>
+      
+    
+      
+    
+  </div>
+  <a target="_blank" rel="noopener noreferrer" href="https://beian.miit.gov.cn/">鄂ICP备17018023号-1</a>
+|
+<span>Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a></span>
+|
+<span>Hosted on <a href="https://github.com/f0rb/f0rb.github.io/" target="_blank">f0rb.github.io</a></span> | <a class="rss" href="https://blog.doyto.win/atom.xml" target="_blank">RSS</a>
+</div>
+
+
+    </div>
+    <script type="application/javascript">
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function () {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?d5d7ae2ddd28b5b5061cc801ef122a66";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: 'bba21e5713780b0ea310',
+        clientSecret: '6d4e00ab700caf5d3809bdafa989c566b458cf2b',
+        repo: 'f0rb.github.io',
+        owner: 'f0rb',
+        admin: ['f0rb'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+  </body>
+</html>

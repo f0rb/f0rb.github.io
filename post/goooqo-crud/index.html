@@ -1,0 +1,452 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    
+<meta charset="utf-8" >
+
+<title>GoooQo中的数据访问接口 | DOYToWin</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.doyto.win/favicon.ico?v=1737547064740">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://blog.doyto.win/styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+  
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-164125169-1"></script>
+<script> window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-164125169-1');</script>
+
+
+    
+    <meta name="description" content="初始化项目
+首先，使用go mod init初始化项目并添加GoooQo依赖：
+go get -u github.com/doytowin/goooqo
+
+然后，初始化数据库连接和事务管理器：
+func main() {
+	db, _ :=..." />
+    <meta name="keywords" content="cn,GoooQo,Go,OQM,CRUD,f0rb说" />
+  </head>
+  <body>
+    <div id="app" class="main">
+      <div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="https://blog.doyto.win">
+        <img class="avatar" src="https://blog.doyto.win/images/avatar.png?v=1737547064740" alt="" width="32px" height="32px">
+      </a>
+      <a href="https://blog.doyto.win">
+        <h1 class="site-title">DOYToWin</h1>
+      </a>
+    </div>
+    <div class="right">
+      <transition name="fade">
+        <i class="icon" :class="{ 'icon-close-outline': menuVisible, 'icon-menu-outline': !menuVisible }" @click="menuVisible = !menuVisible"></i>
+      </transition>
+    </div>
+  </div>
+</div>
+
+<transition name="fade">
+  <div class="menu-container" style="display: none;" v-show="menuVisible">
+    <div class="menu-list">
+      
+        
+          <a href="/" class="menu purple-link">
+            首页/Home
+          </a>
+        
+      
+        
+          <a href="/archives" class="menu purple-link">
+            归档/Archives
+          </a>
+        
+      
+        
+          <a href="/tags" class="menu purple-link">
+            标签/Tags
+          </a>
+        
+      
+        
+          <a href="/post/about" class="menu purple-link">
+            关于/About
+          </a>
+        
+      
+    </div>
+  </div>
+</transition>
+
+
+      <div class="content-container">
+        <div class="post-detail">
+          
+          <h2 class="post-title">GoooQo中的数据访问接口</h2>
+          <div class="post-info post-detail-info">
+            <span><i class="icon-calendar-outline"></i> 2024-09-14</span>
+            
+              <span>
+                <i class="icon-pricetags-outline"></i>
+                
+                  <a href="https://blog.doyto.win/tag/SPCbNe66l_/">
+                    cn
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/OsG0ZGFVG/">
+                    GoooQo
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/wrrn0wEw0/">
+                    Go
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/iJtaxszOUH/">
+                    OQM
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/7k1aGKguYI/">
+                    CRUD
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/qP6WaPh-k/">
+                    f0rb说
+                    
+                  </a>
+                
+              </span>
+            
+            <span id="busuanzi_container_page_pv" style="color: #fff"><span id="busuanzi_value_page_pv"></span></span>
+          </div>
+          <div class="post-content">
+            <h2 id="初始化项目">初始化项目</h2>
+<p>首先，使用<code>go mod init</code>初始化项目并添加GoooQo依赖：</p>
+<pre><code>go get -u github.com/doytowin/goooqo
+</code></pre>
+<p>然后，初始化数据库连接和事务管理器：</p>
+<pre><code class="language-go">func main() {
+	db, _ := sql.Open(&quot;sqlite3&quot;, &quot;./test.db&quot;)
+	tm := rdb.NewTransactionManager(db)
+	//...
+}
+</code></pre>
+<p>接着，我们就可以为每张表创建对应数据访问接口了：</p>
+<pre><code class="language-go">userDataAccess := rdb.NewTxDataAccess[UserEntity](tm)
+</code></pre>
+<h2 id="接口定义">接口定义</h2>
+<p>方法<code>NewTxDataAccess</code>返回一个<code>TxDataAccess</code>实例，该实例由用于CRUD操作的<code>DataAccess</code>接口和用于事务操作的<code>TransactionManager</code>接口组成。</p>
+<pre><code class="language-go">package core
+
+type DataAccess[E Entity] interface {
+	Get(ctx context.Context, id any) (*E, error)
+	Delete(ctx context.Context, id any) (int64, error)
+	Query(ctx context.Context, query Query) ([]E, error)
+	Count(ctx context.Context, query Query) (int64, error)
+	DeleteByQuery(ctx context.Context, query Query) (int64, error)
+	Page(ctx context.Context, query Query) (PageList[E], error)
+	Create(ctx context.Context, entity *E) (int64, error)
+	CreateMulti(ctx context.Context, entities []E) (int64, error)
+	Update(ctx context.Context, entity E) (int64, error)
+	Patch(ctx context.Context, entity E) (int64, error)
+	PatchByQuery(ctx context.Context, entity E, query Query) (int64, error)
+}
+
+type TxDataAccess[E Entity] interface {
+	TransactionManager
+	DataAccess[E]
+}
+
+type PageList[D any] struct {
+    List  []D   `json:&quot;list&quot;`
+    Total int64 `json:&quot;total&quot;`
+}
+</code></pre>
+<p>可以看到，<code>DataAccess</code>接口中的所有方法一共只接收4类参数：</p>
+<ul>
+<li><code>context.Context</code>可以是普通的Context，也可以是开启了事务的<code>TransactionContext</code></li>
+<li><code>id</code> 实体的主键</li>
+<li><code>Entity</code> 实体对象，用于映射表名和列名，需要组合<code>IntId</code>或者<code>Int64Id</code></li>
+<li><code>Query</code> 查询对象，用于动态构造查询条件和分页语句，需要组合<code>PageQuery</code></li>
+</ul>
+<h2 id="创建对象">创建对象</h2>
+<p>假设我们在<code>test.db</code>中有以下用户表：</p>
+<table><thead><tr><th>id</th><th>name</th><th data-type="number">score</th><th>memo</th></tr></thead><tbody><tr><td>1</td><td>Alley</td><td>80</td><td>Good</td></tr><tr><td>2</td><td>Dave</td><td>75</td><td>Well</td></tr><tr><td>3</td><td>Bob</td><td>60</td><td></td></tr><tr><td>4</td><td>Tim</td><td>92</td><td>Great</td></tr><tr><td>5</td><td>Emy</td><td>100</td><td>Great</td></tr></tbody></table>
+<p>我们只需要为表定义一个实体对象<code>UserEntity</code>和一个查询对象<code>UserQuery</code>，然后创建数据访问接口即可：</p>
+<pre><code class="language-go">type UserEntity struct {
+    goooqo.Int64Id
+    Name    *string `json:&quot;name,omitempty&quot;`
+    Score   *int    `json:&quot;score,omitempty&quot;`
+    Memo    *string `json:&quot;memo,omitempty&quot;`
+    Deleted *bool   `json:&quot;deleted,omitempty&quot;`
+}
+
+func (u UserEntity) GetTableName() string {
+    return &quot;t_user&quot;
+}
+
+type UserQuery struct {
+    goooqo.PageQuery
+    IdGt     *int64
+    IdIn     *[]int64
+    ScoreLt  *int
+    MemoNull *bool
+    MemoLike *string
+    Deleted  *bool
+    UserOr   *[]UserQuery
+
+    Account    *string    `condition:&quot;(username = ? OR email = ?)&quot;`
+    ScoreLtAvg *UserQuery `subquery:&quot;select avg(score) from t_user&quot;`
+    ScoreLtAny *UserQuery `subquery:&quot;SELECT score FROM t_user&quot;`
+    ScoreLtAll *UserQuery `subquery:&quot;select score from UserEntity&quot;`
+    ScoreGtAvg *UserQuery `select:&quot;avg(score)&quot; from:&quot;UserEntity&quot;`
+
+    ScoreInScoreOfUser    *UserQuery //score IN (SELECT score FROM t_user WHERE ...)
+    ScoreGtAvgScoreOfUser *UserQuery //score &gt; (SELECT AVG(score) FROM t_user WHERE ...)
+}
+</code></pre>
+<h2 id="调用示例">调用示例</h2>
+<h3 id="get">Get</h3>
+<p>根据id查询数据：</p>
+<pre><code class="language-go">user, err := userDataAccess.Get(ctx, 3)
+// SQL=&quot;SELECT id, name, score, memo, deleted FROM t_user WHERE id = ?&quot; args=&quot;[3]&quot;
+</code></pre>
+<h3 id="query">Query</h3>
+<p>根据查询条件查询数据：</p>
+<pre><code class="language-go">userQuery := UserQuery{ScoreLt: P(80)}
+users, err := userDataAccess.Query(ctx, userQuery)
+// SQL=&quot;SELECT id, name, score, memo, deleted FROM t_user 
+// WHERE score &lt; ?&quot; args=&quot;[80]&quot;
+
+userQuery := UserQuery{PageQuery: PageQuery{PageSize: P(20), 
+    Sort: P(&quot;id,desc;score&quot;)}, MemoLike: P(&quot;Great&quot;)}
+users, err := userDataAccess.Query(ctx, userQuery)
+// SQL=&quot;SELECT id, name, score, memo, deleted FROM t_user 
+// WHERE memo LIKE ? ORDER BY id DESC, score LIMIT 20 OFFSET 0&quot; args=&quot;[Great]&quot;
+
+userQuery := UserQuery{IdIn: &amp;[]int64{1, 4, 12}, Deleted: P(true)}
+users, err := userDataAccess.Query(ctx, userQuery)
+// SQL=&quot;SELECT id, name, score, memo, deleted FROM t_user 
+// WHERE id IN (?, ?, ?) AND deleted = ?&quot; args=&quot;[1 4 12 true]&quot;
+
+userQuery := UserQuery{UserOr: &amp;[]UserQuery{
+    {IdGt: P(int64(10)), MemoNull: P(true)}, 
+    {ScoreLt: P(80), MemoLike: P(&quot;Good&quot;)},
+}}
+users, err := userDataAccess.Query(ctx, userQuery)
+// SQL=&quot;SELECT id, name, score, memo, deleted FROM t_user 
+// WHERE (id &gt; ? AND memo IS NULL OR score &lt; ? AND memo LIKE ?)&quot; args=&quot;[10 80 Good]&quot;
+
+userQuery := UserQuery{ScoreGtAvg: &amp;UserQuery{Deleted: P(true)},
+     ScoreLtAny: &amp;UserQuery{}}
+users, err := userDataAccess.Query(ctx, userQuery)
+// SQL=&quot;SELECT id, name, score, memo, deleted FROM t_user 
+// WHERE score &gt; (SELECT avg(score) FROM t_user WHERE deleted = ?) 
+// AND score &lt; ANY(SELECT score FROM t_user)&quot; args=&quot;[true]&quot;
+
+userQuery := UserQuery{Account: P(&quot;John&quot;)}
+users, err := userDataAccess.Query(ctx, userQuery)
+// SQL=&quot;SELECT id, name, score, memo, deleted FROM t_user 
+// WHERE (username = ? OR email = ?)&quot; args=&quot;[John John]&quot;
+</code></pre>
+<h3 id="count">Count</h3>
+<p>根据查询条件查询数据的总数：</p>
+<pre><code class="language-go">userQuery := UserQuery{ScoreLt: P(60)}
+cnt, err := userDataAccess.Count(ctx, userQuery)
+// SQL=&quot;SELECT count(0) FROM t_user WHERE score &lt; ?&quot; args=&quot;[60]&quot;
+</code></pre>
+<h3 id="page">Page</h3>
+<p>根据查询条件查询数据和总数：</p>
+<pre><code class="language-go">userQuery := UserQuery{PageQuery: PageQuery{PageSize: P(20)}, ScoreLt: P(80)}
+page, err := userDataAccess.Page(ctx, userQuery)
+// SQL=&quot;SELECT id, name, score, memo, deleted FROM t_user WHERE score &lt; ? LIMIT 20 OFFSET 0&quot; args=&quot;[80]&quot;
+// SQL=&quot;SELECT count(0) FROM t_user WHERE score &lt; ?&quot; args=&quot;[80]&quot;
+</code></pre>
+<h3 id="delete">Delete</h3>
+<p>根据id删除数据：</p>
+<pre><code class="language-go">tc, _ := tm.StartTransaction(tc)
+cnt, err := userDataAccess.Delete(tc, 3)
+// SQL=&quot;DELETE FROM t_user WHERE id = ?&quot; args=&quot;[3]&quot;
+</code></pre>
+<h3 id="deletebyquery">DeleteByQuery</h3>
+<p>根据查询条件删除数据：</p>
+<pre><code class="language-go">userQuery := UserQuery{ScoreLt: P(80)}
+cnt, err := userDataAccess.DeleteByQuery(tc, userQuery)
+// SQL=&quot;DELETE FROM User WHERE score &lt; ?&quot; args=&quot;[80]&quot;
+</code></pre>
+<h3 id="create">Create</h3>
+<p>创建单条数据：</p>
+<pre><code class="language-go">entity := UserEntity{Name: P(&quot;John&quot;), Score: P(90), Deleted: P(false)}
+id, err := userDataAccess.Create(tc, &amp;entity)
+// SQL=&quot;INSERT INTO t_user (name, score, memo, deleted) VALUES (?, ?, ?, ?)&quot; args=&quot;[John 90 &lt;nil&gt; false]&quot;
+</code></pre>
+<h3 id="createmulti">CreateMulti</h3>
+<p>创建多条数据：</p>
+<pre><code class="language-go">entities := []UserEntity{
+    {Name: P(&quot;John&quot;), Score: P(90), Memo: P(&quot;Great&quot;), Deleted: P(false)}, 
+    {Name: P(&quot;Alex&quot;), Score: P(55)},
+}
+cnt, err := userDataAccess.CreateMulti(tc, entities)
+// SQL=&quot;INSERT INTO t_user (name, score, memo, deleted) VALUES 
+// (?, ?, ?, ?), (?, ?, ?, ?)&quot; args=&quot;[John 90 Great false Alex 55 &lt;nil&gt; &lt;nil&gt;]&quot;
+</code></pre>
+<h3 id="update">Update</h3>
+<p>根据id更新所有字段：</p>
+<pre><code class="language-go">entity := UserEntity{Int64Id: NewInt64Id(2), Score: P(90), Memo: P(&quot;Great&quot;)}
+cnt, err := userDataAccess.Update(tc, entity)
+// SQL=&quot;UPDATE t_user SET score = ?, memo = ? WHERE id = ?&quot; args=&quot;[90 Great 2]&quot;
+</code></pre>
+<h3 id="patch">Patch</h3>
+<p>根据id更新所有非空字段：</p>
+<pre><code class="language-go">entity := UserEntity{Int64Id: NewInt64Id(2), Score: P(90)}
+cnt, err := userDataAccess.Patch(tc, entity)
+// SQL=&quot;UPDATE t_user SET score = ? WHERE id = ?&quot; args=&quot;[90 2]&quot;
+</code></pre>
+<h3 id="patchbyquery">PatchByQuery</h3>
+<p>根据查询条件更新所有非空字段：</p>
+<pre><code class="language-go">entity := UserEntity{Memo: P(&quot;Add Memo&quot;)}
+query := UserQuery{MemoNull: P(true)}
+cnt, err := userDataAccess.PatchByQuery(tc, entity, query)
+// SQL=&quot;UPDATE t_user SET memo = ? WHERE memo IS NULL&quot; args=&quot;[Add Memo]&quot;
+</code></pre>
+<h2 id="小结">小结</h2>
+<p>GoooQo基于查询对象动态查询条件，从而为单表的增删查改操作构建了一组完全基于对象的调用接口，大大简化了增删查改操作的参数构造。</p>
+<p>更多用法请参考GoooQo的在线文档：<a href="https://goooqo.docs.doyto.win/v/zh">https://goooqo.docs.doyto.win/v/zh</a></p>
+<hr>
+<p>© 2024 Yuan Zhen. All rights reserved.</p>
+
+          </div>
+        </div>
+
+        
+          <div class="next-post">
+            <a class="purple-link" href="https://blog.doyto.win/post/goooqo-or-clause-en/">
+              <h3 class="post-title">
+                下一篇：How to express `select * from user where id = ? or name = ? and age = ?` in GoooQo
+              </h3>
+            </a>
+          </div>
+          
+      </div>
+
+      
+        
+          <div id="gitalk-container"></div>
+        
+
+        
+      
+
+      <div class="site-footer">
+  <div class="slogan">DOYToWin</div>
+  <div class="social-container">
+    
+      
+        <a href="https://github.com/doytowin/" target="_blank">
+          <i class="fab fa-github"></i>
+        </a>
+      
+    
+      
+        <a href="https://x.com/doytowin" target="_blank">
+          <i class="fab fa-twitter"></i>
+        </a>
+      
+    
+      
+    
+      
+        <a href="https://www.zhihu.com/people/yuan-forb/" target="_blank">
+          <i class="fab fa-zhihu"></i>
+        </a>
+      
+    
+      
+    
+  </div>
+  <a target="_blank" rel="noopener noreferrer" href="https://beian.miit.gov.cn/">鄂ICP备17018023号-1</a>
+|
+<span>Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a></span>
+|
+<span>Hosted on <a href="https://github.com/f0rb/f0rb.github.io/" target="_blank">f0rb.github.io</a></span> | <a class="rss" href="https://blog.doyto.win/atom.xml" target="_blank">RSS</a>
+</div>
+
+
+    </div>
+    <script type="application/javascript">
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function () {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?d5d7ae2ddd28b5b5061cc801ef122a66";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: 'bba21e5713780b0ea310',
+        clientSecret: '6d4e00ab700caf5d3809bdafa989c566b458cf2b',
+        repo: 'f0rb.github.io',
+        owner: 'f0rb',
+        admin: ['f0rb'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+  </body>
+</html>

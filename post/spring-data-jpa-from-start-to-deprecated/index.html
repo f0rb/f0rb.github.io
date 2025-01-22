@@ -1,0 +1,384 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    
+<meta charset="utf-8" >
+
+<title>SpringDataJPA之从入门到弃用 | DOYToWin</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.doyto.win/favicon.ico?v=1737547064740">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://blog.doyto.win/styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+  
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-164125169-1"></script>
+<script> window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-164125169-1');</script>
+
+
+    
+    <meta name="description" content="本文主要讲弃用。
+入门
+入门的文章一大堆，基本上学会使用JpaRepository编写增删查改代码，使用Specification编写动态查询就可以。
+比如编写这样一个UserSpecification类，
+public class Use..." />
+    <meta name="keywords" content="" />
+  </head>
+  <body>
+    <div id="app" class="main">
+      <div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="https://blog.doyto.win">
+        <img class="avatar" src="https://blog.doyto.win/images/avatar.png?v=1737547064740" alt="" width="32px" height="32px">
+      </a>
+      <a href="https://blog.doyto.win">
+        <h1 class="site-title">DOYToWin</h1>
+      </a>
+    </div>
+    <div class="right">
+      <transition name="fade">
+        <i class="icon" :class="{ 'icon-close-outline': menuVisible, 'icon-menu-outline': !menuVisible }" @click="menuVisible = !menuVisible"></i>
+      </transition>
+    </div>
+  </div>
+</div>
+
+<transition name="fade">
+  <div class="menu-container" style="display: none;" v-show="menuVisible">
+    <div class="menu-list">
+      
+        
+          <a href="/" class="menu purple-link">
+            首页/Home
+          </a>
+        
+      
+        
+          <a href="/archives" class="menu purple-link">
+            归档/Archives
+          </a>
+        
+      
+        
+          <a href="/tags" class="menu purple-link">
+            标签/Tags
+          </a>
+        
+      
+        
+          <a href="/post/about" class="menu purple-link">
+            关于/About
+          </a>
+        
+      
+    </div>
+  </div>
+</transition>
+
+
+      <div class="content-container">
+        <div class="post-detail">
+          
+          <h2 class="post-title">SpringDataJPA之从入门到弃用</h2>
+          <div class="post-info post-detail-info">
+            <span><i class="icon-calendar-outline"></i> 2021-10-02</span>
+            
+            <span id="busuanzi_container_page_pv" style="color: #fff"><span id="busuanzi_value_page_pv"></span></span>
+          </div>
+          <div class="post-content">
+            <p>本文主要讲弃用。</p>
+<p><em>入门</em></p>
+<p>入门的文章一大堆，基本上学会使用<code>JpaRepository</code>编写增删查改代码，使用<code>Specification</code>编写动态查询就可以。</p>
+<p>比如编写这样一个<a href="https://github.com/doytowin/doyto-query-origin/blob/step0/src/main/java/win/doyto/query/origin/module/user/UserSpecification.java"><code>UserSpecification</code></a>类，</p>
+<pre><code class="language-java">public class UserSpecification implements Specification&lt;User&gt; {
+
+    private final UserQuery query;
+
+    public UserSpecification(UserQuery query) {
+        this.query = query;
+    }
+
+    @Override
+    public Predicate toPredicate(Root&lt;User&gt; root, CriteriaQuery&lt;?&gt; criteriaQuery, CriteriaBuilder criteriaBuilder) {
+        List&lt;Predicate&gt; list = new ArrayList&lt;&gt;();
+
+        if (StringUtils.isNotBlank(query.getAccount())) {
+            list.add(criteriaBuilder.equal(root.get(&quot;account&quot;).as(String.class), query.getAccount()));
+        }
+        if (StringUtils.isNotBlank(query.getUserStatus())) {
+            list.add(criteriaBuilder.equal(root.get(&quot;status&quot;).as(String.class), query.getStatus()));
+        }
+        if (StringUtils.isNotBlank(query.getAccountLike())) {
+            list.add(criteriaBuilder.like(root.get(&quot;account&quot;).as(String.class), &quot;%&quot; + query.getAccountLike() + &quot;%&quot;));
+        }
+        return criteriaBuilder.and(list.toArray(new Predicate[0]));
+    }
+}
+</code></pre>
+<p>然后我们来演示如何通过对这个<code>UserSpecification</code>类进行重构，来替换掉复杂难用的<code>SpringDataJPA</code>的。</p>
+<p><em>重构</em></p>
+<p>在分析代码之前，先介绍点重构的知识。</p>
+<p>“重构就是在不改变软件系统外部行为的前提下，对它的内部结构进行改善”。</p>
+<p>这句话大家可能都听过,但是重构的两大目标许多人却未必清楚。</p>
+<p>其中一个是表达意图，另一个是消除重复。</p>
+<p><em>表达意图</em></p>
+<p>那么<code>UserSpecification</code>类背后要表达的意图是什么呢？</p>
+<p>单看这段代码只是将<code>UserQuery</code>类定义的对象<code>query</code>转换成<code>Predicate</code>对象，再结合所要完成的动态查询功能来看，这个<code>Predicate</code>对象最终将被转换成SQL语句用于数据库查询。</p>
+<p>那么我们为什么不绕过<code>Predicate</code>对象，直接把<code>query</code>对象转换成SQL语句，来达到我们进行动态查询的意图呢？</p>
+<p>于是，我们编写一个<code>UserQueryBuilder</code>类来基于<code>UserQuery</code>构建查询语句和参数，</p>
+<pre><code class="language-java">public class UserQueryBuilder {
+    public List&lt;String&gt; toWhere(UserQuery query, List&lt;Object&gt; argList) {
+        List&lt;String&gt; whereList = new LinkedList&lt;&gt;();
+
+        if (StringUtils.isNotBlank(query.getAccount())) {
+            whereList.add(&quot;account = ?&quot;);
+            argList.add(query.getAccount());
+        }
+        if (query.getValid() != null) {
+            whereList.add(&quot;valid = ?&quot;);
+            argList.add(query.getValid());
+        }
+        if (StringUtils.isNotBlank(query.getAccountLike())) {
+            whereList.add(&quot;account like ?&quot;);
+            argList.add(&quot;%&quot; + query.getAccountLike() + &quot;%&quot;);
+        }
+        return whereList;
+    }
+
+    public String buildSelectAndArgs(UserQuery query, List&lt;Object&gt; argList) {
+        String where = StringUtils.join(toWhere(query, argList), &quot; &quot;);
+        if (!where.isEmpty()) {
+            where = &quot;where &quot; + where;
+        }
+        return &quot;select * from t_user &quot; + where;
+    }
+}
+</code></pre>
+<p>并在<code>UserService</code>中将生成的查询语句和参数交给<code>EntityManager</code>执行。</p>
+<pre><code class="language-java">@Service
+public class UserService {
+    @Resource
+    EntityManager entityManager;
+
+    UserQueryBuilder userQueryBuilder = new UserQueryBuilder();
+
+    public List&lt;User&gt; query(UserQuery userQuery) {
+        ArrayList&lt;Object&gt; argList = new ArrayList&lt;&gt;();
+        String sql = userQueryBuilder.buildSelectAndArgs(userQuery, argList);
+
+        Query query = entityManager.createNativeQuery(sql, User.class);
+        for (int i = 0; i &lt; argList.size(); i++) {
+            query.setParameter(i + 1, argList.get(i));
+        }
+        return query.getResultList();
+    }
+}
+</code></pre>
+<blockquote>
+<p>完整代码见这里：https://github.com/doytowin/doyto-query-origin/tree/step1</p>
+</blockquote>
+<p>这时我们已经不再需要使用<code>UserSpecification</code>类来进行动态查询了。</p>
+<p><em>消除重复</em></p>
+<p>代码重复分为两种，一种是简单型重复，一种是结构型重复。</p>
+<p>再看看<code>UserQueryBuilder#toWhere</code>方法，每个if语句的代码都比较相似</p>
+<pre><code>if (some condition) {
+    whereList.add(sql);
+    argList.add(value);
+}
+</code></pre>
+<p>这就是一种典型的结构型重复，而消除这种重复的常见手法就是使用反射。</p>
+<p>另外每行<code>whereList.add</code>语句里面的参数都是字符串常量，并且跟<code>UserQuery</code>里的字段一一对应，可以通过引入注解来将查询语句和字段关联起来。</p>
+<p>经过这一步重构后的代码结构大概是这样:</p>
+<ul>
+<li>通过反射获取查询对象的所有字段并进行遍历
+<ul>
+<li>通过反射读取对应字段的值</li>
+<li>如果为有效值
+<ul>
+<li>向whereList添加注解配置的查询条件</li>
+<li>向argList添加字段的值</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>重构后的<code>UserQueryBuilder</code>代码如下：</p>
+<pre><code class="language-java">public class UserQueryBuilder {
+    @SneakyThrows
+    public List&lt;String&gt; toWhere(UserQuery query, List&lt;Object&gt; argList) {
+        List&lt;String&gt; whereList = new LinkedList&lt;&gt;();
+        for (Field field : FieldUtils.getAllFields(query.getClass())) {
+            Object value = FieldUtils.readField(field, query, true);
+            if (isValidValue(value)) {
+                appendAnd(whereList, field);
+                appendArg(argList, value);
+            }
+        }
+        return whereList;
+    }
+
+    private void appendArg(List&lt;Object&gt; argList, Object value) {
+        argList.add(value);
+    }
+
+    private void appendAnd(List&lt;String&gt; whereList, Field field) {
+        QueryField queryField = field.getAnnotation(QueryField.class);
+        whereList.add(queryField.and());
+    }
+    // ...
+}
+</code></pre>
+<p>对应的<code>UserQuery</code>代码如下：</p>
+<pre><code class="language-java">public class UserQuery extends PageQuery {
+
+    @QueryField(and = &quot;account = ?&quot;)
+    private String account;
+
+    @QueryField(and = &quot;valid = ?&quot;)
+    private Boolean valid;
+
+    @QueryField(and = &quot;account Like CONCAT('%', ?, '%')&quot;)
+    private String accountLike;
+
+}
+</code></pre>
+<p>以及<code>QueryField</code>的定义：</p>
+<pre><code class="language-java">@Target(FIELD)
+@Retention(RUNTIME)
+public @interface QueryField {
+    String and();
+}
+</code></pre>
+<blockquote>
+<p>完整代码见这里：https://github.com/doytowin/doyto-query-origin/tree/step2</p>
+</blockquote>
+<p>现在当我们需要增加新的查询条件时，只需要在<code>UserQuery</code>类中添加新的字段并配上相应的注解即可。</p>
+<p><em>弃用</em></p>
+<p>接着再通过对<code>UserQueryBuilder</code>和<code>UserService</code>应用抽取父类，抽取泛型参数等重构手法，<br>
+将动态查询逻辑进一步封装和抽象，进而得到一个将Query对象映射成Where语句的独立模块。</p>
+<p>后续再基于Entity类生成增删查改语句，交给<code>EntityManager</code>执行，从而不再需要使用<code>JpaRepository</code>，<br>
+最后将SQL执行模块从<code>EntityManager</code>切换为<code>spring-jdbc</code>，彻底完成对<code>SpringDataJPA</code>的替换。</p>
+<p>这就是用世界上最好的开发语言JAVA开发的世界上最好的第二代ORM框架<code>DoytoQuery</code>的起源。</p>
+
+          </div>
+        </div>
+
+        
+          <div class="next-post">
+            <a class="purple-link" href="https://blog.doyto.win/post/broswer-download-compatible-solution-in-java/">
+              <h3 class="post-title">
+                下一篇：兼容各浏览器的文件下载时中文名称乱码的解决方案
+              </h3>
+            </a>
+          </div>
+          
+      </div>
+
+      
+        
+          <div id="gitalk-container"></div>
+        
+
+        
+      
+
+      <div class="site-footer">
+  <div class="slogan">DOYToWin</div>
+  <div class="social-container">
+    
+      
+        <a href="https://github.com/doytowin/" target="_blank">
+          <i class="fab fa-github"></i>
+        </a>
+      
+    
+      
+        <a href="https://x.com/doytowin" target="_blank">
+          <i class="fab fa-twitter"></i>
+        </a>
+      
+    
+      
+    
+      
+        <a href="https://www.zhihu.com/people/yuan-forb/" target="_blank">
+          <i class="fab fa-zhihu"></i>
+        </a>
+      
+    
+      
+    
+  </div>
+  <a target="_blank" rel="noopener noreferrer" href="https://beian.miit.gov.cn/">鄂ICP备17018023号-1</a>
+|
+<span>Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a></span>
+|
+<span>Hosted on <a href="https://github.com/f0rb/f0rb.github.io/" target="_blank">f0rb.github.io</a></span> | <a class="rss" href="https://blog.doyto.win/atom.xml" target="_blank">RSS</a>
+</div>
+
+
+    </div>
+    <script type="application/javascript">
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function () {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?d5d7ae2ddd28b5b5061cc801ef122a66";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: 'bba21e5713780b0ea310',
+        clientSecret: '6d4e00ab700caf5d3809bdafa989c566b458cf2b',
+        repo: 'f0rb.github.io',
+        owner: 'f0rb',
+        admin: ['f0rb'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+  </body>
+</html>

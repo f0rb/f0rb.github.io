@@ -1,0 +1,361 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    
+<meta charset="utf-8" >
+
+<title>What‘s the Real Problem for ORMs | DOYToWin</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.doyto.win/favicon.ico?v=1737547064740">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://blog.doyto.win/styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+  
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-164125169-1"></script>
+<script> window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-164125169-1');</script>
+
+
+    
+    <meta property="og:image" content="https://blog.doyto.win/post-images/what-is-the-real-problem-for-orms-en.png">
+    
+    <meta name="description" content="The designers and developers of ORMs have never truly understood the real problems they need to address. Once this probl..." />
+    <meta name="keywords" content="Forb,en,ORM" />
+  </head>
+  <body>
+    <div id="app" class="main">
+      <div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="https://blog.doyto.win">
+        <img class="avatar" src="https://blog.doyto.win/images/avatar.png?v=1737547064740" alt="" width="32px" height="32px">
+      </a>
+      <a href="https://blog.doyto.win">
+        <h1 class="site-title">DOYToWin</h1>
+      </a>
+    </div>
+    <div class="right">
+      <transition name="fade">
+        <i class="icon" :class="{ 'icon-close-outline': menuVisible, 'icon-menu-outline': !menuVisible }" @click="menuVisible = !menuVisible"></i>
+      </transition>
+    </div>
+  </div>
+</div>
+
+<transition name="fade">
+  <div class="menu-container" style="display: none;" v-show="menuVisible">
+    <div class="menu-list">
+      
+        
+          <a href="/" class="menu purple-link">
+            首页/Home
+          </a>
+        
+      
+        
+          <a href="/archives" class="menu purple-link">
+            归档/Archives
+          </a>
+        
+      
+        
+          <a href="/tags" class="menu purple-link">
+            标签/Tags
+          </a>
+        
+      
+        
+          <a href="/post/about" class="menu purple-link">
+            关于/About
+          </a>
+        
+      
+    </div>
+  </div>
+</transition>
+
+
+      <div class="content-container">
+        <div class="post-detail">
+          
+            <img src="https://blog.doyto.win/post-images/what-is-the-real-problem-for-orms-en.png" alt="What‘s the Real Problem for ORMs" style="width:100%">
+          
+          <h2 class="post-title">What‘s the Real Problem for ORMs</h2>
+          <div class="post-info post-detail-info">
+            <span><i class="icon-calendar-outline"></i> 2024-12-19</span>
+            
+              <span>
+                <i class="icon-pricetags-outline"></i>
+                
+                  <a href="https://blog.doyto.win/tag/2ixBhtMBT/">
+                    Forb
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/XWT0z16Oz/">
+                    en
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/ivCsCBvQG/">
+                    ORM
+                    
+                  </a>
+                
+              </span>
+            
+            <span id="busuanzi_container_page_pv" style="color: #fff"><span id="busuanzi_value_page_pv"></span></span>
+          </div>
+          <div class="post-content">
+            <p>The designers and developers of ORMs have never truly understood the real problems they need to address. Once this problem is solved, the ORM will no longer be an ORM.</p>
+<!-- more -->
+<h2 id="the-dynamic-query-problem-and-combinatorial-mathematics">The Dynamic Query Problem and Combinatorial Mathematics</h2>
+<p>Let's revisit the dynamic query problem first.</p>
+<p>In an information system, developers provide users with a query interface containing <code>n</code> query parameters. The user fills out <code>k</code> of these parameters to make a request <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mo>(</mo><mi>k</mi><mo>∈</mo><mo>[</mo><mn>0</mn><mo separator="true">,</mo><mi>n</mi><mo>]</mo><mo>)</mo></mrow><annotation encoding="application/x-tex">(k \in [0, n])</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord mathdefault" style="margin-right:0.03148em;">k</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">∈</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">[</span><span class="mord">0</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord mathdefault">n</span><span class="mclose">]</span><span class="mclose">)</span></span></span></span>. The system constructs a query statement based on these <code>k</code> parameters. Developers need to combine the corresponding query conditions for every possible combination of <code>k</code> query parameters, which is known as the dynamic query problem.</p>
+<p>The core of the dynamic query problem lies in the variable k introduced by the user into the system. SQL, in its original design, was only intended for DBA and developers and did not account for user inputs. Therefore, each SQL statement is static, corresponding to only one set of query conditions. Since the ORM framework does not address this issue, developers need to combine the corresponding query conditions based on the user's input.</p>
+<p>Assuming the n query parameters provided by the system are independent and the order of the corresponding query conditions is fixed, the problem can be described as a classic combination problem: listing all possible combinations of k elements chosen from a set of n elements.</p>
+<p class='katex-block'><span class="katex-display"><span class="katex"><span class="katex-mathml"><math><semantics><mrow><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>0</mn></mrow><mi>n</mi></munderover><mrow><mo fence="true">(</mo><mfrac linethickness="0px"><mi>n</mi><mi>k</mi></mfrac><mo fence="true">)</mo></mrow><mo>=</mo><msup><mn>2</mn><mi>n</mi></msup></mrow><annotation encoding="application/x-tex">\sum_{k=0}^{n} \binom{n}{k} = 2^n
+</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:2.9535100000000005em;vertical-align:-1.302113em;"></span><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.6513970000000002em;"><span style="top:-1.8478869999999998em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight" style="margin-right:0.03148em;">k</span><span class="mrel mtight">=</span><span class="mord mtight">0</span></span></span></span><span style="top:-3.0500049999999996em;"><span class="pstrut" style="height:3.05em;"></span><span><span class="mop op-symbol large-op">∑</span></span></span><span style="top:-4.300005em;margin-left:0em;"><span class="pstrut" style="height:3.05em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathdefault mtight">n</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:1.302113em;"><span></span></span></span></span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord"><span class="mopen delimcenter" style="top:0em;"><span class="delimsizing size3">(</span></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.1075599999999999em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathdefault" style="margin-right:0.03148em;">k</span></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathdefault">n</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose delimcenter" style="top:0em;"><span class="delimsizing size3">)</span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.7143919999999999em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7143919999999999em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">n</span></span></span></span></span></span></span></span></span></span></span></span></p>
+<p>From the above formula, we can see that for a query interface with <code>n</code> query parameters, there are <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mi>n</mi></msup></mrow><annotation encoding="application/x-tex">2^n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.664392em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.664392em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">n</span></span></span></span></span></span></span></span></span></span></span> possible query clauses. For example, if there are 3 query parameters, there are 8  combinations of query conditions; if there are 10 query parameters, there are 1024 possible query clauses. Both coding and maintaining are extremely difficult.</p>
+<p>ORM frameworks have not paid attention to this problem, nor have they provided a solution. A natural way is to use <code>if</code> statements to check the query parameters and determine whether the corresponding query condition should be concatenated. Since each <code>if</code> statement produces two possible outcomes (TRUE or FALSE), corresponding to whether or not to execute the query condition concatenation within the <code>if</code> block, the <code>n</code> <code>if</code> statements result in <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mi>n</mi></msup></mrow><annotation encoding="application/x-tex">2^n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.664392em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.664392em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">n</span></span></span></span></span></span></span></span></span></span></span> possible concatenation outcomes.</p>
+<p>At first glance, this problem seems to be solved, but the issue with this approach is that developers must write an <code>if</code> statement for each query parameter. As the number of query parameters increases, the number of <code>if</code> statements grows, and code maintenance still remains difficult.</p>
+<p>This is the real problem that needs to be solved in database access,<br>
+This is the real problem that needs to be solved in database access, instead of just mapping object models to relational models.</p>
+<h2 id="query-object-mapping-method">Query Object Mapping Method</h2>
+<p>When we use the <em>Introduce Parameter Object</em> refactoring method to group all the query parameters into a single object, we get an object with <code>n</code> fields, and the construction of query clauses depends solely on this object.</p>
+<p>For an object with <code>n</code> fields, each field can either be assigned or unassigned, resulting in <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mi>n</mi></msup></mrow><annotation encoding="application/x-tex">2^n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.664392em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.664392em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">n</span></span></span></span></span></span></span></span></span></span></span> possible combinations of assignments. If each field maps to a query condition, we can use the <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mi>n</mi></msup></mrow><annotation encoding="application/x-tex">2^n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.664392em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.664392em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">n</span></span></span></span></span></span></span></span></span></span></span> combinations of assignments to construct <span class="katex"><span class="katex-mathml"><math><semantics><mrow><msup><mn>2</mn><mi>n</mi></msup></mrow><annotation encoding="application/x-tex">2^n</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.664392em;vertical-align:0em;"></span><span class="mord"><span class="mord">2</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.664392em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathdefault mtight">n</span></span></span></span></span></span></span></span></span></span></span> query clauses.</p>
+<p>Thus, we shift our approach to map query clauses through an object instead of mapping objects to relations. We call this object used to construct query clauses a <strong>Query Object</strong>, and the method of combining query conditions into query clauses based on the field assignments of the Query Object is called the <strong>Query Object Mapping Method</strong>.</p>
+<h3 id="object-mapping">Object Mapping</h3>
+<p>For programming languages that support reflection, we can use reflection to read the values of the fields and determine whether each field's assignment should be mapped to a query condition. The algorithm is as follows:</p>
+<ul>
+<li>Traverse the fields of the Query Object instance.</li>
+<li>Use reflection to obtain the value of each field and map the assigned fields to query conditions.</li>
+<li>Use logical operators such as AND to combine the query conditions into query clauses.</li>
+</ul>
+<p>One simple way to map fields to query conditions is by using annotations to declare query conditions along with the fields.</p>
+<p>Reflection and annotation declarations help us encapsulate the query clause construction code into a framework that is available for all developers to use, greatly simplifying their work.</p>
+<p>For example, for a <code>UserQuery</code> object defined by developers, the framework can use the algorithm described above to construct the corresponding query clause based on the <code>UserQuery</code> assignment:</p>
+<pre><code class="language-java">public class UserQuery {
+    @Condition(&quot;name LIKE CONCAT('%', ?, '%')&quot;)
+    private String nameLike;
+    @Condition(&quot;age &gt; ?&quot;)
+    private Integer ageGt;
+    @Condition(&quot;valid = ?&quot;)
+    private Boolean valid;
+}
+// a possible query clause: WHERE age &gt; ? and valid = ?
+</code></pre>
+<p>After confirming the advantages of object mapping over the <code>if</code> statement concatenation approach, we further discuss how to construct different query conditions based on field characteristics to avoid maintaining string conditions.</p>
+<h3 id="field-mapping">Field Mapping</h3>
+<p>In SQL, query conditions mainly include the following three types:</p>
+<ol>
+<li>
+<p><strong>Comparison Query Conditions</strong>: For example, <code>age &gt; ?</code>, this condition is represented using <strong>Predicate Logic</strong>. Predicate logic is used to express basic comparison operations, such as equality (=), greater than (&gt;), less than (&lt;), greater than or equal to (≥), less than or equal to (≤), and not equal to (≠).</p>
+</li>
+<li>
+<p><strong>Logical Query Conditions</strong>: These are formed using <strong>Boolean Algebra</strong>, combining multiple conditions with logical operators such as <code>AND</code>, <code>OR</code>, and <code>NOT</code>. These conditions express the logical relationships between multiple query conditions. For example, <code>age &gt; 30 AND valid = true</code> is a logical query condition where two conditions are combined using the &quot;AND&quot; operator.</p>
+</li>
+<li>
+<p><strong>Subquery Conditions</strong>: These conditions involve a nested query, typically based on <strong>Relational Algebra</strong>. Relational algebra provides the mathematical foundation for database queries, used to express relationships between tables and nested queries. For example, <code>age &gt; (SELECT avg(age) FROM t_user)</code> is a subquery condition, where <code>avg(age)</code> is a subquery that returns a result and is compared with a field in the outer query.</p>
+</li>
+</ol>
+<p>Based on these mathematical principles, we design three types of fields to construct query conditions.</p>
+<p><strong>Mapping Comparison Query Conditions via Predicate Suffix Fields</strong>: Comparison query conditions are usually composed of column names, comparison operators, and parameters. In DSLs (domain-specific languages), predicate phrases are often used to represent comparison operators. For example, <code>eq</code> represents equality (<code>=</code>), <code>gt</code> represents greater than (<code>&gt;</code>), and so on. <code>condition.gt(&quot;age&quot;, 30)</code> represents the query condition <code>age &gt; 30</code>.</p>
+<p>We append the predicate phrase to the column name to represent the query condition. For example, the field <code>ageGt</code> represents the query condition <code>age &gt; ?</code>. Similar suffixes include <code>Eq</code>, <code>Ne</code>, <code>Ge</code>, <code>Lt</code>, <code>Le</code>, <code>In</code>, <code>NotIn</code>, <code>Null</code>, <code>Like</code>, etc., which allows us to map various comparison query conditions through field suffixes.</p>
+<p><strong>Constructing Logical Query Conditions via Logic Suffix Fields</strong>: Logical query conditions are a group of query conditions connected by logical operators such as AND or OR.</p>
+<p>The type of logic suffix fields is either a collection or a query object used to construct multiple query conditions, where each element or field corresponds to one query condition.</p>
+<p>The name of the logical suffix field includes the logical suffix <code>And</code> or <code>Or</code>, indicating the logical operator that connects multiple query conditions.</p>
+<p><strong>Constructing Subquery Conditions via Subquery Fields</strong>: Subquery fields should be query objects.</p>
+<p>For example, for a subquery condition like <code>age &gt; (SELECT avg(age) FROM t_user)</code>, we can break it down into three parts:</p>
+<ul>
+<li>For the condition part <code>age &gt;</code>, we can reuse the mapping method for predicate suffix fields. However, to avoid naming conflicts with the existing predicate suffix field <code>ageGt</code>, we need to add distinguishing characters, such as <code>ageGtAvg</code>.</li>
+<li>For the main subquery part <code>SELECT avg(age) FROM t_user</code>, we can declare the column name and table name using annotations like <code>@Subquery(select = &quot;avg(age)&quot;, from = &quot;t_user&quot;)</code>, or define it in the field name like <code>ageGtAvgAgeOfUser</code>.</li>
+<li>For the WHERE clause of the subquery, we can reuse the query object mapping method.</li>
+</ul>
+<p>With these three types of fields, we can automatically construct most query conditions. For other query conditions, we can continue developing new methods to support them.</p>
+<h3 id="achievement">Achievement</h3>
+<p>Through object and field mapping, the query object now has the following four key characteristics:</p>
+<ol>
+<li>Constructs comparison query conditions;</li>
+<li>Constructs logical query conditions;</li>
+<li>Constructs subquery conditions;</li>
+<li>Dynamically combines query conditions based on query parameters.</li>
+</ol>
+<p>From a mathematical theory perspective, the query object mapping method effectively addresses the uncertainty introduced by end users and constructs various query conditions in SQL, forming an object-based dynamic query language.</p>
+<p>Compared to the static query clauses in SQL, this dynamic query language provides the additional feature of dynamically combining query conditions. On this basis, we can continue constructing other parts of the SQL statement.</p>
+<h2 id="implementations">Implementations</h2>
+<p>The query object mapping method constructs corresponding query conditions solely through the field metadata, making it applicable to any object-oriented programming language. Here are examples in Java and Go.</p>
+<p><strong>Java Example</strong>:</p>
+<pre><code class="language-java">public class UserQuery {// WHERE
+  String nameLike       // AND name LIKE ?
+  Integer ageGt;        // AND age &gt; ?
+  Integer ageLe;        // AND age &lt;= ?
+  Boolean valid;        // AND valid = ?
+  UserQuery userOr;     // AND (age &gt; ? OR age &lt;= ? OR valid = ?)
+  @Subquery(select = &quot;avg(age)&quot;, from = &quot;t_user&quot;)
+  UserQuery ageGtAvg;   // AND age &gt; (SELECT avg(age) FROM t_user [WHERE])
+}
+</code></pre>
+<p>GitHub: <a href="http://github.com/doytowin/doyto-query">http://github.com/doytowin/doyto-query</a></p>
+<p><strong>Go Example</strong>:</p>
+<pre><code class="language-go">type UserQuery struct {   // WHERE
+	NameLike *string       // AND name LIKE ?
+	AgeGt    *int          // AND age &gt; ?
+	AgeLe    *int          // AND age &lt;= ?
+	Valid    *bool         // AND valid = ?
+	UserOr   *[]UserQuery  // AND
+
+ (age &gt; ? OR age &lt;= ? OR valid = ?)
+	                       // AND age &gt; (SELECT avg(age) FROM t_user [WHERE])
+	ScoreGtAvg *UserQuery `subquery:&quot;select:avg(age),from:t_user&quot;`
+}
+</code></pre>
+<p>GitHub: <a href="http://github.com/doytowin/goooqo">http://github.com/doytowin/goooqo</a></p>
+<p>Each field corresponds to one or more query conditions, and the conditions are combined based on field assignments to form the final query clause. Logical and subquery conditions can also be constructed by reusing query objects. These advantages are not available in SQL, which is a static language.</p>
+<p>By defining query objects in this way, <strong>developers no longer need to explicitly write <code>if</code> statements to concatenate query conditions</strong>. The framework can use reflection to read the assignment of each field and implicitly include the <strong>assignment checks and query condition concatenation in the framework code</strong>, greatly simplifying the code writing and maintenance for dynamic queries.</p>
+<h2 id="discussion">Discussion</h2>
+<p>For pagination and sorting, we can still define the relevant parameters in the query object and construct the pagination and sorting clauses based on these parameters when generating the SQL statement. We simply need to declare that these parameters are not used to construct query conditions.</p>
+<p>We can also generate the previously manually written <code>if</code> statement concatenation code for the query object through code generation. This would eliminate the performance impact of reflection and support programming languages that do not provide reflection.</p>
+<p>Furthermore, the query object can also be used to construct MongoDB queries:</p>
+<pre><code class="language-json">{
+  &quot;$and&quot;: [
+    {&quot;age&quot;: {&quot;$gt&quot;: {}}},
+    {&quot;age&quot;: {&quot;$lte&quot;: {}}},
+    {&quot;memo&quot;: null},
+    {&quot;memo&quot;: {&quot;$regex&quot;: {}}},
+    {&quot;valid&quot;: {&quot;$eq&quot;: {}}},
+    {&quot;$or&quot;: [{}, {}, {}]}
+  ]
+}
+</code></pre>
+<p>(The empty objects are placeholders similar to SQL.)</p>
+<p>Since all query languages are designed based on the same mathematical principles, databases like MongoDB, Redis, and ElasticSearch have compared and converted their query languages to SQL. Some databases even directly support portions of the SQL standard. Therefore, the query object mapping method we designed based on these mathematical principles is not only applicable to all object-oriented programming languages, but also to all database query languages. This goes beyond the theoretical scope of ORM.</p>
+<p>As for complex queries involving aggregation and joins, these can be constructed using a view object mapping method, which is beyond the scope of this paper.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>This article categorizes the dynamic query problem as a combinatorial problem, emphasizing the user's impact on the existing system. It proposes a query object mapping method to solve the dynamic combination of query conditions and several field mapping methods to construct various query conditions in SQL statements. Ultimately, these methods form an object-based dynamic query language, offering a more efficient database access solution than ORM.</p>
+
+          </div>
+        </div>
+
+        
+          <div class="next-post">
+            <a class="purple-link" href="https://blog.doyto.win/post/what-is-the-real-problem-for-orms/">
+              <h3 class="post-title">
+                下一篇：ORM真正需要解决的问题是什么？
+              </h3>
+            </a>
+          </div>
+          
+      </div>
+
+      
+        
+          <div id="gitalk-container"></div>
+        
+
+        
+      
+
+      <div class="site-footer">
+  <div class="slogan">DOYToWin</div>
+  <div class="social-container">
+    
+      
+        <a href="https://github.com/doytowin/" target="_blank">
+          <i class="fab fa-github"></i>
+        </a>
+      
+    
+      
+        <a href="https://x.com/doytowin" target="_blank">
+          <i class="fab fa-twitter"></i>
+        </a>
+      
+    
+      
+    
+      
+        <a href="https://www.zhihu.com/people/yuan-forb/" target="_blank">
+          <i class="fab fa-zhihu"></i>
+        </a>
+      
+    
+      
+    
+  </div>
+  <a target="_blank" rel="noopener noreferrer" href="https://beian.miit.gov.cn/">鄂ICP备17018023号-1</a>
+|
+<span>Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a></span>
+|
+<span>Hosted on <a href="https://github.com/f0rb/f0rb.github.io/" target="_blank">f0rb.github.io</a></span> | <a class="rss" href="https://blog.doyto.win/atom.xml" target="_blank">RSS</a>
+</div>
+
+
+    </div>
+    <script type="application/javascript">
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function () {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?d5d7ae2ddd28b5b5061cc801ef122a66";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: 'bba21e5713780b0ea310',
+        clientSecret: '6d4e00ab700caf5d3809bdafa989c566b458cf2b',
+        repo: 'f0rb.github.io',
+        owner: 'f0rb',
+        admin: ['f0rb'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+  </body>
+</html>

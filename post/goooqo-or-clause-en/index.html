@@ -1,0 +1,368 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    
+<meta charset="utf-8" >
+
+<title>How to express `select * from user where id = ? or name = ? and age = ?` in GoooQo | DOYToWin</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.doyto.win/favicon.ico?v=1737547064740">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://blog.doyto.win/styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+  
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-164125169-1"></script>
+<script> window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-164125169-1');</script>
+
+
+    
+    <meta property="og:image" content="https://blog.doyto.win/post-images/goooqo-or-clause-en.webp">
+    
+    <meta name="description" content="Preface
+GoooQo is a CRUD framework in Golang based on OQM technique.
+OQM is a technique that builds database query state..." />
+    <meta name="keywords" content="Forb,GoooQo,Go,en,ORM,OQM" />
+  </head>
+  <body>
+    <div id="app" class="main">
+      <div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="https://blog.doyto.win">
+        <img class="avatar" src="https://blog.doyto.win/images/avatar.png?v=1737547064740" alt="" width="32px" height="32px">
+      </a>
+      <a href="https://blog.doyto.win">
+        <h1 class="site-title">DOYToWin</h1>
+      </a>
+    </div>
+    <div class="right">
+      <transition name="fade">
+        <i class="icon" :class="{ 'icon-close-outline': menuVisible, 'icon-menu-outline': !menuVisible }" @click="menuVisible = !menuVisible"></i>
+      </transition>
+    </div>
+  </div>
+</div>
+
+<transition name="fade">
+  <div class="menu-container" style="display: none;" v-show="menuVisible">
+    <div class="menu-list">
+      
+        
+          <a href="/" class="menu purple-link">
+            首页/Home
+          </a>
+        
+      
+        
+          <a href="/archives" class="menu purple-link">
+            归档/Archives
+          </a>
+        
+      
+        
+          <a href="/tags" class="menu purple-link">
+            标签/Tags
+          </a>
+        
+      
+        
+          <a href="/post/about" class="menu purple-link">
+            关于/About
+          </a>
+        
+      
+    </div>
+  </div>
+</transition>
+
+
+      <div class="content-container">
+        <div class="post-detail">
+          
+            <img src="https://blog.doyto.win/post-images/goooqo-or-clause-en.webp" alt="How to express `select * from user where id = ? or name = ? and age = ?` in GoooQo" style="width:100%">
+          
+          <h2 class="post-title">How to express `select * from user where id = ? or name = ? and age = ?` in GoooQo</h2>
+          <div class="post-info post-detail-info">
+            <span><i class="icon-calendar-outline"></i> 2024-09-06</span>
+            
+              <span>
+                <i class="icon-pricetags-outline"></i>
+                
+                  <a href="https://blog.doyto.win/tag/2ixBhtMBT/">
+                    Forb
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/OsG0ZGFVG/">
+                    GoooQo
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/wrrn0wEw0/">
+                    Go
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/XWT0z16Oz/">
+                    en
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/ivCsCBvQG/">
+                    ORM
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/iJtaxszOUH/">
+                    OQM
+                    
+                  </a>
+                
+              </span>
+            
+            <span id="busuanzi_container_page_pv" style="color: #fff"><span id="busuanzi_value_page_pv"></span></span>
+          </div>
+          <div class="post-content">
+            <h2 id="preface">Preface</h2>
+<p>GoooQo is a CRUD framework in Golang based on OQM technique.</p>
+<p>OQM is a technique that builds database query statements only through objects, focusing on the mapping relationship between object-oriented programming languages and database query languages.</p>
+<p>This article discusses the relationship between logical operators in SQL statements and object structures based on the question in the title.</p>
+<h2 id="hierarchical-structure-of-query-clauses">Hierarchical structure of query clauses</h2>
+<p>OQM technique proposes a new viewpoint: <strong>Query clauses in SQL are not flat, but hierarchical</strong>.</p>
+<p>Among them, query conditions connected by AND are located at one level, and query conditions connected by OR are located at another level. The query conditions at each level are connected by the same logical operator.</p>
+<p>The reason why query clauses are hierarchical is that <strong>the priority of logical operators is different</strong>, and <code>AND</code> has a higher priority than <code>OR</code>.</p>
+<p>In most cases, we use the AND operator to connect query conditions, so we assume AND for the first level. In the query statement of the title, the two conditions connected by OR are thus at the second level, and the two conditions connected by AND in the second condition of the OR statement are at the third level.</p>
+<p>Let's use a JSON data to represent such a hierarchical structure:</p>
+<pre><code class="language-json">{
+  &quot;userOr&quot;: {
+    &quot;id&quot;: 5,
+    &quot;userAnd&quot;: {
+      &quot;name&quot;: &quot;John&quot;,
+      &quot;age&quot;: 30
+    }
+  }
+}
+</code></pre>
+<p>In this data, we use the key name suffixes Or and And to specify the logical operator of the nested conditions.</p>
+<p>There is only one key userOr at the first level, and the AND connection can be omitted;, so we skip the first AND level and start to build the WHERE clause from the second level:</p>
+<ul>
+<li>
+<p>The query condition corresponding to the first key-value pair <code>&quot;id&quot;: 5</code> is <code>id = ?</code>;</p>
+</li>
+<li>
+<p>The suffix of the second key userAnd is And, and the subquery conditions are connected using AND to obtain <code>name = ? ADN age = ?</code>;</p>
+</li>
+<li>
+<p>The above two conditions are under key <code>userOr</code>, so we connect them using OR.</p>
+</li>
+</ul>
+<p>In this way, we get the query clause in the title: <code>id = ? OR name = ? AND age = ?</code>, and the corresponding three parameters: [5, name, 30].</p>
+<figure data-type="image" tabindex="1"><img src="https://blog.doyto.win/post-images/1725275009209.webp" alt="Comparison chart" loading="lazy"></figure>
+<p>Through this comparison chart, we can more clearly see the correspondence between the query clauses and JSON data.</p>
+<h2 id="data-construction-and-mapping-relationship">Data construction and mapping relationship</h2>
+<p>Then we try to use Go struct to construct this JSON data.</p>
+<p>First, we define the corresponding struct <code>UserQuery</code> in the following nested way:</p>
+<pre><code class="language-go">type UserQuery struct {
+    Id      *int       `json:&quot;id,omitempty&quot;`
+    Name    *string    `json:&quot;name,omitempty&quot;`
+    Age     *int       `json:&quot;age,omitempty&quot;`
+    UserOr  *UserQuery `json:&quot;userOr,omitempty&quot;`
+    UserAnd *UserQuery `json:&quot;userAnd,omitempty&quot;`
+}
+</code></pre>
+<p>Then, construct the corresponding variable <code>userQuery</code> according to the assignment in the JSON data:</p>
+<pre><code class="language-go">func P[T any](t T) *T { return &amp;t }
+
+func main() {
+    userQuery := UserQuery{UserOr: &amp;UserQuery{Id: P(1), UserAnd: &amp;UserQuery{Name: P(&quot;John&quot;), Age: P(30)}}}
+    bytes, _ := json.Marshal(query)
+    print(string(bytes))
+}
+</code></pre>
+<p>This code outputs the following, fields without values are ignored:</p>
+<pre><code class="language-json">{&quot;userOr&quot;:{&quot;id&quot;:1,&quot;userAnd&quot;:{&quot;name&quot;:&quot;John&quot;,&quot;age&quot;:30}}}
+</code></pre>
+<p>This is exactly the same as the JSON data above. In other words, we can construct the same query clause based on the <code>userQuery</code> variable here.</p>
+<h2 id="goooqo-interface-call">GoooQo interface call</h2>
+<p>GoooQo uses the relationship between the object structure and the hierarchy of the query clause to construct query clauses containing AND and OR.</p>
+<p>First, define the entity object and query object for the user table:</p>
+<pre><code class="language-go">type UserEntity struct {
+    goooqo.IntId
+    Name     *string `json:&quot;name,omitempty&quot;`
+    Age      *int    `json:&quot;age,omitempty&quot;`
+}
+
+func (u UserEntity) GetTableName() string { return &quot;user&quot; }
+
+type UserQuery struct {
+    goooqo.PageQuery
+    Id      *int       `json:&quot;id,omitempty&quot;`
+    Name    *string    `json:&quot;name,omitempty&quot;`
+    Age     *int       `json:&quot;age,omitempty&quot;`
+    UserOr  *UserQuery `json:&quot;userOr,omitempty&quot;`
+    UserAnd *UserQuery `json:&quot;userAnd,omitempty&quot;`
+}
+</code></pre>
+<p>Then create a transaction manager and a data access interface for the user table based on the database connection:</p>
+<pre><code class="language-go">db := rdb.Connect(&quot;local.properties&quot;)
+defer rdb.Disconnect(db)
+tm := rdb.NewTransactionManager(db)
+
+userDataAccess := rdb.NewTxDataAccess[UserEntity](tm)
+</code></pre>
+<p>Finally, call the <code>Query</code> method of <code>userDataAccess</code> using the created query object according to the SQL statement that needs to be executed:</p>
+<pre><code class="language-go">userQuery := UserQuery{UserOr: &amp;UserQuery{Id: P(1), UserAnd: &amp;UserQuery{Name: P(&quot;John&quot;), Age: P(30)}}}
+userEntities, err := userDataAccess.Query(context.Background(), userQuery)
+</code></pre>
+<p>The corresponding log information is basically the same as the SQL statement in the title:</p>
+<pre><code>time=&quot;2024-09-02T17:11:27+08:00&quot; level=info msg=Executing SQL=&quot;SELECT id, name, age FROM user WHERE (id = ? OR name = ? AND age = ?)&quot; args=&quot;[5 John 30]&quot;
+</code></pre>
+<p>In this way, when we need to execute different SQL statements, we only need to assign values to the corresponding fields according to the query conditions. For projects with frontend and backend interactions, using this type of query object to receive parameters passed in by the front-end can greatly reduce the amount of backend coding.</p>
+<h2 id="improvement">Improvement</h2>
+<p>There is still a small problem here. What if the type of the field with the Or suffix is an array, such as <code>UserOr *[]UserQuery</code>?</p>
+<p>In GoooQo, the query conditions corresponding to the fields inside each struct are connected by AND; each set of query conditions are connected by OR.</p>
+<p>Then we construct the follwing struct to build the same query statement:</p>
+<pre><code class="language-go">userQuery := &amp;UserQuery{UserOr: &amp;[]UserQuery{ {Id: P(1)}, {Name: P(&quot;John&quot;), Age: P(30)}}}
+//json: {&quot;userOr&quot;:[{&quot;id&quot;:1},{&quot;name&quot;:&quot;John&quot;,&quot;age&quot;:30}]}
+</code></pre>
+<p>The key <code>userOr</code> becomes an array containing two elements, the operator between elements is OR, and the operator within an element is AND.</p>
+<p>Thus, the corresponding relationship between each query condition and the object field of the query statement is expressed as follows:<br>
+<img src="https://blog.doyto.win/post-images/1725615897117.webp" alt="Comparison chart" loading="lazy"></p>
+<p>In addition, we can also find that when the array <code>userOr</code> contains only one element, it is actually the same as the condition mapped by the field <code>userAnd</code>, so we can further optimize the <code>userAnd</code> field.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>This article introduces the hierarchical relationship of query clauses and their relationship with the object structure, and it also explains in detail how to use object structures to construct query clauses containing AND and OR operators in OQM technique.</p>
+<p>Traditional ORM technique focuses on the mapping between object model and relational model, and does not point out the connection between object-oriented programming languages and query languages. Therefore, ORM frameworks don't have a unified implementation for constructing query clauses containing OR.</p>
+<p>Furthermore, we will find that since such query conditions can be expressed in JSON data, it means that any programming language that supports JSON can construct such query conditions. Next, we can try to implement the solution described in this article in different programming languages.</p>
+
+          </div>
+        </div>
+
+        
+          <div class="next-post">
+            <a class="purple-link" href="https://blog.doyto.win/post/goooqo-or-clause/">
+              <h3 class="post-title">
+                下一篇：在GoooQo中怎么表达select * from user where id = ? or (name = ? and age = ?)
+              </h3>
+            </a>
+          </div>
+          
+      </div>
+
+      
+        
+          <div id="gitalk-container"></div>
+        
+
+        
+      
+
+      <div class="site-footer">
+  <div class="slogan">DOYToWin</div>
+  <div class="social-container">
+    
+      
+        <a href="https://github.com/doytowin/" target="_blank">
+          <i class="fab fa-github"></i>
+        </a>
+      
+    
+      
+        <a href="https://x.com/doytowin" target="_blank">
+          <i class="fab fa-twitter"></i>
+        </a>
+      
+    
+      
+    
+      
+        <a href="https://www.zhihu.com/people/yuan-forb/" target="_blank">
+          <i class="fab fa-zhihu"></i>
+        </a>
+      
+    
+      
+    
+  </div>
+  <a target="_blank" rel="noopener noreferrer" href="https://beian.miit.gov.cn/">鄂ICP备17018023号-1</a>
+|
+<span>Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a></span>
+|
+<span>Hosted on <a href="https://github.com/f0rb/f0rb.github.io/" target="_blank">f0rb.github.io</a></span> | <a class="rss" href="https://blog.doyto.win/atom.xml" target="_blank">RSS</a>
+</div>
+
+
+    </div>
+    <script type="application/javascript">
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function () {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?d5d7ae2ddd28b5b5061cc801ef122a66";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: 'bba21e5713780b0ea310',
+        clientSecret: '6d4e00ab700caf5d3809bdafa989c566b458cf2b',
+        repo: 'f0rb.github.io',
+        owner: 'f0rb',
+        admin: ['f0rb'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+  </body>
+</html>

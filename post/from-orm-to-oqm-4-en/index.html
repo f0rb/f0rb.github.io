@@ -1,0 +1,368 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    
+<meta charset="utf-8" >
+
+<title>Refactor ORM 3: The PageQuery Object and DataAccess Interface | DOYToWin</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://blog.doyto.win/favicon.ico?v=1737547064740">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://blog.doyto.win/styles/main.css">
+
+
+  
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css" />
+  
+  
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-164125169-1"></script>
+<script> window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'UA-164125169-1');</script>
+
+
+    
+    <meta name="description" content="This article explores refactoring dynamic query interfaces by encapsulating pagination and sorting logic into a reusable..." />
+    <meta name="keywords" content="Forb,en,ORM,OQM,Java" />
+  </head>
+  <body>
+    <div id="app" class="main">
+      <div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="https://blog.doyto.win">
+        <img class="avatar" src="https://blog.doyto.win/images/avatar.png?v=1737547064740" alt="" width="32px" height="32px">
+      </a>
+      <a href="https://blog.doyto.win">
+        <h1 class="site-title">DOYToWin</h1>
+      </a>
+    </div>
+    <div class="right">
+      <transition name="fade">
+        <i class="icon" :class="{ 'icon-close-outline': menuVisible, 'icon-menu-outline': !menuVisible }" @click="menuVisible = !menuVisible"></i>
+      </transition>
+    </div>
+  </div>
+</div>
+
+<transition name="fade">
+  <div class="menu-container" style="display: none;" v-show="menuVisible">
+    <div class="menu-list">
+      
+        
+          <a href="/" class="menu purple-link">
+            首页/Home
+          </a>
+        
+      
+        
+          <a href="/archives" class="menu purple-link">
+            归档/Archives
+          </a>
+        
+      
+        
+          <a href="/tags" class="menu purple-link">
+            标签/Tags
+          </a>
+        
+      
+        
+          <a href="/post/about" class="menu purple-link">
+            关于/About
+          </a>
+        
+      
+    </div>
+  </div>
+</transition>
+
+
+      <div class="content-container">
+        <div class="post-detail">
+          
+          <h2 class="post-title">Refactor ORM 3: The PageQuery Object and DataAccess Interface</h2>
+          <div class="post-info post-detail-info">
+            <span><i class="icon-calendar-outline"></i> 2024-11-16</span>
+            
+              <span>
+                <i class="icon-pricetags-outline"></i>
+                
+                  <a href="https://blog.doyto.win/tag/2ixBhtMBT/">
+                    Forb
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/XWT0z16Oz/">
+                    en
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/ivCsCBvQG/">
+                    ORM
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/iJtaxszOUH/">
+                    OQM
+                    
+                      ，
+                    
+                  </a>
+                
+                  <a href="https://blog.doyto.win/tag/CcCKyUB3QV/">
+                    Java
+                    
+                  </a>
+                
+              </span>
+            
+            <span id="busuanzi_container_page_pv" style="color: #fff"><span id="busuanzi_value_page_pv"></span></span>
+          </div>
+          <div class="post-content">
+            <p>This article explores refactoring dynamic query interfaces by encapsulating pagination and sorting logic into a reusable superclass <code>PageQuery</code> to generate the dynamic components of the SQL statements.</p>
+<!-- more -->
+<h2 id="introduction">Introduction</h2>
+<p>Dynamic query interfaces not only provide users with a variety of query parameters but also process query results based on pagination and sorting parameters.</p>
+<p>This article builds upon the refactoring of dynamic query code to further explore the refactoring of pagination and sorting logic, aiming to design a streamlined and efficient data access interface.</p>
+<h2 id="paging-and-sorting">Paging and Sorting</h2>
+<p>Assume we face the following query request:</p>
+<pre><code class="language-http">/user/?ageGt=3&amp;pageNumber=3&amp;pageSize=10&amp;sort=age,desc;name,asc
+</code></pre>
+<p>Here, pagination parameters are defined as <code>pageNumber</code> and <code>pageSize</code>. The parameter <code>sort</code> is a string. In the Controller layer, we define the corresponding query method as follows:</p>
+<pre><code class="language-java">@GetMapping(&quot;/user/&quot;)
+public List&lt;UserEntity&gt; query(String name, String nameLike, Integer ageGt, Integer pageNumber, Integer pageSize, String sort) {
+    // ...
+}
+</code></pre>
+<h3 id="pagequery-object">PageQuery Object</h3>
+<p>Following the previous refactoring process, we applied the <em>Introduce Parameter Object</em> technique to encapsulate pagination and sorting parameters into a query object, <code>UserQuery</code>.</p>
+<p>Since pagination and sorting are common requirements, we further extracted these fields into a superclass <code>PageQuery</code> using the <em>Extract Superclass</em> refactoring technique. All query objects inherit from this superclass:</p>
+<pre><code class="language-java">public class PageQuery {
+    private Integer pageNumber;
+    private Integer pageSize;
+    private String sort;
+}
+
+public class UserQuery extends PageQuery {
+    private String name;       // name = ?
+    private String nameLike; // name LIKE ?
+    private Integer ageGt;    // age &gt; ?
+}
+</code></pre>
+<p>This design also prevents pagination and sorting fields from being accessed when iterating over <code>UserQuery</code> fields.</p>
+<h3 id="response-object">Response Object</h3>
+<p>In addition to returning the query data list, paginated queries must also return the total data count (<code>total</code>) for the frontend to calculate the total number of pages. The commonly used formula is <code>⌈total / size⌉</code>. Thus, we define the response object for paginated queries as follows:</p>
+<pre><code class="language-java">public record PageList&lt;T&gt;(List&lt;T&gt; list, long total) {
+}
+</code></pre>
+<h3 id="pagination-clause-construction">Pagination Clause Construction</h3>
+<p>Based on the page index <code>pageNumber</code> and page size <code>pageSize</code>, the offset can be calculated as <code>(pageNumber - 1) * pageSize</code>, which is then used to construct the pagination clause <code>LIMIT {pageSize} OFFSET {offset}</code>. Assuming the page index starts from 1:</p>
+<p>To support different database dialects in the future, we can define an interface <code>Dialect</code> to handle pagination for various databases:</p>
+<pre><code class="language-java">public interface Dialect {
+    String buildPageSql(String sql, int limit, long offset);
+}
+</code></pre>
+<h3 id="sorting-clause-construction">Sorting Clause Construction</h3>
+<p>For the sorting parameter <code>sort=age,desc;name</code>, commas (<code>,</code>) are replaced with spaces, semicolons (<code>;</code>) are replaced with commas (<code>,</code>), and the <code>ORDER BY</code> keyword is prefixed to create the sorting clause: <code>ORDER BY age desc, name</code>.</p>
+<p>Since the sorting parameter is a string, to prevent SQL injection, we can validate the <code>sort</code> field using annotations provided by <code>Validation</code>.</p>
+<h2 id="data-access-interface">Data Access Interface</h2>
+<p>Now, with the query object, we can construct the dynamic parts of a database query—query clauses, sorting clauses, and pagination clauses. Combined with static parts like table names and column names extracted from the entity object, we can generate complete SQL statements for single-table CRUD operations.</p>
+<p>Table and column names do not change, so we can move entity-parsing logic into the constructor to cache table and column names, avoiding repetitive processing. The optimized query method would look like this:</p>
+<pre><code class="language-java">public class JdbcDataAccess&lt;E&gt; {
+    private JdbcTemplate jdbcTemplate;
+    private RowMapper&lt;E&gt; rowMapper;
+    private String table;
+    private String columns;
+
+    public JdbcDataAccess(JdbcTemplate jdbcTemplate, Class&lt;E&gt; clazz) {
+        this.jdbcTemplate = jdbcTemplate;
+        this.rowMapper = new BeanPropertyRowMapper&lt;&gt;(clazz);
+        this.table = clazz.getAnnotation(Table.class).name();
+        this.columns = QueryBuilder.buildColumns(clazz);
+    }
+
+    public List&lt;E&gt; query(PageQuery query) {
+        String sql = &quot;SELECT &quot; + columns + &quot; FROM &quot; + table;
+        ArrayList&lt;Object&gt; argList = new ArrayList&lt;&gt;();
+        sql += QueryBuilder.buildWhere(query, argList); // WHERE ...
+        sql += QueryBuilder.buildOrderBy(query); // ORDER BY ...
+        sql += QueryBuilder.buildPaging(query); // LIMIT ... OFFSET ...
+        return jdbcTemplate.query(sql, rowMapper, argList.toArray());
+    }
+
+    public long count(PageQuery query) {
+        String sql = &quot;SELECT count(*) FROM &quot; + table;
+        ArrayList&lt;Object&gt; argList = new ArrayList&lt;&gt;();
+        sql += QueryBuilder.buildWhere(query, argList);
+        return jdbcTemplate.queryForObject(sql, argList.toArray(), long.class);
+    }
+
+    public PageList&lt;E&gt; page(PageQuery query) {
+        return new PageList&lt;&gt;(query(query), count(query));
+    }
+}
+</code></pre>
+<p>Next, inspired by Spring Data JPA's <code>CrudRepository</code> interface, we designed a new data access interface, <code>DataAccess&lt;E, I, Q&gt;</code>, for single-table interactions around entity objects and query objects. Here, <code>E</code> represents the entity type, and <code>Q</code> represents the query object type.</p>
+<pre><code class="language-java">public interface DataAccess&lt;E extends Persistable&lt;I&gt;, I extends Serializable, Q extends PageQuery&gt; {
+    List&lt;E&gt; query(Q query);
+    long count(Q query);
+    PageList&lt;E&gt; page(Q query);
+    &lt;V&gt; List&lt;V&gt; queryColumns(Q q, Class&lt;V&gt; clazz, String... columns);
+    int delete(Q query);  // delete filtered records
+    int patch(E entity, Q query);  // update non-null fields for filtered records
+
+    E get(I id);
+    int delete(I id);
+    void create(E e);
+    int create(List&lt;E&gt; entities);
+    int update(E e); // update all fields
+    int patch(E e);  // update non-null fields
+}
+</code></pre>
+<p>This interface provides a standardized set of data manipulation methods, enabling the Controller layer to implement a universal RESTful API:</p>
+<pre><code class="language-java">public class AbstractController&lt;E extends Persistable&lt;I&gt;, I extends Serializable, Q extends PageQuery&gt; {
+    @Resource
+    private DataAccess&lt;E, I, Q&gt; dataAccess;
+
+    @GetMapping(&quot;/&quot;)
+    public PageList&lt;E&gt; page(Q query) {
+        return dataAccess.page(query);
+    }
+
+    @GetMapping(&quot;/{id}&quot;)
+    public E get(@PathVariable I id) {
+        return dataAccess.get(id);
+    }
+
+    // POST/PUT/PATCH/DELETE methods
+}
+</code></pre>
+<h2 id="conclusion">Conclusion</h2>
+<p>By effectively applying refactoring techniques, we created a query object that can be used to construct the dynamic parts of database query statements, including the where clause, sorting clause, and pagination clause. These components represent the dynamic part of the SQL statement. Meanwhile, the table name and column names, derived from the entity object, represent the static part of the SQL statement.</p>
+<p>Thus, SQL statements are divided into dynamic and static parts, which are mapped respectively by the query object and the entity object. On this foundation, we designed a simple and comprehensive data access interface for single-table interactions in object-oriented development.</p>
+<p>Clearly, we can also construct the dynamic parts of complex queries based on the query object. But how should the static parts of complex queries be constructed? In the next article, we will further explore an object-oriented way to construct complex query statements.</p>
+<p style="color:white">© 2024 Yuan Zhen. All rights reserved.</p>
+
+          </div>
+        </div>
+
+        
+          <div class="next-post">
+            <a class="purple-link" href="https://blog.doyto.win/post/from-orm-to-oqm-4/">
+              <h3 class="post-title">
+                下一篇：从ORM到OQM之4：分页查询与数据访问接口
+              </h3>
+            </a>
+          </div>
+          
+      </div>
+
+      
+        
+          <div id="gitalk-container"></div>
+        
+
+        
+      
+
+      <div class="site-footer">
+  <div class="slogan">DOYToWin</div>
+  <div class="social-container">
+    
+      
+        <a href="https://github.com/doytowin/" target="_blank">
+          <i class="fab fa-github"></i>
+        </a>
+      
+    
+      
+        <a href="https://x.com/doytowin" target="_blank">
+          <i class="fab fa-twitter"></i>
+        </a>
+      
+    
+      
+    
+      
+        <a href="https://www.zhihu.com/people/yuan-forb/" target="_blank">
+          <i class="fab fa-zhihu"></i>
+        </a>
+      
+    
+      
+    
+  </div>
+  <a target="_blank" rel="noopener noreferrer" href="https://beian.miit.gov.cn/">鄂ICP备17018023号-1</a>
+|
+<span>Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a></span>
+|
+<span>Hosted on <a href="https://github.com/f0rb/f0rb.github.io/" target="_blank">f0rb.github.io</a></span> | <a class="rss" href="https://blog.doyto.win/atom.xml" target="_blank">RSS</a>
+</div>
+
+
+    </div>
+    <script type="application/javascript">
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+<script>
+  var _hmt = _hmt || [];
+  (function () {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?d5d7ae2ddd28b5b5061cc801ef122a66";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+</script>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+  
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+
+      var gitalk = new Gitalk({
+        clientID: 'bba21e5713780b0ea310',
+        clientSecret: '6d4e00ab700caf5d3809bdafa989c566b458cf2b',
+        repo: 'f0rb.github.io',
+        owner: 'f0rb',
+        admin: ['f0rb'],
+        id: (location.pathname).substring(0, 49),      // Ensure uniqueness and length less than 50
+        distractionFreeMode: false  // Facebook-like distraction free mode
+      })
+
+      gitalk.render('gitalk-container')
+
+    </script>
+  
+
+  
+
+
+
+  </body>
+</html>
